@@ -1,0 +1,17 @@
+{
+  "id": "frontend/escape-hatch",
+  "surface": "frontend",
+  "title": "Every terp-allow marker is justified and governed by the budget ratchet",
+  "intent": "The one opt-out is a // terp-allow-<rule>: <reason> marker; an unjustified marker is itself an error, and marker counts must exactly match the app's checked-in escape-hatch-budget.json (ADR 0059) so opt-outs stay visible and can only shrink.",
+  "layer": "static-bespoke",
+  "enforcement": [
+    {
+      "kind": "build-time",
+      "tool": "@terp/eslint-boundaries",
+      "ref": "terp/escape-hatch",
+      "reported_as": "terp/escape-hatch"
+    }
+  ],
+  "opt_out": "// terp-allow-escape-hatch: <reason>",
+  "corpus": true
+}

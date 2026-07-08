@@ -1,0 +1,17 @@
+{
+  "id": "backend/no_manual_actor_stamping",
+  "surface": "backend",
+  "title": "Modules never set the framework-managed actor-stamp columns by hand",
+  "intent": "Who created and last modified a row is **provenance**, applied **centrally**: ``BaseService._save`` fills ``created_by_id`` (on insert) and ``modified_by_id`` (on every write) from the request actor (:class:`~terp.core.ActorStampedMixin`, ADR 0012). A module that assigns ``<x>.created_by_id`` / ``<x>.modified_by_id`` is forging or clobbering that trail \u2014 the actor must come from the authenticated request, never from caller-supplied data. As with the scope columns, a read DTO may still *expose* the column (an annotation is fine); only attribute access (set / compare) is policed.",
+  "layer": "static-bespoke",
+  "enforcement": [
+    {
+      "kind": "build-time",
+      "tool": "terp.arch",
+      "ref": "check_no_manual_actor_stamping"
+    }
+  ],
+  "opt_out": "# arch-allow-no-manual-actor-stamping: <reason>",
+  "guide_topic": "service",
+  "corpus": true
+}

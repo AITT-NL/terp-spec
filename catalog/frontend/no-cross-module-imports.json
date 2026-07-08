@@ -1,0 +1,17 @@
+{
+  "id": "frontend/no-cross-module-imports",
+  "surface": "frontend",
+  "title": "An app module never imports a sibling module",
+  "intent": "Modules couple only through the platform surface (@terp/* packages and their own files). A sibling import \u2014 static, dynamic import(), relative or via the app alias \u2014 creates hidden coupling that breaks module isolation and independent evolution.",
+  "layer": "static-portable",
+  "enforcement": [
+    {
+      "kind": "build-time",
+      "tool": "@terp/eslint-boundaries",
+      "ref": "terp/no-cross-module-imports",
+      "reported_as": "terp/no-cross-module-imports"
+    }
+  ],
+  "opt_out": "// terp-allow-no-cross-module-imports: <reason>",
+  "corpus": true
+}

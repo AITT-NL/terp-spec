@@ -1,0 +1,17 @@
+{
+  "id": "backend/escape_hatch_budget",
+  "surface": "backend",
+  "title": "``# arch-allow-*`` marker counts must match the checked-in budget (a ratchet)",
+  "intent": "The budget is a JSON object ``{marker: count}`` checked into the client repo. Actual usage must equal it **exactly**: a marker that *rose* needs a justified budget bump in the same change; one that *dropped* must be lowered to lock in the win; an unbudgeted marker must be added with a justified count. This keeps every secure-by-default opt-out visible, greppable, and governed (design \u00a78).",
+  "layer": "static-bespoke",
+  "enforcement": [
+    {
+      "kind": "build-time",
+      "tool": "terp.arch",
+      "ref": "check_escape_hatch_budget"
+    }
+  ],
+  "opt_out": "# arch-allow-escape-hatch-budget: <reason>",
+  "guide_topic": "rules",
+  "corpus": true
+}

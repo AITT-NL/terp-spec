@@ -1,0 +1,17 @@
+{
+  "id": "backend/no_app_instantiation",
+  "surface": "backend",
+  "title": "App code never constructs ``FastAPI()`` directly",
+  "intent": "``terp.core.create_app`` owns app composition (deny-by-default guards, the control plane, the error envelope). A hand-built ``FastAPI()`` is an application assembled outside the framework.",
+  "layer": "static-portable",
+  "enforcement": [
+    {
+      "kind": "build-time",
+      "tool": "terp.arch",
+      "ref": "check_no_app_instantiation"
+    }
+  ],
+  "opt_out": "# arch-allow-no-app-instantiation: <reason>",
+  "guide_topic": "capability",
+  "corpus": true
+}

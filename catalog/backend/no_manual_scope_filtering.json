@@ -1,0 +1,17 @@
+{
+  "id": "backend/no_manual_scope_filtering",
+  "surface": "backend",
+  "title": "Modules never touch framework-managed scope columns (``deleted_at`` / ``tenant_id``)",
+  "intent": "Soft-delete and tenant scoping are applied **centrally**: ``BaseService.base_query`` filters ``deleted_at IS NULL`` for a soft-delete model and applies every registered row predicate (e.g. the tenant filter) for a scoped one, and the audited ``delete`` chokepoint stamps ``deleted_at``. A module that references ``<x>.deleted_at`` / ``<x>.tenant_id`` \u2014 to filter, set, or compare \u2014 is re-implementing that scope predicate by hand, which can leak or destroy scoped rows. The framework's ``base_query`` is the only path; expose the column in a read DTO if you must surface it, but never filter or assign it in module code.",
+  "layer": "static-bespoke",
+  "enforcement": [
+    {
+      "kind": "build-time",
+      "tool": "terp.arch",
+      "ref": "check_no_manual_scope_filtering"
+    }
+  ],
+  "opt_out": "# arch-allow-no-manual-scope-filtering: <reason>",
+  "guide_topic": "tenancy",
+  "corpus": true
+}

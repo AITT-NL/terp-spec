@@ -1,0 +1,17 @@
+{
+  "id": "backend/no_manual_table_schema",
+  "surface": "backend",
+  "title": "Table models never hand-write a ``schema=`` placement (the layout is managed)",
+  "intent": "The physical schema layout is a **deployment** decision (``DB_SCHEMA_LAYOUT``, ADR 0070): under ``flat`` every table lives in the default schema, and under ``per-module`` the migration runtime routes each package's tables into its own PostgreSQL schema via the search_path \u2014 in both layouts the model metadata stays schema-free. A hand-written ``__table_args__ = {\"schema\": ...}`` pins one table to a fixed schema, silently escaping the managed layout (and breaking SQLite dev/test, which parses a schema prefix as an ATTACH database name).",
+  "layer": "static-bespoke",
+  "enforcement": [
+    {
+      "kind": "build-time",
+      "tool": "terp.arch",
+      "ref": "check_no_manual_table_schema"
+    }
+  ],
+  "opt_out": "# arch-allow-no-manual-table-schema: <reason>",
+  "guide_topic": "migrations",
+  "corpus": true
+}

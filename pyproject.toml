@@ -1,0 +1,45 @@
+# terp-spec — the Terp Standard as an installable distribution (ADR 0082).
+#
+# The spec is DATA (catalog + corpus + schemas + the refused surface); this
+# manifest packages it so consumers depend on it as a declared dependency
+# instead of a repo-relative path. Inside the monorepo it resolves as a uv
+# workspace member; after a repo split the framework repins it to a git tag or
+# registry release with zero code edits. The version IS the spec version
+# (spec/VERSION) — deliberately independent of the platform's lockstep release
+# version, exactly as ADR 0081's certification model requires.
+#
+# Layer-neutral by design: no dependencies, no terp.* imports (the same
+# isolation discipline as studio/).
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "terp-spec"
+version = "0.3.0"
+description = "The Terp Standard — stack-neutral rule catalog, violation corpus, finding format, and refused-surface declaration (ADRs 0080/0081)."
+requires-python = ">=3.10"
+license = "Apache-2.0"
+dependencies = []
+
+[dependency-groups]
+dev = ["pytest>=8.0"]
+
+# The accessor package plus the spec data itself: a built wheel carries the data
+# inside `terp_spec/` (catalog/, corpus/, ...), while an editable/workspace
+# install reads it from the directory the package sits in — `terp_spec.spec_dir()`
+# handles both layouts.
+[tool.hatch.build.targets.wheel]
+packages = ["terp_spec"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"VERSION" = "terp_spec/VERSION"
+"findings.schema.json" = "terp_spec/findings.schema.json"
+"restricted-surface.json" = "terp_spec/restricted-surface.json"
+"catalog" = "terp_spec/catalog"
+"corpus" = "terp_spec/corpus"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

@@ -1,0 +1,17 @@
+{
+  "id": "backend/no_raw_file_references",
+  "surface": "backend",
+  "title": "A table model's ``*file_id`` column is declared with ``FileRef(...)``, never bare",
+  "intent": "A stored pointer to a file object carries **authorization semantics**: the files capability serves delegated reads only through a *declared* reference (``FileService.load_for`` fail-closes on an undeclared column \u2014 the runtime half of this rule, ADR 0057). A bare ``file_id: uuid.UUID`` column on a ``table=True`` model is an undeclared reference: nothing ties the file's access to the referencing row, which is the classic object-level (BOLA) drift. Declare the column with ``FileRef(...)`` (from ``terp-cap-files``) so the reference is greppable, verified at runtime, and served through the module's own already-authorized row \u2014 never hand-rolled. A non-table schema (a Read DTO exposing ``file_id``) is fine and not policed; only the persisted column is.",
+  "layer": "static-bespoke",
+  "enforcement": [
+    {
+      "kind": "build-time",
+      "tool": "terp.arch",
+      "ref": "check_no_raw_file_references"
+    }
+  ],
+  "opt_out": "# arch-allow-no-raw-file-references: <reason>",
+  "guide_topic": "files",
+  "corpus": true
+}

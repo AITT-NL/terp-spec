@@ -1,0 +1,17 @@
+{
+  "id": "backend/no_adhoc_background_runtime",
+  "surface": "backend",
+  "title": "App modules don't import a background engine / runtime directly \u2014 only adapter caps do",
+  "intent": "Background work (a scheduled sync, an export, a webhook) goes through the typed :func:`terp.core.enqueue` chokepoint and the context-binding kernel runner, so the engine that actually runs it \u2014 Celery, Azure Service Bus, Redis, APScheduler \u2014 stays a composition-root choice wired into an **opt-in adapter capability**, never an import baked into domain code. This rule forbids importing those broker / scheduler engines (and a raw ``threading`` / ``multiprocessing`` *execution* construct \u2014 ``Thread`` / ``Process`` / a pool, or a bare ``import threading`` that can reach one) anywhere in an app module; an explicit synchronization primitive (``from threading import RLock``) is a correctness tool, not background execution, and stays allowed. Its runtime half is the jobs seam itself: every job runs through :func:`terp.core.enqueue` and the active :class:`~terp.core.JobQueue`, so an adapter swap never touches a call site. An adapter capability legitimately imports its engine under a budgeted ``# arch-allow-*`` marker.",
+  "layer": "static-portable",
+  "enforcement": [
+    {
+      "kind": "build-time",
+      "tool": "terp.arch",
+      "ref": "check_no_adhoc_background_runtime"
+    }
+  ],
+  "opt_out": "# arch-allow-no-adhoc-background-runtime: <reason>",
+  "guide_topic": "jobs",
+  "corpus": true
+}

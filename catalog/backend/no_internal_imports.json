@@ -1,0 +1,17 @@
+{
+  "id": "backend/no_internal_imports",
+  "surface": "backend",
+  "title": "Modules may import only the public ``terp.core`` surface, never ``_internal``",
+  "intent": "Modules may import only the public ``terp.core`` surface, never ``_internal``",
+  "layer": "static-portable",
+  "enforcement": [
+    {
+      "kind": "build-time",
+      "tool": "terp.arch",
+      "ref": "check_no_internal_imports"
+    }
+  ],
+  "opt_out": "# arch-allow-no-internal-imports: <reason>",
+  "guide_topic": "module",
+  "corpus": true
+}

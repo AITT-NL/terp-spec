@@ -1,0 +1,17 @@
+{
+  "id": "backend/session_imported_from_sqlmodel",
+  "surface": "backend",
+  "title": "The ORM ``Session`` is imported from ``sqlmodel``, never from ``sqlalchemy``",
+  "intent": "SQLModel re-exports SQLAlchemy's ``Session``, and the framework standardises on that one everywhere \u2014 ``SessionDep``, ``BaseService``, the write guard, and the migrations all speak ``sqlmodel.Session``. Importing ``Session`` from ``sqlalchemy`` / ``sqlalchemy.orm`` quietly forks the app onto a second session type, so the rule names the one canonical import. (Constructing a session is separately banned by ``no_raw_session_construction`` \u2014 this only fixes the spelling.)",
+  "layer": "static-bespoke",
+  "enforcement": [
+    {
+      "kind": "build-time",
+      "tool": "terp.arch",
+      "ref": "check_session_imported_from_sqlmodel"
+    }
+  ],
+  "opt_out": "# arch-allow-session-imported-from-sqlmodel: <reason>",
+  "guide_topic": "service",
+  "corpus": true
+}

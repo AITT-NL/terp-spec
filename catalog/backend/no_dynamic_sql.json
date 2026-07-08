@@ -1,0 +1,17 @@
+{
+  "id": "backend/no_dynamic_sql",
+  "surface": "backend",
+  "title": "Raw SQL text in app modules must be a static literal, never dynamically built",
+  "intent": "Dynamic ``text(...)`` / ``sqlalchemy.text(...)`` calls (f-strings, string concatenation, ``.format``, ``%`` formatting, or a variable) are not statically reviewable and are easy to turn into SQL injection. Keep SQL as a literal and pass data through SQLAlchemy parameters / ORM expressions instead. As a security rule this also scans ``tests/`` and ``migrations/`` dirs inside a module \u2014 they are importable Python, so they are application surface too.",
+  "layer": "static-portable",
+  "enforcement": [
+    {
+      "kind": "build-time",
+      "tool": "terp.arch",
+      "ref": "check_no_dynamic_sql"
+    }
+  ],
+  "opt_out": "# arch-allow-no-dynamic-sql: <reason>",
+  "guide_topic": "service",
+  "corpus": true
+}

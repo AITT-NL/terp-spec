@@ -1,0 +1,22 @@
+{
+  "id": "backend/schemas_exclude_sensitive_fields",
+  "surface": "backend",
+  "title": "A read / response DTO never exposes a credential-shaped field",
+  "intent": "Routes serialize a response DTO out of the boundary, so a field whose name reads like a secret -- ``password`` / ``hashed_password`` / ``*secret`` / ``*api_key`` / ``*token`` -- would leak the credential to every caller. A response DTO is a ``BaseSchema`` / ``BaseUpdateSchema`` model **or** any class wired as a ``response_model=`` (so an input ``*Create`` / ``*Update`` mistakenly reused as a response is caught), excluding the inputs that are only ever request bodies (a client *supplies* a password) and ``table=True`` models (a table may store the hash). Plain helper classes are not policed. This guards the gap ``response_model_not_table_model`` leaves: a hand-rolled Read model that copies the stored hash. (``token_version`` / ``version`` are integer counters, not secrets.)",
+  "layer": "black-box",
+  "enforcement": [
+    {
+      "kind": "build-time",
+      "tool": "terp.arch",
+      "ref": "check_schemas_exclude_sensitive_fields"
+    },
+    {
+      "kind": "black-box",
+      "tool": "@terp/conformance",
+      "ref": "standard: responses never expose credential-shaped fields"
+    }
+  ],
+  "opt_out": "# arch-allow-schemas-exclude-sensitive-fields: <reason>",
+  "guide_topic": "module",
+  "corpus": true
+}

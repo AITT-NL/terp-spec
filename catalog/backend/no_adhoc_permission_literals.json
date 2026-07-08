@@ -1,0 +1,17 @@
+{
+  "id": "backend/no_adhoc_permission_literals",
+  "surface": "backend",
+  "title": "Modules reference typed authority objects, never bare permission strings",
+  "intent": "Modules reference typed authority objects, never bare permission strings",
+  "layer": "static-portable",
+  "enforcement": [
+    {
+      "kind": "build-time",
+      "tool": "terp.arch",
+      "ref": "check_no_adhoc_permission_literals"
+    }
+  ],
+  "opt_out": "# arch-allow-no-adhoc-permission-literals: <reason>",
+  "guide_topic": "policy",
+  "corpus": true
+}

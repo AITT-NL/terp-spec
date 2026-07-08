@@ -1,0 +1,17 @@
+{
+  "id": "backend/no_raw_connection_access",
+  "surface": "backend",
+  "title": "Modules never reach the raw DB connection / engine behind the session",
+  "intent": "The runtime write guard (ADR 0015) covers the request ``Session``'s own persistence methods, but the bound ``Engine`` / ``Connection`` it exposes can issue DML directly -- ``session.get_bind().connect().execute(insert(...))`` or ``session.connection().execute(...)`` -- bypassing the audited chokepoint (the F3 follow-up). A module must never call ``get_bind`` / ``connection``; persist through ``BaseService`` so every write is audited. A ``get_bind().connect()`` escape is already caught here at the ``get_bind`` call, and raw ``Session`` / engine *construction* (``create_engine`` / ``sessionmaker``) is separately banned by ``no_raw_session_construction`` -- so an unrelated ``.connect()`` on a domain object (a websocket / cache / search client) is deliberately *not* flagged.",
+  "layer": "static-portable",
+  "enforcement": [
+    {
+      "kind": "build-time",
+      "tool": "terp.arch",
+      "ref": "check_no_raw_connection_access"
+    }
+  ],
+  "opt_out": "# arch-allow-no-raw-connection-access: <reason>",
+  "guide_topic": "service",
+  "corpus": true
+}

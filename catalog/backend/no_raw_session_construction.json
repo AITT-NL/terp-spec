@@ -1,0 +1,17 @@
+{
+  "id": "backend/no_raw_session_construction",
+  "surface": "backend",
+  "title": "App code never constructs a ``Session`` / engine directly; it uses ``SessionDep``",
+  "intent": "App code never constructs a ``Session`` / engine directly; it uses ``SessionDep``",
+  "layer": "static-portable",
+  "enforcement": [
+    {
+      "kind": "build-time",
+      "tool": "terp.arch",
+      "ref": "check_no_raw_session_construction"
+    }
+  ],
+  "opt_out": "# arch-allow-no-raw-session-construction: <reason>",
+  "guide_topic": "service",
+  "corpus": true
+}

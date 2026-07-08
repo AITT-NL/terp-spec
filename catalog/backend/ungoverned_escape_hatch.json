@@ -1,0 +1,17 @@
+{
+  "id": "backend/ungoverned_escape_hatch",
+  "surface": "backend",
+  "title": "The fail-closed ungoverned-opt-out condition, as structured violations",
+  "intent": ":func:`assert_app_clean` refuses (with a plain ``AssertionError``) to honour any ``# arch-allow-*`` marker when no escape-hatch budget governs it. This is the same condition projected as :class:`ArchViolation` values (rule ``ungoverned_escape_hatch``, one per marker line), so a structured renderer (``terp check --format json``) reports it in-band instead of crashing.",
+  "layer": "static-bespoke",
+  "enforcement": [
+    {
+      "kind": "build-time",
+      "tool": "terp.arch",
+      "ref": "ungoverned_marker_violations"
+    }
+  ],
+  "opt_out": "# arch-allow-ungoverned-escape-hatch: <reason>",
+  "guide_topic": "rules",
+  "corpus": true
+}

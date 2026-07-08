@@ -1,0 +1,27 @@
+{
+  "id": "backend/list_routes_paginate",
+  "surface": "backend",
+  "title": "A list route returns a capped ``Page[T]``, never a bare ``list[...]``",
+  "intent": "Pagination is a mandatory cross-cutting control (ADR 0006, Tier A): a route whose ``response_model`` is a bare ``list[...]`` / ``Sequence[...]`` serializes an **unbounded** collection -- a resource-exhaustion and over-exposure footgun on a large table, and a ``Page[T]`` guarantee that was previously only a convention. Wrap the Read DTO in ``terp.core.Page[...]`` (returned via ``Page.of(...)`` with ``PaginationDep``) so every list is capped and uniformly shaped. A single-object ``response_model`` (``NoteRead``) is unaffected; both decorator routes and imperative ``add_api_route`` registration are checked.",
+  "layer": "black-box",
+  "enforcement": [
+    {
+      "kind": "build-time",
+      "tool": "terp.arch",
+      "ref": "check_list_routes_paginate"
+    },
+    {
+      "kind": "runtime",
+      "tool": "terp.core",
+      "ref": "PaginationParams"
+    },
+    {
+      "kind": "black-box",
+      "tool": "@terp/conformance",
+      "ref": "standard: list routes return a capped Page envelope"
+    }
+  ],
+  "opt_out": "# arch-allow-list-routes-paginate: <reason>",
+  "guide_topic": "service",
+  "corpus": true
+}

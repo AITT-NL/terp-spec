@@ -1,0 +1,22 @@
+{
+  "id": "backend/mutations_emit_audit",
+  "surface": "backend",
+  "title": "Modules never write to the session directly; mutations go through the audited chokepoint",
+  "intent": "Audit is auto-emitted from the single ``BaseService`` ``create`` / ``update`` / ``delete`` (``_save`` / ``_remove``) chokepoint inside the write's transaction. A module that calls ``session.add`` / ``delete`` / ``merge`` / ``commit`` / ``flush`` / a ``bulk_*`` helper itself \u2014 or smuggles a write through ``session.execute`` / ``exec`` with a DML statement (``insert`` / ``update`` / ``delete`` / raw ``text``) \u2014 bypasses that chokepoint and would persist a mutation with **no** audit trail. The receiver is recognised by the conventional session names **and** by any parameter annotated ``Session`` / ``SessionDep`` (so renaming the variable does not evade the rule). Routing every write through ``BaseService`` keeps the trail structural \u2014 a method call on the model's service (e.g. ``_service.delete(...)``) is fine; a raw ``session.*`` write is not.",
+  "layer": "static-bespoke",
+  "enforcement": [
+    {
+      "kind": "build-time",
+      "tool": "terp.arch",
+      "ref": "check_mutations_emit_audit"
+    },
+    {
+      "kind": "runtime",
+      "tool": "terp.core",
+      "ref": "WriteGuardedSession"
+    }
+  ],
+  "opt_out": "# arch-allow-mutations-emit-audit: <reason>",
+  "guide_topic": "service",
+  "corpus": true
+}

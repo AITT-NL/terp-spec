@@ -1,0 +1,17 @@
+{
+  "id": "backend/tenant_scoped_models_use_scoped_service",
+  "surface": "backend",
+  "title": "A ``TenantScopedMixin`` model's service must extend ``TenantScopedService``",
+  "intent": "This makes tenant isolation structural on the **write** side: reads of a tenant-scoped model are already filtered centrally by the registered tenant scope predicate (ADR 0017), but ``TenantScopedService`` is what stamps ``tenant_id`` on create \u2014 so a plain ``BaseService`` (which would insert an unstamped, never-visible row) is rejected at build time.",
+  "layer": "static-bespoke",
+  "enforcement": [
+    {
+      "kind": "build-time",
+      "tool": "terp.arch",
+      "ref": "check_tenant_scoped_models_use_scoped_service"
+    }
+  ],
+  "opt_out": "# arch-allow-tenant-scoped-models-use-scoped-service: <reason>",
+  "guide_topic": "tenancy",
+  "corpus": true
+}

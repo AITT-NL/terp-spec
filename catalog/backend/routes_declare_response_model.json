@@ -1,0 +1,17 @@
+{
+  "id": "backend/routes_declare_response_model",
+  "surface": "backend",
+  "title": "Every content route declares ``response_model=`` (no bare ORM/data out)",
+  "intent": "Covers both decorator routes (``@router.get(...)``) and imperative registration (``router.add_api_route(...)``): a route with neither a ``response_model`` nor a no-body ``status_code`` (204/205/304) can serialize a bare ORM object out of the boundary, so both forms are checked.",
+  "layer": "static-bespoke",
+  "enforcement": [
+    {
+      "kind": "build-time",
+      "tool": "terp.arch",
+      "ref": "check_routes_declare_response_model"
+    }
+  ],
+  "opt_out": "# arch-allow-routes-declare-response-model: <reason>",
+  "guide_topic": "module",
+  "corpus": true
+}

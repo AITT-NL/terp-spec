@@ -1,0 +1,34 @@
+name: ci
+
+# The Terp Standard's own CI (ADR 0082): the spec is plain data + a tiny
+# accessor with zero dependencies, and this suite proves it self-consistent —
+# versioning agreement, schema validity of every catalog entry, the finding
+# format, the refused surface's shape, and the corpus ratchet. The reference
+# implementation (terp-framework) certifies itself against this spec in its
+# own gate.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  standard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: pip install pytest
+      - name: Test (the spec is self-consistent)
+        run: python -m pytest

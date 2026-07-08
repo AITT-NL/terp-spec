@@ -1,0 +1,18 @@
+{
+  "id": "frontend/generated-client-only",
+  "surface": "frontend",
+  "title": "All network egress goes through the generated, typed client",
+  "intent": "Raw fetch / XMLHttpRequest / WebSocket / EventSource (and navigator.sendBeacon) bypass the app's single audited, typed egress path. One client means one place for auth, errors, and contract types. The refused globals and member calls are declared in restricted-surface.json (restrictedGlobals, restrictedMemberCalls).",
+  "layer": "static-portable",
+  "enforcement": [
+    {
+      "kind": "build-time",
+      "tool": "@terp/eslint-boundaries",
+      "ref": "BOUNDARY_SPEC.restrictedGlobals",
+      "reported_as": "no-restricted-globals"
+    }
+  ],
+  "reference": "useTerpClient() + unwrap from @terp/react-core — the generated, typed client.",
+  "opt_out": "// terp-allow-no-restricted-globals: <reason>",
+  "corpus": true
+}

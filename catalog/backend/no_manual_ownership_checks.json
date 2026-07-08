@@ -1,0 +1,17 @@
+{
+  "id": "backend/no_manual_ownership_checks",
+  "surface": "backend",
+  "title": "Modules never gate a row write on the framework-managed ``owner_id`` by hand",
+  "intent": "Object-level authorization is applied **centrally**: ``BaseService`` stamps ``owner_id`` from the request actor on create and authorizes every update / delete of an owned row at the write chokepoint (a non-owner write fails closed with 403, ADR 0029). A module that references ``<x>.owner_id`` \u2014 to compare it against a principal, filter on it, or set it \u2014 is hand-rolling that per-row check, the easy-to-get-wrong pattern (it leaks if forgotten, and a hand-written ``select(...).where(owner_id == ...)`` also drops the soft-delete / tenant row scope) the seam replaces. Declare :class:`~terp.core.OwnedMixin` on the model and let the framework gate the write; register an object-authz predicate (ADR 0029) for a richer policy. As with the scope / actor columns, a read DTO may still *expose* ``owner_id`` (an annotation is fine); only attribute access (set / filter / compare) is policed.",
+  "layer": "static-bespoke",
+  "enforcement": [
+    {
+      "kind": "build-time",
+      "tool": "terp.arch",
+      "ref": "check_no_manual_ownership_checks"
+    }
+  ],
+  "opt_out": "# arch-allow-no-manual-ownership-checks: <reason>",
+  "guide_topic": "ownership",
+  "corpus": true
+}

@@ -1,0 +1,17 @@
+{
+  "id": "backend/no_adhoc_middleware",
+  "surface": "backend",
+  "title": "App code never wires HTTP middleware itself; security is centralized",
+  "intent": "Cross-cutting HTTP security (headers, CORS, rate-limit, body-size, request-id) is declared once as a ``SecurityConfig`` and installed by ``create_app``. A module calling ``add_middleware(...)``, using the ``@app.middleware(\"http\")`` decorator, or subclassing ``BaseHTTPMiddleware`` is assembling a security posture outside that single control plane.",
+  "layer": "static-portable",
+  "enforcement": [
+    {
+      "kind": "build-time",
+      "tool": "terp.arch",
+      "ref": "check_no_adhoc_middleware"
+    }
+  ],
+  "opt_out": "# arch-allow-no-adhoc-middleware: <reason>",
+  "guide_topic": "capability",
+  "corpus": true
+}

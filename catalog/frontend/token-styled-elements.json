@@ -1,0 +1,18 @@
+{
+  "id": "frontend/token-styled-elements",
+  "surface": "frontend",
+  "title": "Raw interactive/structural HTML elements are refused in app modules",
+  "intent": "A raw <button>/<input>/<select>/<textarea>/<table>/<dialog>/<form> bypasses the app's sanctioned, token-styled primitive surface (accessible and theme-consistent by construction). The refused elements are declared in restricted-surface.json (restrictedElements); each has a sanctioned replacement in the stack's component surface, and the violation message names it.",
+  "layer": "static-portable",
+  "enforcement": [
+    {
+      "kind": "build-time",
+      "tool": "@terp/eslint-boundaries",
+      "ref": "BOUNDARY_SPEC.restrictedElements",
+      "reported_as": "no-restricted-syntax"
+    }
+  ],
+  "reference": "Button, Input, Select, Textarea, DataView, ConfirmDialog and Stack as=\"form\" from @terp/react-core (BOUNDARY_SPEC.restrictedElements maps each element to its replacement).",
+  "opt_out": "// terp-allow-no-restricted-syntax: <reason>",
+  "corpus": true
+}

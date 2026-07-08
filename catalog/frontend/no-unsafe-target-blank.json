@@ -1,0 +1,17 @@
+{
+  "id": "frontend/no-unsafe-target-blank",
+  "surface": "frontend",
+  "title": "A static target=\"_blank\" link declares rel=\"noopener\"",
+  "intent": "Without rel=noopener the opened page holds a window.opener reference to the app \u2014 the reverse-tabnabbing primitive. The rule enforces the safe default on every statically-authored external link.",
+  "layer": "static-portable",
+  "enforcement": [
+    {
+      "kind": "build-time",
+      "tool": "@terp/eslint-boundaries",
+      "ref": "terp/no-unsafe-target-blank",
+      "reported_as": "terp/no-unsafe-target-blank"
+    }
+  ],
+  "opt_out": "// terp-allow-no-unsafe-target-blank: <reason>",
+  "corpus": true
+}

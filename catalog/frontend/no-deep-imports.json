@@ -1,0 +1,17 @@
+{
+  "id": "frontend/no-deep-imports",
+  "surface": "frontend",
+  "title": "App modules import @terp/* packages from the root only",
+  "intent": "A deep import (@terp/*/src/*, @terp/*/dist/*) couples the app to package internals that are free to move; the package root is the published, stable surface. The refused path segments are declared in restricted-surface.json (deepImportPathSegments).",
+  "layer": "static-portable",
+  "enforcement": [
+    {
+      "kind": "build-time",
+      "tool": "@terp/eslint-boundaries",
+      "ref": "BOUNDARY_SPEC.internalImportPatterns",
+      "reported_as": "no-restricted-imports"
+    }
+  ],
+  "opt_out": "// terp-allow-no-restricted-imports: <reason>",
+  "corpus": true
+}

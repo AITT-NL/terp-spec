@@ -1,0 +1,17 @@
+{
+  "id": "frontend/no-eval",
+  "surface": "frontend",
+  "title": "eval() and new Function() are refused in app modules",
+  "intent": "Runtime code evaluation defeats every static guarantee the boundary provides and is a classic injection primitive. There is no sanctioned dynamic-code path in an app module.",
+  "layer": "static-portable",
+  "enforcement": [
+    {
+      "kind": "build-time",
+      "tool": "@terp/eslint-boundaries",
+      "ref": "terp/no-eval",
+      "reported_as": "terp/no-eval"
+    }
+  ],
+  "opt_out": "// terp-allow-no-eval: <reason>",
+  "corpus": true
+}

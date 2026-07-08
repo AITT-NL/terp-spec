@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://terp.dev/spec/findings.schema.json",
+  "title": "Terp Standard finding",
+  "description": "The machine-readable finding a conformant checker emits: an array of these objects per checked tree. The corpus contract is stated over this shape — for a rule under test, every violation-* case yields at least one finding whose `rule` is the catalog id, and every compliant-* case yields none for that rule. Findings are attributed to the stack-neutral catalog id, never a tool-internal rule id.",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": ["rule", "path"],
+    "additionalProperties": false,
+    "properties": {
+      "rule": {
+        "type": "string",
+        "description": "The Terp Standard catalog id the finding realises (catalog/<surface>/<rule>.json).",
+        "pattern": "^(backend/[a-z0-9_]+|frontend/[a-z0-9-]+)$"
+      },
+      "path": {
+        "type": "string",
+        "description": "File path relative to the checked tree's root (the corpus case root, or the app root), with forward slashes."
+      },
+      "line": {
+        "type": "integer",
+        "description": "1-based line of the violation, when the checker can locate it.",
+        "minimum": 1
+      },
+      "message": {
+        "type": "string",
+        "description": "Human-readable explanation; ideally directive (states the compliant fix)."
+      }
+    }
+  }
+}

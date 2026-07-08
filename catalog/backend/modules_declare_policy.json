@@ -1,0 +1,22 @@
+{
+  "id": "backend/modules_declare_policy",
+  "surface": "backend",
+  "title": "Every ``modules/<name>/module.py`` declares a ``ModuleSpec`` with a ``policy=``",
+  "intent": "Every ``modules/<name>/module.py`` declares a ``ModuleSpec`` with a ``policy=``",
+  "layer": "static-bespoke",
+  "enforcement": [
+    {
+      "kind": "build-time",
+      "tool": "terp.arch",
+      "ref": "check_modules_declare_policy"
+    },
+    {
+      "kind": "runtime",
+      "tool": "terp.core",
+      "ref": "build_guard"
+    }
+  ],
+  "opt_out": "# arch-allow-modules-declare-policy: <reason>",
+  "guide_topic": "policy",
+  "corpus": true
+}

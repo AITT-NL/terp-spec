@@ -1,0 +1,17 @@
+{
+  "id": "backend/no_adhoc_config_decrypt",
+  "surface": "backend",
+  "title": "Sealed config is never decrypted ad hoc; one budgeted call site only",
+  "intent": "A sealed configuration value (``enc:v1:...``) stays opaque in app code: a module renders ``mask_config`` and never calls ``decrypt_config``. The single sanctioned decrypt site (design \u00a75.4) carries a justified ``# arch-allow-no-adhoc-config-decrypt`` marker counted against the app's escape-hatch budget. Its runtime half is :func:`terp.core.secrets.decrypt_config`, which fails closed unless called from the one site registered via ``register_decrypt_call_site``.",
+  "layer": "static-portable",
+  "enforcement": [
+    {
+      "kind": "build-time",
+      "tool": "terp.arch",
+      "ref": "check_no_adhoc_config_decrypt"
+    }
+  ],
+  "opt_out": "# arch-allow-no-adhoc-config-decrypt: <reason>",
+  "guide_topic": "capability",
+  "corpus": true
+}
