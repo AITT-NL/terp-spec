@@ -13,7 +13,7 @@
     {
       "kind": "runtime",
       "tool": "terp.core",
-      "ref": "create_app freezes app/app.router route registration after composition"
+      "ref": "_freeze_app_route_registration"
     }
   ],
   "opt_out": "# arch-allow-no-raw-app-routes: <reason>",
