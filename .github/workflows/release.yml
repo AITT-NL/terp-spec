@@ -1,0 +1,49 @@
+name: release
+
+# The Terp Standard's release seam (ADR 0082): consumers pin releases by tag
+# (uv git tag pin / npm github:#tag), so a tag IS the release artifact. This
+# workflow makes tagging fail-closed instead of a raw `git push origin v*`:
+# the tag must match the checked-in VERSION (and the package manifests, which
+# the test suite holds to VERSION), the self-consistency suite must pass at
+# the tagged commit, and a GitHub Release documents it with generated notes.
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tag matches the checked-in VERSION
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          checked_in="$(tr -d '[:space:]' < VERSION)"
+          [ "$version" = "$checked_in" ] \
+            || { echo "tag $GITHUB_REF_NAME != VERSION ($checked_in)"; exit 1; }
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: The spec is self-consistent at the tagged commit
+        run: |
+          pip install pytest
+          python -m pytest
+
+  github-release:
+    needs: verify
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create the GitHub Release (generated notes)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            --title "Terp Standard $GITHUB_REF_NAME" \
+            --generate-notes
