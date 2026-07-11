@@ -216,3 +216,6 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Data-only spec package: no runtime deps, the lock is test-env noise.
+uv.lock
