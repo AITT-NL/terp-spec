@@ -1,0 +1,17 @@
+{
+  "id": "backend/no_dependency_overrides",
+  "surface": "backend",
+  "title": "App code never touches ``dependency_overrides``",
+  "intent": "``create_app`` binds the authentication and session seams once, at composition. Rebinding ``app.dependency_overrides`` in app code (e.g. replacing the principal provider) silently disables authentication or swaps the database session outside every guard. Overrides are a TEST-ONLY seam; application code has no legitimate use.",
+  "layer": "static-portable",
+  "enforcement": [
+    {
+      "kind": "build-time",
+      "tool": "terp.arch",
+      "ref": "check_no_dependency_overrides"
+    }
+  ],
+  "opt_out": "# arch-allow-no-dependency-overrides: <reason>",
+  "guide_topic": "capability",
+  "corpus": true
+}
