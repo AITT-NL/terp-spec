@@ -9,6 +9,11 @@
       "kind": "build-time",
       "tool": "terp.arch",
       "ref": "check_no_raw_app_routes"
+    },
+    {
+      "kind": "runtime",
+      "tool": "terp.core",
+      "ref": "create_app freezes app/app.router route registration after composition"
     }
   ],
   "opt_out": "# arch-allow-no-raw-app-routes: <reason>",
