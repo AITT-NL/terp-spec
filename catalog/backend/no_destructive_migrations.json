@@ -12,6 +12,10 @@
     }
   ],
   "opt_out": "# arch-allow-no-destructive-migrations: <reason>",
+  "runtime": {
+    "applicability": "not-applicable",
+    "rationale": "The invariant is reviewability of the authored revision: a reason-bearing marker is a comment, invisible to Alembic when the DDL executes. What could be checked at apply time is a different (op-classification) control; the justified-marker contract itself only exists in source."
+  },
   "guide_topic": "migrations",
   "corpus": true
 }

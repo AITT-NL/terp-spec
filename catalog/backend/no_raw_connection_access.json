@@ -9,9 +9,18 @@
       "kind": "build-time",
       "tool": "terp.arch",
       "ref": "check_no_raw_connection_access"
+    },
+    {
+      "kind": "runtime",
+      "tool": "terp.core",
+      "ref": "WriteGuardedSession"
     }
   ],
   "opt_out": "# arch-allow-no-raw-connection-access: <reason>",
+  "runtime": {
+    "applicability": "required",
+    "rationale": "The write-guarded request session gates session.connection() itself (WriteGuardedSession), closing the primary in-request escape to unaudited DML; the get_bind()/engine remainder has no construction hook, which is exactly the residual the build-time half covers."
+  },
   "guide_topic": "service",
   "corpus": true
 }

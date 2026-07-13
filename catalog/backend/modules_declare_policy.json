@@ -16,6 +16,9 @@
       "ref": "build_guard"
     }
   ],
+  "runtime": {
+    "applicability": "required"
+  },
   "opt_out": "# arch-allow-modules-declare-policy: <reason>",
   "guide_topic": "policy",
   "corpus": true

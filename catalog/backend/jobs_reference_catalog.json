@@ -9,9 +9,18 @@
       "kind": "build-time",
       "tool": "terp.arch",
       "ref": "check_jobs_reference_catalog"
+    },
+    {
+      "kind": "runtime",
+      "tool": "terp.core",
+      "ref": "enqueue"
     }
   ],
   "opt_out": "# arch-allow-jobs-reference-catalog: <reason>",
+  "runtime": {
+    "applicability": "required",
+    "rationale": "enqueue is the single producer chokepoint and fails closed on a job the active JobCatalog does not register (the job analogue of emit); execution re-checks (run_job raises JobError on a stale envelope), and boot refuses a ModuleSpec whose declared jobs miss the catalog (ControlPlane.validation_errors)."
+  },
   "guide_topic": "jobs",
   "corpus": true
 }

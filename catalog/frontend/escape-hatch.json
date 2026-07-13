@@ -13,5 +13,9 @@
     }
   ],
   "opt_out": "// terp-allow-escape-hatch: <reason>",
+  "runtime": {
+    "applicability": "not-applicable",
+    "rationale": "Markers and budgets are source/repository artifacts; the built bundle retains neither. The controls the markers opt out of keep their own runtime halves regardless."
+  },
   "corpus": true
 }

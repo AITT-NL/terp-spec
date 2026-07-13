@@ -9,9 +9,18 @@
       "kind": "build-time",
       "tool": "terp.arch",
       "ref": "check_no_raw_file_references"
+    },
+    {
+      "kind": "runtime",
+      "tool": "terp.capabilities.files",
+      "ref": "load_for"
     }
   ],
   "opt_out": "# arch-allow-no-raw-file-references: <reason>",
+  "runtime": {
+    "applicability": "required",
+    "rationale": "Delegated reads fail closed on an undeclared reference column: FileService.load_for serves a file only through a FileRef-declared column (UndeclaredFileReferenceError otherwise, ADR 0057), so a bare uuid column never acquires read-delegation semantics."
+  },
   "guide_topic": "files",
   "corpus": true
 }

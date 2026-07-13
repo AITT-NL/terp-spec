@@ -12,6 +12,10 @@
     }
   ],
   "opt_out": "# arch-allow-input-str-fields-have-max-length: <reason>",
+  "runtime": {
+    "applicability": "not-applicable",
+    "rationale": "The rule's job is to force the cap into the authored schema -- and a declared cap is then enforced at request time by validation itself, so compliance creates its own runtime control. No shipped seam can supply a missing per-field cap; the per-module request-size middleware bounds the payload wholesale as a distinct Tier-A control."
+  },
   "guide_topic": "module",
   "corpus": true
 }

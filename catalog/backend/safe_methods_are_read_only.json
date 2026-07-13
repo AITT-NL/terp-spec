@@ -22,6 +22,9 @@
     }
   ],
   "opt_out": "# arch-allow-safe-methods-are-read-only: <reason>",
+  "runtime": {
+    "applicability": "required"
+  },
   "guide_topic": "module",
   "corpus": true
 }

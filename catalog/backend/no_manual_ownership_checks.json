@@ -9,9 +9,18 @@
       "kind": "build-time",
       "tool": "terp.arch",
       "ref": "check_no_manual_ownership_checks"
+    },
+    {
+      "kind": "runtime",
+      "tool": "terp.core",
+      "ref": "apply_object_authz"
     }
   ],
   "opt_out": "# arch-allow-no-manual-ownership-checks: <reason>",
+  "runtime": {
+    "applicability": "required",
+    "rationale": "Every update/delete of an owned row is authorized per-row at the write chokepoint (apply_object_authz; a non-owner write fails closed with 403), and owner_id is stamped centrally on create -- the authorization a manual check would hand-roll is guaranteed by the framework."
+  },
   "guide_topic": "ownership",
   "corpus": true
 }

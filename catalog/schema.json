@@ -4,7 +4,7 @@
   "title": "Terp Standard catalog entry",
   "description": "One enforced Terp rule as data (ADR 0080). The file lives at catalog/<surface>/<rule>.json and its id must equal '<surface>/<rule>'. The spec version an entry belongs to is the checked-in spec/VERSION.",
   "type": "object",
-  "required": ["id", "surface", "title", "intent", "layer", "enforcement", "opt_out", "corpus"],
+  "required": ["id", "surface", "title", "intent", "layer", "enforcement", "runtime", "opt_out", "corpus"],
   "additionalProperties": false,
   "properties": {
     "id": {
@@ -35,6 +35,20 @@
             "type": "string",
             "description": "Frontend build-time only: the ESLint rule id violations surface as. Several catalog rules share a core rule id, so conformance findings are attributed via the adapter's catalogRuleId mapping, never this field."
           }
+        }
+      }
+    },
+    "runtime": {
+      "description": "The rule's runtime-applicability classification: whether the two-layer discipline pairs this build-time rule with a fail-closed runtime control. 'required' means the reference implementation owns such a control and the entry declares it (a kind 'runtime' enforcement entry whose ref must resolve — the parity test fails otherwise). 'not-applicable' means the invariant is a property of the authored artifact (source form, imports, markers, checked-in files) that is erased or already materialised by the time the app runs, so no runtime seam can enforce it — the rationale states why. 'deferred' means a runtime control would add independent fidelity on a seam the framework owns but has not shipped yet — an explicit, reviewed gap, never a silent one. Coherence is held by the spec suite: 'required' iff a kind 'runtime' enforcement entry exists; an exemption always carries a rationale.",
+      "type": "object",
+      "required": ["applicability"],
+      "additionalProperties": false,
+      "properties": {
+        "applicability": { "enum": ["required", "not-applicable", "deferred"] },
+        "rationale": {
+          "type": "string",
+          "description": "Why the rule is exempt from the runtime half (mandatory for 'not-applicable' and 'deferred'; optional for 'required', e.g. to record which vector the control covers).",
+          "minLength": 1
         }
       }
     },

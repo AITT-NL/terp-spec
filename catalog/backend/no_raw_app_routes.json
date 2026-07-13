@@ -17,6 +17,9 @@
     }
   ],
   "opt_out": "# arch-allow-no-raw-app-routes: <reason>",
+  "runtime": {
+    "applicability": "required"
+  },
   "guide_topic": "capability",
   "corpus": true
 }

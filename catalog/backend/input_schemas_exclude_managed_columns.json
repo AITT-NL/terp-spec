@@ -9,9 +9,18 @@
       "kind": "build-time",
       "tool": "terp.arch",
       "ref": "check_input_schemas_exclude_managed_columns"
+    },
+    {
+      "kind": "runtime",
+      "tool": "terp.core",
+      "ref": "_without_managed_columns"
     }
   ],
   "opt_out": "# arch-allow-input-schemas-exclude-managed-columns: <reason>",
+  "runtime": {
+    "applicability": "required",
+    "rationale": "BaseService.create/update strip every framework-managed column from the inbound payload at the write chokepoint (_without_managed_columns), so even an over-wide schema that ships cannot mass-assign id / version / scope / actor columns."
+  },
   "guide_topic": "module",
   "corpus": true
 }

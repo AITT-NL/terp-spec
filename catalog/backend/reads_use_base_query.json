@@ -9,9 +9,18 @@
       "kind": "build-time",
       "tool": "terp.arch",
       "ref": "check_reads_use_base_query"
+    },
+    {
+      "kind": "runtime",
+      "tool": "terp.core",
+      "ref": "apply_row_scope"
     }
   ],
   "opt_out": "# arch-allow-reads-use-base-query: <reason>",
+  "runtime": {
+    "applicability": "required",
+    "rationale": "The request session re-scopes user-facing ORM reads idempotently (apply_row_scope): a bespoke select(Model) that skipped base_query() is filtered for soft-delete / registered predicates again at execution, so the leak the rule warns about is closed even when the source pattern slips through."
+  },
   "guide_topic": "service",
   "corpus": true
 }

@@ -9,9 +9,18 @@
       "kind": "build-time",
       "tool": "terp.arch",
       "ref": "check_response_model_not_table_model"
+    },
+    {
+      "kind": "runtime",
+      "tool": "terp.core",
+      "ref": "_validate_router_response_models"
     }
   ],
   "opt_out": "# arch-allow-response-model-not-table-model: <reason>",
+  "runtime": {
+    "applicability": "required",
+    "rationale": "Boot refuses a route whose response_model is (or wraps) a table=True ORM model (_validate_router_response_models -> BootError), with cross-package and nested-router fidelity a source scan cannot have."
+  },
   "guide_topic": "module",
   "corpus": true
 }

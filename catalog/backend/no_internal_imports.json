@@ -12,6 +12,10 @@
     }
   ],
   "opt_out": "# arch-allow-no-internal-imports: <reason>",
+  "runtime": {
+    "applicability": "not-applicable",
+    "rationale": "Python has no enforced import visibility: at runtime _internal objects are ordinary attributes, reachable through the public modules that legitimately use them. The underscore contract is source-form; the runtime controls live in what _internal implements, not in refusing its import."
+  },
   "guide_topic": "module",
   "corpus": true
 }

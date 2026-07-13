@@ -12,6 +12,10 @@
     }
   ],
   "opt_out": "# arch-allow-no-unique-columns-on-soft-delete-models: <reason>",
+  "runtime": {
+    "applicability": "not-applicable",
+    "rationale": "The constraint is baked into migration-produced DDL; at runtime the schema already exists, and the failure mode (a dead row blocking reuse) surfaces as the database's own constraint error, mapped to the uniform 409 envelope -- handled, but only preventable when the model is authored."
+  },
   "guide_topic": "module",
   "corpus": true
 }

@@ -12,6 +12,10 @@
     }
   ],
   "opt_out": "# arch-allow-tables-have-migrations: <reason>",
+  "runtime": {
+    "applicability": "deferred",
+    "rationale": "The migration runtime owns the seam but does not yet refuse this rule's core violation: assert_no_homeless_tables fails closed only on an unowned table wired into an owned one by a foreign key (deliberately scoped against fixture false-positives), and the boot guard assert_migrations_current refuses only pending revisions of declared histories. A standalone missing history -- the case this rule exists for -- is visible in the same seam's live metadata but not yet refused, so it is held at build time only."
+  },
   "guide_topic": "migrations",
   "corpus": true
 }

@@ -28,7 +28,13 @@ The spec-only validations (versioning, schema validity, the refused surface's
 shape, the corpus ratchet and directory discipline) live in `spec/tests/` and
 run standalone (`python -m pytest` from `spec/`; CI: the path-filtered
 `spec.yml` workflow). The framework gate keeps the *parity* half — everything
-that needs the live implementations. Splitting the spec out is then purely a
+that needs the live implementations. Because the framework consumes a **pinned
+release**, this repository's CI additionally runs `certify-against-reference`:
+it checks out the reference framework, substitutes the candidate spec for the
+pinned `terp-spec` / `@terp/spec`, and runs the framework's parity + corpus
+certification — so a catalog or corpus change is proven against the live
+implementations *before* release, and the framework's later pin bump re-proves
+it in the framework's own gate. Splitting the spec out is then purely a
 manifest change: move `spec/` + `spec.yml`, repin `terp-spec` / `@terp/spec`
 from workspace sources to a git tag or registry release
 (`tests/architecture/test_repo_split_readiness.py` fails the build if code
@@ -62,6 +68,34 @@ same "docs can't lie" discipline as the rest of the gate: a rule cannot ship
 without a catalog entry, a catalog entry cannot outlive its rule, and every
 enforcement reference must resolve to real code.
 
+## Scope: what the standard claims — and delegates
+
+The catalog is **Terp-specific secure architecture, not complete application
+security**. A rule is admitted only when Terp provides a *privileged seam* or
+a *more precise invariant* than a generic analyzer can state — a framework
+chokepoint to pair with (`runtime.applicability: required`), a
+refused-surface entry, a trait/registry the rule holds code to. Generic
+vulnerability classes that stock security analyzers already detect well
+(command injection, unsafe deserialization, weak security randomness, …) are
+**delegated, never duplicated**: a conformant toolchain
+runs a generic security baseline for its language *next to* the Terp rules
+(the reference stack pins ruff's bandit-derived `S` rules, wired into the
+platform repo, the client template, and each generated project's own gate —
+platform ADR 0085). Classes no stock analyzer detects well — path traversal,
+secrets in logs, browser-storage auth material — are addressed
+**constructively** by the reference framework (streamed storage behind
+declared references, central log redaction, the session/refresh model) and
+earn a detective catalog rule only through the same admission bar, never as a
+checkbox. Baseline findings are **not** Terp findings: the finding
+format's `rule` pattern admits only catalog ids, so a generic finding can
+never masquerade as (or dilute) a Terp verdict — it travels as the baseline
+tool's own output (or the envelope's `unattributed` bucket, ADR 0083).
+
+Catalog entries deliberately carry **no CWE/OWASP mappings**: no governance
+consumer exists for them, and the delegated baseline's own documentation
+already maps the generic classes. Metadata joins the catalog when something
+machine-consumes it, not before.
+
 ## Catalog format
 
 `catalog/<surface>/<rule>.json`, validated against `catalog/schema.json` (the
@@ -74,7 +108,8 @@ schema is normative and travels with the spec):
 | `title` | One-line statement of the invariant. |
 | `intent` | Why the rule exists — the drift or threat it prevents. |
 | `layer` | Cheapest faithful verification for a *new* stack: see below. |
-| `enforcement` | How the reference implementation enforces it (first entry: the `build-time` check). A `runtime` entry names the fail-closed runtime control pairing with it (the two-layer discipline a Level 3 stack must reproduce); a `black-box` entry names the `@terp/conformance` probe title. For frontend rules, `reported_as` is the ESLint rule id violations surface as — several catalog rules share one core rule id, so the adapter publishes a `catalogRuleId()` mapping and findings are attributed through it. |
+| `enforcement` | How the reference implementation enforces it (first entry: the `build-time` check). A `runtime` entry names the fail-closed runtime control pairing with it (the two-layer discipline a Level 3 stack must reproduce for the rules that require it); a `black-box` entry names the `@terp/conformance` probe title. For frontend rules, `reported_as` is the ESLint rule id violations surface as — several catalog rules share one core rule id, so the adapter publishes a `catalogRuleId()` mapping and findings are attributed through it. |
+| `runtime` | **Mandatory.** The rule's runtime-applicability classification (`required` / `not-applicable` / `deferred`) plus a `rationale` (mandatory for exemptions) — see “Runtime applicability” below. |
 | `opt_out` | The *reference realisation* of the abstract escape-hatch contract (see below). |
 | `reference` | Optional reference-implementation metadata: the compliant realisation the reference stack offers (component / helper names). **Not normative** — the `title` and `intent` state the stack-neutral invariant; another stack ships its own realisation. |
 | `guide_topic` | Reference-implementation metadata (backend only): the `terp guide` topic teaching the compliant pattern. Not normative for other stacks. |
@@ -93,9 +128,29 @@ schema is normative and travels with the spec):
 
 The classification is a judgment about *porting cost*, not a limit on the
 reference implementation — today every rule is enforced by `terp.arch` or
-`@terp/eslint-boundaries` regardless of layer, and each pairs with a
-fail-closed runtime control per the two-layer discipline (recorded as a
-`runtime` enforcement entry where the control is a distinct named seam).
+`@terp/eslint-boundaries` regardless of layer.
+
+### Runtime applicability (the two-layer discipline, per rule)
+
+Whether a rule *additionally* pairs with a fail-closed runtime control is not a
+blanket claim — it is recorded per rule in the mandatory `runtime` block and
+held coherent by the spec suite:
+
+- **`required`** — the invariant is observable in the running system and the
+  reference implementation owns a fail-closed control for it; the entry **must**
+  declare that control as a `kind: "runtime"` enforcement entry (whose `ref`
+  must resolve to a real symbol — the framework's parity test fails otherwise).
+- **`not-applicable`** — the invariant is a property of the authored artifact
+  (source form, imports, justification markers, checked-in files) that is
+  erased or already materialised by the time the app runs, so no runtime seam
+  can enforce it. The mandatory `rationale` states why; the build-time check is
+  the control, by recorded decision.
+- **`deferred`** — a runtime control would add independent fidelity on a seam
+  the reference framework owns, but has not shipped yet: an explicit, reviewed
+  gap, never a silent one. The mandatory `rationale` names the seam.
+
+Fail-closed consistency (spec suite): `required` iff a `runtime` enforcement
+entry exists; an exemption always carries a non-empty rationale.
 
 ### The escape-hatch contract
 
@@ -145,6 +200,41 @@ corpus run to the rule under test. (The reference frontend harness happens to
 hold its compliant cases fully clean across all boundary rules — a stricter
 bar than the contract requires.)
 
+### Detector boundaries (what the corpus deliberately does not require)
+
+The executable corpus **is** the interoperability contract: a checker is
+conformant for a rule when it flags every `violation-*` case and stays silent
+on every `compliant-*` case — nothing more. The violation cases include the
+evasion shapes the rules are expected to see through (qualified/attribute
+calls, multiline constructs, values routed through a local variable or
+`.format()`/`%` building, aliased and parenthesized imports, computed
+`window["fetch"]`-style member access for the egress family), and the
+compliant cases pin the near-misses that must **not** fire (adjacent-literal
+SQL that merely looks concatenated, credential-shaped names with dynamic
+values, `*_mock`/`socketserver`-style name cousins, member calls like
+`repo.fetch(...)` / `interpreter.eval(...)` on local objects, forbidden syntax
+quoted inside comments and strings).
+
+Some statically-erased or renamed forms are **deliberately outside** the
+contract — known limits of precise, low-false-positive detection, kept out of
+the corpus so a second implementation neither over-fits nor under-claims:
+
+- an alias-renamed symbol import (`from sqlalchemy import text as sql_text`)
+  is not required to be resolved to `text`;
+- dynamic import (`importlib.import_module("httpx")`) is not required to be
+  seen as an import;
+- a computed sink or global (`el["innerHTML"] = …`, `window["eval"]`) is not
+  required to be recognised for the *eval/DOM-sink* rules (the egress family
+  **does** contract the computed forms — its cases include them);
+- `Function("…")` called without `new`, and egress through receivers other
+  than `window`/`globalThis` (`self.fetch`), are not required.
+
+These residuals are governed the usual way: the escape-hatch contract makes
+sanctioned exceptions visible, and the paired runtime controls (where
+`runtime.applicability` is `required`) hold the invariant regardless of
+spelling. Widening a detector past the contract is always allowed — the
+corpus states the floor, not the ceiling.
+
 The reference implementations are themselves held to this contract in CI:
 `test_spec_corpus.py` runs each catalogued `terp.arch` rule over the backend
 corpus, and `corpus.test.js` runs the ESLint adapter over the frontend corpus,
@@ -169,19 +259,26 @@ rule can ship with its gap explicit and reviewed.
   this corpus enforces the `static-portable` rules for the app's language(s),
   emitting findings per `findings.schema.json`.
 - **Level 3 — full harness:** additionally, the `static-bespoke` rules, the
-  paired `runtime` controls, and the governed escape-hatch budget ratchet are
-  enforced (today: the `terp.arch` + `@terp/eslint-boundaries` reference
-  harness on top of `terp.core` / `@terp/react-core`).
+  paired `runtime` controls of every rule whose `runtime.applicability` is
+  `required`, and the governed escape-hatch budget ratchet are enforced (today:
+  the `terp.arch` + `@terp/eslint-boundaries` reference harness on top of
+  `terp.core` / `@terp/react-core`).
 
 ## Growing the spec
 
 - **New rule** → ship the rule and its catalog entry together (the parity test
-  fails otherwise); seed corpus cases when the rule is portable, or list it in
-  `corpus/PENDING.json` explicitly.
+  fails otherwise); classify its runtime applicability deliberately (`required`
+  with the declared control, or an exemption with its rationale); seed corpus
+  cases when the rule is portable, or list it in `corpus/PENDING.json`
+  explicitly.
 - **New corpus cases** → add `violation-*`/`compliant-*` directories, flip the
   entry's `corpus` flag to `true`, and drop the rule from `corpus/PENDING.json`;
   the harness picks the cases up by convention.
 - **New stack** → implement the `static-portable` rules however you like; the
   corpus is the acceptance test, and findings must attribute to catalog ids.
-- **Breaking format change** → bump `VERSION` (major for a changed contract,
-  minor for new fields/rules, patch for prose).
+- **Format change** → bump `VERSION`. Pre-1.0, a **changed contract** — a new
+  mandatory catalog field (0.5.0's `runtime` block), a changed finding shape —
+  bumps the **minor** (the strongest signal 0.x semver carries; a 0.x major
+  would claim a stability this spec does not yet promise); purely additive
+  fields and new rules also bump the minor; prose bumps the patch. From 1.0.0
+  a changed contract bumps the **major**.

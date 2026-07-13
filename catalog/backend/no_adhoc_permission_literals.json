@@ -9,9 +9,18 @@
       "kind": "build-time",
       "tool": "terp.arch",
       "ref": "check_no_adhoc_permission_literals"
+    },
+    {
+      "kind": "runtime",
+      "tool": "terp.core",
+      "ref": "requirement_from"
     }
   ],
   "opt_out": "# arch-allow-no-adhoc-permission-literals: <reason>",
+  "runtime": {
+    "applicability": "required",
+    "rationale": "The typed normalization chokepoint refuses a bare string outright (requirement_from raises TypeError for anything but Role / Permission / the legacy enum), and boot refuses a Policy citing an authority the control plane does not declare."
+  },
   "guide_topic": "policy",
   "corpus": true
 }

@@ -12,6 +12,10 @@
     }
   ],
   "opt_out": "# arch-allow-no-cross-module-imports: <reason>",
+  "runtime": {
+    "applicability": "not-applicable",
+    "rationale": "Module independence is an import-graph property of the source tree. At runtime the composed app legitimately holds every module in one process, so a cross-module reference is indistinguishable from composition itself."
+  },
   "guide_topic": "module",
   "corpus": true
 }

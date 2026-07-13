@@ -12,6 +12,10 @@
     }
   ],
   "opt_out": "# arch-allow-table-models-use-base-table: <reason>",
+  "runtime": {
+    "applicability": "not-applicable",
+    "rationale": "Inheritance is an authoring-shape fact, and Python generics are not runtime-enforced. The chokepoint contracts that matter at runtime (OCC version, managed columns, audit identity) presuppose BaseTable rather than police it -- a bare SQLModel table simply never fits the service seam."
+  },
   "guide_topic": "module",
   "corpus": true
 }

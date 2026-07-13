@@ -18,5 +18,8 @@
     }
   ],
   "opt_out": "// terp-allow-layout-contract: <reason>",
+  "runtime": {
+    "applicability": "required"
+  },
   "corpus": true
 }

@@ -12,6 +12,10 @@
     }
   ],
   "opt_out": "# arch-allow-no-adhoc-middleware: <reason>",
+  "runtime": {
+    "applicability": "deferred",
+    "rationale": "The composition freeze (_freeze_app_route_registration) refuses post-composition routes and lifecycle hooks but does not yet cover add_middleware / the middleware decorator on the composed app -- extending that same owned seam would close the gap fail-closed. Until then, ad hoc middleware registered between composition and serving is caught at build time only."
+  },
   "guide_topic": "capability",
   "corpus": true
 }

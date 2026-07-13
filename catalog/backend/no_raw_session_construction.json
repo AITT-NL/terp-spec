@@ -12,6 +12,10 @@
     }
   ],
   "opt_out": "# arch-allow-no-raw-session-construction: <reason>",
+  "runtime": {
+    "applicability": "not-applicable",
+    "rationale": "Nothing in Python lets the framework refuse construction of a third-party class: a hand-built Session or engine never passes through any framework seam -- which is exactly why it must be caught in source. The guarded request session (SessionDep) is the surface the framework does control; an app-constructed one sits outside every chokepoint by definition."
+  },
   "guide_topic": "service",
   "corpus": true
 }
