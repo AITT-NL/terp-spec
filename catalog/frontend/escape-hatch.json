@@ -12,8 +12,7 @@
       "reported_as": "terp/escape-hatch"
     }
   ],
-  "opt_out": "// terp-allow-escape-hatch: <reason>",
-  "reference": "// terp-allow-<rule>: <reason> markers reconciled against the app's checked-in escape-hatch-budget.json (ADR 0059).",
+  "reference": "// terp-allow-<rule>: <reason> markers reconciled against the app's checked-in escape-hatch-budget.json (ADR 0059). The rule carries no opt_out: governance cannot be waived by the mechanism it governs.",
   "runtime": {
     "applicability": "not-applicable",
     "rationale": "Markers and budgets are source/repository artifacts; the built bundle retains neither. The controls the markers opt out of keep their own runtime halves regardless."

@@ -12,7 +12,7 @@
       "reported_as": "no-restricted-imports"
     }
   ],
-  "opt_out": "// terp-allow-no-restricted-imports: <reason>",
+  "opt_out": "// terp-allow-no-style-imports: <reason>",
   "runtime": {
     "applicability": "not-applicable",
     "rationale": "A stylesheet import is a build-graph edge; the bundler compiles it into the emitted CSS, after which module authorship does not exist."

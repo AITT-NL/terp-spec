@@ -122,6 +122,46 @@ def test_the_packaging_manifests_carry_the_spec_version() -> None:
     )
 
 
+# --------------------------------------------------------------------------- #
+# the escape-hatch contract is uniform: a marker names the CATALOG RULE NAME
+# (never a tool-internal rule id — the suppression analogue of findings
+# attribution), and the governance rules themselves carry no opt-out
+# --------------------------------------------------------------------------- #
+_GOVERNANCE_RULES_WITHOUT_OPT_OUT = {
+    "backend/escape_hatch_budget",
+    "backend/ungoverned_escape_hatch",
+    "frontend/escape-hatch",
+}
+
+_OPT_OUT_TEMPLATES = {
+    "backend": "# arch-allow-{name}: <reason>",
+    "frontend": "// terp-allow-{name}: <reason>",
+}
+
+
+def test_opt_outs_derive_from_the_catalog_rule_name() -> None:
+    """Every opt-out marker spelling is the rule's own catalog name (backend
+    snake_case rendered with dashes), so a marker can never waive a sibling
+    rule that happens to share a tool-internal rule id — and the escape-hatch
+    governance rules declare no opt-out at all: governance cannot be waived by
+    the mechanism it governs."""
+    for surface in ("backend", "frontend"):
+        for name, entry in _entries(surface).items():
+            rule_id = f"{surface}/{name}"
+            opt_out = entry.get("opt_out")
+            if rule_id in _GOVERNANCE_RULES_WITHOUT_OPT_OUT:
+                assert opt_out is None, (
+                    f"{rule_id}: an escape-hatch governance rule must not declare an "
+                    "opt_out — waiving governance with governance is refused"
+                )
+                continue
+            expected = _OPT_OUT_TEMPLATES[surface].format(name=name.replace("_", "-"))
+            assert opt_out == expected, (
+                f"{rule_id}: opt_out must name the catalog rule "
+                f"({expected!r}), got {opt_out!r}"
+            )
+
+
 def test_every_catalog_entry_validates_against_the_checked_in_schema() -> None:
     schema = json.loads((_CATALOG / "schema.json").read_text(encoding="utf-8"))
     for surface in ("backend", "frontend"):

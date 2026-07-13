@@ -13,7 +13,7 @@
     }
   ],
   "reference": "Link from @terp/react-core (router-integrated, role-aware).",
-  "opt_out": "// terp-allow-no-restricted-syntax: <reason>",
+  "opt_out": "// terp-allow-router-links: <reason>",
   "runtime": {
     "applicability": "not-applicable",
     "rationale": "In the rendered DOM the router's own Link IS an anchor -- raw-anchor authorship is only visible in source, so no DOM check can distinguish a sanctioned link from a hand-written one."

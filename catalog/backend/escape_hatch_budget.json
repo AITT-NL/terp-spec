@@ -11,8 +11,7 @@
       "ref": "check_escape_hatch_budget"
     }
   ],
-  "reference": "# arch-allow-<rule>: <reason> markers reconciled against the app's checked-in escape-hatch budget JSON (design §8).",
-  "opt_out": "# arch-allow-escape-hatch-budget: <reason>",
+  "reference": "# arch-allow-<rule>: <reason> markers reconciled against the app's checked-in escape-hatch budget JSON (design §8). The rule carries no opt_out: governance cannot be waived by the mechanism it governs.",
   "runtime": {
     "applicability": "not-applicable",
     "rationale": "The budget ratchet reconciles a checked-in governance file against source markers -- both sides are repository artifacts with no runtime counterpart. The controls the markers opt out of keep their own runtime halves regardless."

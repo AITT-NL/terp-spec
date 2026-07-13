@@ -161,13 +161,18 @@ entry exists; an exemption always carries a non-empty rationale.
 
 ### The escape-hatch contract
 
-Every rule has exactly one governed opt-out, and its *semantics* are the
+Every rule has **at most one** governed opt-out, and its *semantics* are the
 normative part: a **justified inline marker** on (or immediately above) the
-violating line that names the rule and states a reason; an unjustified marker
-is itself a violation; marker counts must exactly match a checked-in
-per-app budget that can only shrink (the ratchet). The `opt_out` field records
-the reference realisation's concrete spelling (`# arch-allow-<rule>: <reason>`
-in Python, `// terp-allow-<rule>: <reason>` in TypeScript); another stack
+violating line that names the **catalog rule name** (the `<rule>` half of the
+id — never a tool-internal rule id, mirroring findings attribution) and states
+a reason; an unjustified marker is itself a violation; marker counts must
+exactly match a checked-in per-app budget that can only shrink (the ratchet).
+The `opt_out` field records the reference realisation's concrete spelling
+(`# arch-allow-<rule>: <reason>` in Python, `// terp-allow-<rule>: <reason>`
+in TypeScript) — the spelling is derived from the rule id, and the spec suite
+holds the derivation. The escape-hatch **governance rules themselves** (the
+budget ratchet, the ungoverned-marker condition) carry no `opt_out`:
+governance cannot be waived by the mechanism it governs. Another stack
 implements the same contract with its own comment syntax.
 
 ## Finding format

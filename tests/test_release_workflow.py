@@ -87,6 +87,29 @@ def test_release_is_bound_to_the_verified_commit() -> None:
     )
 
 
+def test_release_requires_certification_against_the_reference() -> None:
+    """A tag can never publish a spec no conformant checker exists for: the
+    release runs the same reference-substitution certification as ci.yml and
+    the GitHub Release requires it (fail closed)."""
+    text = _workflow_text()
+    assert "certify-against-reference:" in text, (
+        "the release workflow must certify the tagged spec against the "
+        "reference implementation (the ci.yml substitution), not only "
+        "self-consistency"
+    )
+    assert "repository: AITT-NL/terp-framework" in text, (
+        "certification checks out the reference framework"
+    )
+    assert "uv pip install -e ../spec" in text and "node_modules/@terp/spec" in text, (
+        "certification must substitute the tagged checkout for BOTH pinned "
+        "spec packages (terp-spec and @terp/spec)"
+    )
+    assert re.search(r"needs:\s*\[verify,\s*certify-against-reference\]", text), (
+        "the GitHub Release must require the certification job — a failed "
+        "certification refuses the release"
+    )
+
+
 def test_release_workflow_keeps_permissions_minimal() -> None:
     text = _workflow_text()
     assert re.search(r"^permissions:\s*\n\s+contents: read", text, re.M), (

@@ -13,7 +13,7 @@
     }
   ],
   "reference": "Layout via Stack, DetailList and the page archetypes from @terp/react-core; theming via the app's token source.",
-  "opt_out": "// terp-allow-no-restricted-syntax: <reason>",
+  "opt_out": "// terp-allow-no-inline-styling: <reason>",
   "runtime": {
     "applicability": "not-applicable",
     "rationale": "style/className are authoring-surface attributes: the token pipeline itself emits inline styles and class names into the built DOM, so their presence at runtime is legitimate and unattributable to app authorship."

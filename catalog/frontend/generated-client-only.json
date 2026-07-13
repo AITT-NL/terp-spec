@@ -13,7 +13,7 @@
     }
   ],
   "reference": "useTerpClient() + unwrap from @terp/react-core — the generated, typed client.",
-  "opt_out": "// terp-allow-no-restricted-globals: <reason>",
+  "opt_out": "// terp-allow-generated-client-only: <reason>",
   "runtime": {
     "applicability": "not-applicable",
     "rationale": "In the running bundle the sanctioned generated client is itself built on fetch, so egress-primitive use cannot be attributed to an app module from inside the app. One typed egress path is an authoring contract; network policy beyond it (CSP connect-src) is deployment configuration the framework does not own per module."
