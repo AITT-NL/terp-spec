@@ -9,9 +9,18 @@
       "kind": "build-time",
       "tool": "terp.arch",
       "ref": "check_policy_refs_resolve"
+    },
+    {
+      "kind": "runtime",
+      "tool": "terp.core",
+      "ref": "validation_errors"
     }
   ],
   "opt_out": "# arch-allow-policy-refs-resolve: <reason>",
+  "runtime": {
+    "applicability": "required",
+    "rationale": "Boot validation refuses an undeclared authority before the app serves (ControlPlane.validation_errors -> BootError); the build-time rule catches the same drift earlier, at the gate."
+  },
   "guide_topic": "policy",
   "corpus": true
 }

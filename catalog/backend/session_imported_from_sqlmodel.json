@@ -12,6 +12,10 @@
     }
   ],
   "opt_out": "# arch-allow-session-imported-from-sqlmodel: <reason>",
+  "runtime": {
+    "applicability": "not-applicable",
+    "rationale": "Which module a symbol was imported from is erased at runtime: sqlmodel's Session subclasses SQLAlchemy's, and the object in play is the framework-provided session either way. The typed exec/scoping benefits are carried by the session the framework hands out."
+  },
   "guide_topic": "service",
   "corpus": true
 }

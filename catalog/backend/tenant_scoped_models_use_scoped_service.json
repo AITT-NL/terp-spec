@@ -12,6 +12,10 @@
     }
   ],
   "opt_out": "# arch-allow-tenant-scoped-models-use-scoped-service: <reason>",
+  "runtime": {
+    "applicability": "not-applicable",
+    "rationale": "Service lineage is an authoring-shape fact. The leak-relevant runtime control is the registered row-scope predicate (apply_row_scope, declared under the scoping rules), which filters reads for the mixin regardless of which service touched the row; extending TenantScopedService is what makes writes stamp tenant_id so rows stay reachable in their tenant."
+  },
   "guide_topic": "tenancy",
   "corpus": true
 }

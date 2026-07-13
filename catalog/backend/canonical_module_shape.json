@@ -12,6 +12,10 @@
     }
   ],
   "opt_out": "# arch-allow-canonical-module-shape: <reason>",
+  "runtime": {
+    "applicability": "not-applicable",
+    "rationale": "Repository-layout governance: the module directory's file shape exists only in the source tree. Composition consumes the ModuleSpec object, which carries no memory of which files declared it, so no runtime seam can observe the layout."
+  },
   "guide_topic": "module",
   "corpus": true
 }

@@ -12,6 +12,10 @@
     }
   ],
   "opt_out": "# arch-allow-no-app-instantiation: <reason>",
+  "runtime": {
+    "applicability": "not-applicable",
+    "rationale": "A raw FastAPI() is an ordinary object the framework never sees: it acquires no guard, middleware, or error envelope -- and offers no seam through which terp.core could refuse its construction. Only composition through create_app passes framework-owned surface; the rule keeps authorship inside it."
+  },
   "guide_topic": "capability",
   "corpus": true
 }

@@ -12,6 +12,10 @@
     }
   ],
   "opt_out": "# arch-allow-no-raw-outbound-http: <reason>",
+  "runtime": {
+    "applicability": "not-applicable",
+    "rationale": "Import-form rule: the sanctioned egress capability itself drives an HTTP client at runtime, so client presence and traffic cannot be attributed to an app module from inside the process. Network-level egress policy is deployment configuration, not a per-module framework seam."
+  },
   "guide_topic": "capability",
   "corpus": true
 }

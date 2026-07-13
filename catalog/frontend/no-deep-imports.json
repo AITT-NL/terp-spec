@@ -13,5 +13,9 @@
     }
   ],
   "opt_out": "// terp-allow-no-restricted-imports: <reason>",
+  "runtime": {
+    "applicability": "not-applicable",
+    "rationale": "Package-boundary form: the bundler resolves and inlines whatever was imported, and the built artifact retains no distinction between a root import and a deep one."
+  },
   "corpus": true
 }

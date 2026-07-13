@@ -17,6 +17,9 @@
     }
   ],
   "opt_out": "# arch-allow-mutations-emit-audit: <reason>",
+  "runtime": {
+    "applicability": "required"
+  },
   "guide_topic": "service",
   "corpus": true
 }

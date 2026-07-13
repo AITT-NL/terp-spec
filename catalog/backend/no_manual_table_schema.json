@@ -12,6 +12,10 @@
     }
   ],
   "opt_out": "# arch-allow-no-manual-table-schema: <reason>",
+  "runtime": {
+    "applicability": "not-applicable",
+    "rationale": "schema= placement is materialised into DDL by the packaged migrations; by the time the app serves, tables live where the migrations put them. The managed-layout guarantee is enforced where the DDL is authored, not against an already-created schema."
+  },
   "guide_topic": "migrations",
   "corpus": true
 }

@@ -9,9 +9,18 @@
       "kind": "build-time",
       "tool": "terp.arch",
       "ref": "check_base_query_not_overridden"
+    },
+    {
+      "kind": "runtime",
+      "tool": "terp.core",
+      "ref": "apply_row_scope"
     }
   ],
   "opt_out": "# arch-allow-base-query-not-overridden: <reason>",
+  "runtime": {
+    "applicability": "required",
+    "rationale": "The request session re-scopes every user-facing ORM read idempotently (apply_row_scope in the write-guarded session), so even a query built by an override that dropped super().base_query() is filtered again before execution."
+  },
   "guide_topic": "service",
   "corpus": true
 }

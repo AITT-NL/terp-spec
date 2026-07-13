@@ -14,5 +14,9 @@
   ],
   "reference": "The Markdown component from @terp/react-core for rich text.",
   "opt_out": "// terp-allow-no-dom-html-injection: <reason>",
+  "runtime": {
+    "applicability": "not-applicable",
+    "rationale": "The sinks are platform primitives on every element; React's default output escaping is the ambient constructive protection and the sanctioned Markdown component sanitises rich text. A runtime hook over every element's HTML mutation is not a seam react-core owns or could make sound -- vendored code legitimately uses the same primitives."
+  },
   "corpus": true
 }

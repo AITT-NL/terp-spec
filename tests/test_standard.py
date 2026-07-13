@@ -144,6 +144,39 @@ def test_the_findings_schema_is_checked_in() -> None:
 
 
 # --------------------------------------------------------------------------- #
+# runtime applicability: every rule states whether the two-layer discipline
+# pairs it with a fail-closed runtime control, and the statement is coherent —
+# 'required' iff a kind 'runtime' enforcement entry exists; an exemption
+# ('not-applicable' / 'deferred') always carries a rationale and never a
+# runtime entry. The schema makes the field mandatory; these assertions hold
+# the cross-field consistency the minimal schema subset cannot express.
+# --------------------------------------------------------------------------- #
+def test_runtime_applicability_is_coherent() -> None:
+    for surface in ("backend", "frontend"):
+        for name, entry in _entries(surface).items():
+            runtime = entry["runtime"]
+            applicability = runtime["applicability"]
+            kinds = {enforcement["kind"] for enforcement in entry["enforcement"]}
+            if applicability == "required":
+                assert "runtime" in kinds, (
+                    f"{surface}/{name}: runtime.applicability is 'required' but no "
+                    "enforcement entry has kind 'runtime' — declare the fail-closed "
+                    "runtime control (tool + ref), or reclassify with a rationale"
+                )
+            else:
+                assert "runtime" not in kinds, (
+                    f"{surface}/{name}: a kind 'runtime' enforcement entry exists but "
+                    f"runtime.applicability is {applicability!r} — a declared runtime "
+                    "control means the rule is 'required'"
+                )
+                assert runtime.get("rationale", "").strip(), (
+                    f"{surface}/{name}: runtime.applicability {applicability!r} is an "
+                    "exemption from the two-layer discipline and must carry a non-empty "
+                    "rationale"
+                )
+
+
+# --------------------------------------------------------------------------- #
 # the declared refused surface (restricted-surface.json) is well-formed and
 # every catalog citation of it resolves to a real key — the stack-neutral,
 # normative half of the portable prohibition rules travels with the spec, not the

@@ -12,6 +12,10 @@
     }
   ],
   "opt_out": "# arch-allow-no-adhoc-logging-config: <reason>",
+  "runtime": {
+    "applicability": "not-applicable",
+    "rationale": "Global logging mutation is ambient interpreter state with no framework chokepoint to refuse it. The paired protection is constructive rather than preventive: the framework installs redaction on every handler it configures, but cannot intercept a module calling logging.basicConfig at import time."
+  },
   "guide_topic": "capability",
   "corpus": true
 }

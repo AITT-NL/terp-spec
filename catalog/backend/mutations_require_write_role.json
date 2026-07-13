@@ -14,8 +14,17 @@
       "kind": "runtime",
       "tool": "terp.core",
       "ref": "build_guard"
+    },
+    {
+      "kind": "runtime",
+      "tool": "terp.core",
+      "ref": "_validate_policy_write_tiers"
     }
   ],
+  "runtime": {
+    "applicability": "required",
+    "rationale": "Two runtime halves: the request guard authorizes every mutating method at the policy's write tier (build_guard), and boot refuses a Policy whose write rank sits below its read rank for any role ladder, including custom ranks a source scan cannot know (_validate_policy_write_tiers)."
+  },
   "opt_out": "# arch-allow-mutations-require-write-role: <reason>",
   "guide_topic": "policy",
   "corpus": true

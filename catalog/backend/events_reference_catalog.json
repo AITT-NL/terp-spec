@@ -9,9 +9,18 @@
       "kind": "build-time",
       "tool": "terp.arch",
       "ref": "check_events_reference_catalog"
+    },
+    {
+      "kind": "runtime",
+      "tool": "terp.core",
+      "ref": "emit"
     }
   ],
   "opt_out": "# arch-allow-events-reference-catalog: <reason>",
+  "runtime": {
+    "applicability": "required",
+    "rationale": "emit() is the single producer chokepoint and fails closed on an event that is unknown to -- or shadows -- the registered EventCatalog entry; boot additionally refuses a ModuleSpec whose declared emits/subscribes miss the catalog (ControlPlane.validation_errors)."
+  },
   "guide_topic": "events",
   "corpus": true
 }

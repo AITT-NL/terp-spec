@@ -13,5 +13,9 @@
     }
   ],
   "opt_out": "// terp-allow-no-unsafe-href: <reason>",
+  "runtime": {
+    "applicability": "not-applicable",
+    "rationale": "The refusal is of authoring javascript: URLs in source. Data-driven links are the sanctioned components' own concern (the Markdown component strips unsafe protocols at render -- its control, not this rule's), and raw anchors are refused wholesale in app modules anyway."
+  },
   "corpus": true
 }

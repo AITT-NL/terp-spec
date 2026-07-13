@@ -12,6 +12,10 @@
     }
   ],
   "opt_out": "# arch-allow-escape-hatch-budget: <reason>",
+  "runtime": {
+    "applicability": "not-applicable",
+    "rationale": "The budget ratchet reconciles a checked-in governance file against source markers -- both sides are repository artifacts with no runtime counterpart. The controls the markers opt out of keep their own runtime halves regardless."
+  },
   "guide_topic": "rules",
   "corpus": true
 }

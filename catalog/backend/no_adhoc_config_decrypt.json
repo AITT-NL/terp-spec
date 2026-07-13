@@ -9,9 +9,18 @@
       "kind": "build-time",
       "tool": "terp.arch",
       "ref": "check_no_adhoc_config_decrypt"
+    },
+    {
+      "kind": "runtime",
+      "tool": "terp.core",
+      "ref": "decrypt_config"
     }
   ],
   "opt_out": "# arch-allow-no-adhoc-config-decrypt: <reason>",
+  "runtime": {
+    "applicability": "required",
+    "rationale": "decrypt_config itself fails closed on every path unless invoked from the single call site registered via register_decrypt_call_site -- an ad hoc decrypt raises SecretsError at runtime; the budgeted marker governs which site that is."
+  },
   "guide_topic": "capability",
   "corpus": true
 }

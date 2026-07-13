@@ -12,6 +12,10 @@
     }
   ],
   "opt_out": "# arch-allow-no-adhoc-background-runtime: <reason>",
+  "runtime": {
+    "applicability": "not-applicable",
+    "rationale": "Import-form rule: which package imported an engine is a source fact, and at runtime the sanctioned adapter capability legitimately holds the same engine in the same process, so engine presence cannot be attributed to an app module. The constructive counterpart is the jobs seam itself (enqueue + the active JobQueue) -- it makes ad hoc runtimes unnecessary, but nothing can refuse a hand-spawned thread fail-closed."
+  },
   "guide_topic": "jobs",
   "corpus": true
 }

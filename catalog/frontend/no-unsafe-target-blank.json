@@ -13,5 +13,9 @@
     }
   ],
   "opt_out": "// terp-allow-no-unsafe-target-blank: <reason>",
+  "runtime": {
+    "applicability": "not-applicable",
+    "rationale": "An authored static target=_blank without rel is a source form; the residual risk it addresses is legacy-engine reverse-tabnabbing, fixable only where the anchor is written. Modern engines default to noopener behaviour, and raw anchors are refused wholesale in app modules regardless."
+  },
   "corpus": true
 }

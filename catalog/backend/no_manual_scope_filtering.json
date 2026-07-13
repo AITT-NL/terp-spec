@@ -9,9 +9,18 @@
       "kind": "build-time",
       "tool": "terp.arch",
       "ref": "check_no_manual_scope_filtering"
+    },
+    {
+      "kind": "runtime",
+      "tool": "terp.core",
+      "ref": "apply_row_scope"
     }
   ],
   "opt_out": "# arch-allow-no-manual-scope-filtering: <reason>",
+  "runtime": {
+    "applicability": "required",
+    "rationale": "Row scope is applied centrally and non-droppably: apply_row_scope composes the soft-delete filter and every registered predicate into each read (including raw selects, re-scoped by the request session), the delete chokepoint stamps deleted_at, and the managed scope columns are stripped from inbound payloads."
+  },
   "guide_topic": "tenancy",
   "corpus": true
 }

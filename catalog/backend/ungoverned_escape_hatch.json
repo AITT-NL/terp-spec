@@ -12,6 +12,10 @@
     }
   ],
   "opt_out": "# arch-allow-ungoverned-escape-hatch: <reason>",
+  "runtime": {
+    "applicability": "not-applicable",
+    "rationale": "A justification marker is a source comment; compiled bytecode retains neither the marker nor its reason. The escape-hatch contract governs authored source at the gate."
+  },
   "guide_topic": "rules",
   "corpus": true
 }

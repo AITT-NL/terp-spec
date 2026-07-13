@@ -12,6 +12,10 @@
     }
   ],
   "opt_out": "# arch-allow-no-dynamic-sql: <reason>",
+  "runtime": {
+    "applicability": "not-applicable",
+    "rationale": "The invariant is a property of the authored source: whether SQL text was written as a static, reviewable literal. At execution time every statement is just a string \u2014 how it was built is erased, so no runtime seam can distinguish a vetted literal from concatenated input. The adjacent runtime protections are different controls: the write guard refuses smuggled DML (mutations_emit_audit) and parameter binding is the compliant data path."
+  },
   "guide_topic": "service",
   "corpus": true
 }

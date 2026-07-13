@@ -9,9 +9,18 @@
       "kind": "build-time",
       "tool": "terp.arch",
       "ref": "check_no_manual_actor_stamping"
+    },
+    {
+      "kind": "runtime",
+      "tool": "terp.core",
+      "ref": "_save"
     }
   ],
   "opt_out": "# arch-allow-no-manual-actor-stamping: <reason>",
+  "runtime": {
+    "applicability": "required",
+    "rationale": "The audited write chokepoint (_save) stamps created_by_id on insert and modified_by_id on every save from the request actor, unconditionally for a stamped model -- a hand-written stamp never survives the write, and inbound payloads have the stamp columns stripped (_without_managed_columns)."
+  },
   "guide_topic": "service",
   "corpus": true
 }

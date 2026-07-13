@@ -13,5 +13,9 @@
     }
   ],
   "opt_out": "// terp-allow-no-cross-module-imports: <reason>",
+  "runtime": {
+    "applicability": "not-applicable",
+    "rationale": "Module independence is an import-graph property of the source tree; the bundler merges every module into one dependency graph, after which a cross-module edge is indistinguishable from composition."
+  },
   "corpus": true
 }
