@@ -4,8 +4,14 @@ name: release
 # (uv git tag pin / npm github:#tag), so a tag IS the release artifact. This
 # workflow makes tagging fail-closed instead of a raw `git push origin v*`:
 # the tag must match the checked-in VERSION (and the package manifests, which
-# the test suite holds to VERSION), the self-consistency suite must pass at
-# the tagged commit, and a GitHub Release documents it with generated notes.
+# the test suite holds to VERSION), the tagged commit must be REACHABLE FROM
+# THE DEFAULT BRANCH (provenance: no releasing an unreviewed side branch or a
+# rewritten commit), the self-consistency suite must pass at the tagged
+# commit, and the release job is BOUND to the verified commit (a tag moved or
+# deleted mid-workflow is refused, never released). A GitHub Release then
+# documents it with generated notes.
+#
+# tests/test_release_workflow.py holds this file to that contract.
 
 on:
   push:
@@ -14,17 +20,50 @@ on:
 permissions:
   contents: read
 
+# One run per tag ref: a retrigger or a racing duplicate never interleaves
+# with an in-flight verification/release of the same tag.
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   verify:
     runs-on: ubuntu-latest
+    outputs:
+      # The commit the checks below actually verified — the release job binds
+      # to THIS sha, so a tag force-moved mid-workflow cannot smuggle an
+      # unverified commit into the release.
+      verified_sha: ${{ steps.provenance.outputs.sha }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Full history: the ancestry check below proves the tagged commit
+          # is reachable from the default branch — a shallow clone cannot.
+          fetch-depth: 0
       - name: Tag matches the checked-in VERSION
         run: |
           version="${GITHUB_REF_NAME#v}"
           checked_in="$(tr -d '[:space:]' < VERSION)"
           [ "$version" = "$checked_in" ] \
             || { echo "tag $GITHUB_REF_NAME != VERSION ($checked_in)"; exit 1; }
+      - name: Tagged commit is reachable from the default branch
+        id: provenance
+        env:
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          # Fail closed at every step: no resolvable default branch, no
+          # dereferenceable tag, or no ancestry = no release.
+          [ -n "$DEFAULT_BRANCH" ] \
+            || { echo "could not resolve the repository default branch"; exit 1; }
+          git fetch --no-tags origin \
+            "refs/heads/${DEFAULT_BRANCH}:refs/remotes/origin/${DEFAULT_BRANCH}"
+          tagged="$(git rev-parse "refs/tags/${GITHUB_REF_NAME}^{commit}")" \
+            || { echo "cannot dereference tag $GITHUB_REF_NAME to a commit"; exit 1; }
+          git merge-base --is-ancestor "$tagged" "refs/remotes/origin/${DEFAULT_BRANCH}" \
+            || { echo "tag $GITHUB_REF_NAME ($tagged) is not reachable from" \
+                      "'${DEFAULT_BRANCH}' — release tags must point at reviewed," \
+                      "merged history"; exit 1; }
+          echo "sha=$tagged" >> "$GITHUB_OUTPUT"
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -40,10 +79,28 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
+      - name: The tag still points at the verified commit
+        env:
+          VERIFIED_SHA: ${{ needs.verify.outputs.verified_sha }}
+        run: |
+          # Re-resolve the tag from the REMOTE at release time: a tag that
+          # was deleted or force-moved between verification and release is
+          # refused instead of released.
+          [ -n "$VERIFIED_SHA" ] \
+            || { echo "no verified sha handed over from the verify job"; exit 1; }
+          git fetch --no-tags origin "refs/tags/${GITHUB_REF_NAME}" \
+            || { echo "tag $GITHUB_REF_NAME no longer exists on origin"; exit 1; }
+          current="$(git rev-parse 'FETCH_HEAD^{commit}')"
+          [ "$current" = "$VERIFIED_SHA" ] \
+            || { echo "tag $GITHUB_REF_NAME moved after verification" \
+                      "($current != verified $VERIFIED_SHA) — refusing to release"; exit 1; }
       - name: Create the GitHub Release (generated notes)
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          # --verify-tag: never create the tag as a side effect — release
+          # only an existing remote tag (the one just re-verified above).
           gh release create "$GITHUB_REF_NAME" \
+            --verify-tag \
             --title "Terp Standard $GITHUB_REF_NAME" \
             --generate-notes
