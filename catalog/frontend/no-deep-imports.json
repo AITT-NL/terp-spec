@@ -1,8 +1,8 @@
 {
   "id": "frontend/no-deep-imports",
   "surface": "frontend",
-  "title": "App modules import @terp/* packages from the root only",
-  "intent": "A deep import (@terp/*/src/*, @terp/*/dist/*) couples the app to package internals that are free to move; the package root is the published, stable surface. The refused path segments are declared in restricted-surface.json (deepImportPathSegments).",
+  "title": "App modules import platform packages from the root only",
+  "intent": "A deep import into a platform package's internals couples the app to files that are free to move; the package root is the published, stable surface. The refused path segments are declared in restricted-surface.json (deepImportPathSegments).",
   "layer": "static-portable",
   "enforcement": [
     {
@@ -12,6 +12,7 @@
       "reported_as": "no-restricted-imports"
     }
   ],
+  "reference": "@terp/*/src/* and @terp/*/dist/* imports are refused; import from the @terp/* package root.",
   "opt_out": "// terp-allow-no-restricted-imports: <reason>",
   "runtime": {
     "applicability": "not-applicable",

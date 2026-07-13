@@ -2,7 +2,7 @@
   "id": "backend/no_destructive_migrations",
   "surface": "backend",
   "title": "Destructive migration operations require a reason-bearing marker",
-  "intent": "``drop_table(...)``, ``drop_column(...)``, type-changing ``alter_column(..., type_=...)`` (on ``op``, a batch block, or any alias), and ``execute(...)`` of a statement containing ``DROP TABLE`` / ``DROP COLUMN`` / ``TRUNCATE`` / ``DELETE FROM`` / ``ALTER TABLE ... DROP`` in ``upgrade()`` can destroy data or make rollback unsafe. A revision may still perform one, but only when the file carries ``# terp-allow-destructive-migration: <reason>`` so the risk is explicit, reviewable, and greppable.",
+  "intent": "Dropping a table or column, changing a column's type, and executing raw destructive statements in an upgrade can destroy data or make rollback unsafe — whether spelled directly, on a batch block, through an alias, or smuggled into a raw statement. A revision may still perform one, but only when it carries a justified reason-bearing marker, so the risk is explicit, reviewable, and greppable.",
   "layer": "static-portable",
   "enforcement": [
     {
@@ -11,6 +11,7 @@
       "ref": "check_no_destructive_migrations"
     }
   ],
+  "reference": "drop_table / drop_column / type-changing alter_column and execute(...) of DROP TABLE / DROP COLUMN / TRUNCATE / DELETE FROM / ALTER TABLE ... DROP in upgrade() require a # terp-allow-destructive-migration: <reason> marker in the revision file.",
   "opt_out": "# arch-allow-no-destructive-migrations: <reason>",
   "runtime": {
     "applicability": "not-applicable",

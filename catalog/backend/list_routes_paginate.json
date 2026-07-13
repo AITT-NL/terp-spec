@@ -1,8 +1,8 @@
 {
   "id": "backend/list_routes_paginate",
   "surface": "backend",
-  "title": "A list route returns a capped ``Page[T]``, never a bare ``list[...]``",
-  "intent": "Pagination is a mandatory cross-cutting control (ADR 0006, Tier A): a route whose ``response_model`` is a bare ``list[...]`` / ``Sequence[...]`` serializes an **unbounded** collection -- a resource-exhaustion and over-exposure footgun on a large table, and a ``Page[T]`` guarantee that was previously only a convention. Wrap the Read DTO in ``terp.core.Page[...]`` (returned via ``Page.of(...)`` with ``PaginationDep``) so every list is capped and uniformly shaped. A single-object ``response_model`` (``NoteRead``) is unaffected; both decorator routes and imperative ``add_api_route`` registration are checked.",
+  "title": "A list route returns a capped page envelope, never a bare unbounded collection",
+  "intent": "Pagination is a mandatory cross-cutting control: a route whose declared response type is a bare collection serializes an unbounded result — a resource-exhaustion and over-exposure footgun on a large table, and a page-envelope guarantee that was previously only a convention. Wrap the read DTO in the framework's capped page envelope so every list is bounded and uniformly shaped. A single-object response is unaffected; both decorator routes and imperative route registration are checked.",
   "layer": "black-box",
   "enforcement": [
     {
@@ -16,6 +16,7 @@
       "ref": "standard: list routes return a capped Page envelope"
     }
   ],
+  "reference": "response_model=Page[ReadDTO] returned via Page.of(...) with PaginationDep (ADR 0006, Tier A); bare list[...] / Sequence[...] response models are refused.",
   "opt_out": "# arch-allow-list-routes-paginate: <reason>",
   "runtime": {
     "applicability": "deferred",

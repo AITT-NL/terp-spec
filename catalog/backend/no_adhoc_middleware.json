@@ -2,7 +2,7 @@
   "id": "backend/no_adhoc_middleware",
   "surface": "backend",
   "title": "App code never wires HTTP middleware itself; security is centralized",
-  "intent": "Cross-cutting HTTP security (headers, CORS, rate-limit, body-size, request-id) is declared once as a ``SecurityConfig`` and installed by ``create_app``. A module calling ``add_middleware(...)``, using the ``@app.middleware(\"http\")`` decorator, or subclassing ``BaseHTTPMiddleware`` is assembling a security posture outside that single control plane.",
+  "intent": "Cross-cutting HTTP security (headers, CORS, rate-limit, body-size, request-id) is declared once as central security configuration and installed at composition. A module that registers middleware itself — by call, decorator, or subclassing — is assembling a security posture outside that single control plane.",
   "layer": "static-portable",
   "enforcement": [
     {
@@ -11,6 +11,7 @@
       "ref": "check_no_adhoc_middleware"
     }
   ],
+  "reference": "SecurityConfig declared once and installed by create_app; add_middleware(...), the @app.middleware(\"http\") decorator, and BaseHTTPMiddleware subclasses are refused in app modules.",
   "opt_out": "# arch-allow-no-adhoc-middleware: <reason>",
   "runtime": {
     "applicability": "deferred",

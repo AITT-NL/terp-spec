@@ -1,8 +1,8 @@
 {
   "id": "backend/input_str_fields_have_max_length",
   "surface": "backend",
-  "title": "Every ``str`` a client can supply caps its length",
-  "intent": "A field is client-supplied when it lives on a table model, on a ``*Create`` / ``*Update`` schema, **or** on any class used as a request body (a route handler's body parameter, or a ``build_crud_router`` create/update schema) -- so an input DTO named off-convention (``LoginRequest``, ``UserProvision``) is capped too, not only the ``*Create`` / ``*Update`` ones. ``str``, ``str | None``, and sequence containers of str (``list[str]``) all count; an uncapped one is an unbounded-input (DoS / abuse) hole.",
+  "title": "Every string a client can supply caps its length",
+  "intent": "A field is client-supplied when it lives on a table model, on a *Create / *Update schema, or on any class used as a request body (a route handler's body parameter, or a generated CRUD router's create/update schema) — so an input DTO named off-convention (LoginRequest, UserProvision) is capped too, not only the *Create / *Update ones. Plain strings, optional strings, and sequence containers of strings all count; an uncapped one is an unbounded-input (DoS / abuse) hole.",
   "layer": "static-bespoke",
   "enforcement": [
     {
@@ -11,6 +11,7 @@
       "ref": "check_input_str_fields_have_max_length"
     }
   ],
+  "reference": "str / str | None / list[str] fields declare max_length; build_crud_router create/update schemas are scanned too.",
   "opt_out": "# arch-allow-input-str-fields-have-max-length: <reason>",
   "runtime": {
     "applicability": "not-applicable",

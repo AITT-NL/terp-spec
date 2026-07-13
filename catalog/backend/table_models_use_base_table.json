@@ -1,8 +1,8 @@
 {
   "id": "backend/table_models_use_base_table",
   "surface": "backend",
-  "title": "Every ORM table model inherits ``BaseTable`` (no bare ``SQLModel`` tables)",
-  "intent": "A ``table=True`` model that skips ``BaseTable`` bypasses the framework's UUID id, timestamps, and optimistic-concurrency ``version`` \u2014 a model living outside the control-plane contract.",
+  "title": "Every ORM table model inherits the platform base table (no bare tables)",
+  "intent": "A table model that skips the platform base table bypasses the framework's managed identity, timestamps, and optimistic-concurrency version — a model living outside the control-plane contract, which every chokepoint (the service layer, audit, concurrency) presupposes.",
   "layer": "static-bespoke",
   "enforcement": [
     {
@@ -11,6 +11,7 @@
       "ref": "check_table_models_use_base_table"
     }
   ],
+  "reference": "BaseTable supplies the UUID id, created_at/updated_at and the OCC version; a bare SQLModel table=True model is refused.",
   "opt_out": "# arch-allow-table-models-use-base-table: <reason>",
   "runtime": {
     "applicability": "not-applicable",

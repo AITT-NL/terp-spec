@@ -99,7 +99,14 @@ machine-consumes it, not before.
 ## Catalog format
 
 `catalog/<surface>/<rule>.json`, validated against `catalog/schema.json` (the
-schema is normative and travels with the spec):
+schema is normative and travels with the spec). The normative statement of a
+rule is its `title` + `intent`, and that prose is **stack-neutral by
+construction**: plain prose, no docstring markup, no reference-implementation
+symbols, package paths, marker spellings, or repo-internal pointers (sibling
+rules are cited by catalog rule name). The reference realisation lives in the
+non-normative fields (`enforcement`, `reference`, `opt_out`, `guide_topic`).
+The standalone suite enforces the split
+(`test_normative_prose_is_stack_neutral`).
 
 | Field | Meaning |
 |---|---|

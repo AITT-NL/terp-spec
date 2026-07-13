@@ -283,3 +283,68 @@ def test_corpus_flags_match_the_corpus_directories() -> None:
             assert all(case.startswith(("violation-", "compliant-")) for case in cases), (
                 f"{surface}/{name}: unexpected case dirs {sorted(cases)}"
             )
+
+
+# --------------------------------------------------------------------------- #
+# the normative prose is stack-neutral: title and intent state the invariant
+# in plain prose — reference-implementation vocabulary (framework symbols,
+# docstring markup, marker spellings, repo-internal pointers) belongs in the
+# non-normative fields (enforcement / reference / opt_out / guide_topic)
+# --------------------------------------------------------------------------- #
+_REFERENCE_LEAKAGE: list[tuple[re.Pattern[str], str]] = [
+    (re.compile(r"``"), "RST literal markup — write plain prose"),
+    (re.compile(r":[a-z]+:`"), "a Sphinx role — write plain prose"),
+    (re.compile(r"\bterp\.[a-z_]"), "a terp.* package path — reference metadata"),
+    (re.compile(r"@terp/"), "an @terp/* package path — reference metadata"),
+    (re.compile(r"\bterp +(?:check|guide|migrate)\b"), "the reference CLI — reference metadata"),
+    (re.compile(r"(?:arch|terp)-allow"), "a marker spelling — belongs in opt_out / reference"),
+    (re.compile(r"\bADR +\d"), "a framework ADR pointer — unresolvable for a spec consumer"),
+    (
+        re.compile(
+            r"\b(?:BaseService|BaseTable|BaseSchema|BaseUpdateSchema|ModuleSpec|SessionDep"
+            r"|create_app|FastAPI|SQLModel|sqlmodel|SQLAlchemy|sqlalchemy|Alembic|alembic"
+            r"|base_query|business_filters|response_model|TenantScopedService|TenantScopedMixin"
+            r"|SoftDeleteMixin|OwnedMixin|ActorStampedMixin|FileRef|WriteGuardedSession"
+            r"|ControlPlane|EventDefinition|JobDefinition|LifecycleEventMap|PaginationDep"
+            r"|SecurityConfig|configure_logging|basicConfig|dictConfig|fileConfig"
+            r"|dependency_overrides|add_middleware|BaseHTTPMiddleware|assert_app_clean"
+            r"|ArchViolation|assert_migrations_current|create_all|httpx|Celery|APScheduler"
+            r"|React)\b"
+        ),
+        "a reference-implementation symbol — belongs in reference / enforcement",
+    ),
+    (
+        re.compile(r"Page\[|Policy\.[a-z_]|Roles\.[A-Z]"),
+        "a reference API shape — belongs in reference / enforcement",
+    ),
+]
+
+
+def test_normative_prose_is_stack_neutral() -> None:
+    """``title`` and ``intent`` are the normative, stack-neutral statement of a
+    rule; the reference realisation lives in ``enforcement`` / ``reference`` /
+    ``opt_out`` / ``guide_topic``. Hold the prose to that split, so
+    docstring-flavoured markup and framework symbols cannot drift back in.
+    Sibling rules are cited by their catalog rule name — that is catalog
+    vocabulary, not leakage, so rule names are scrubbed before matching."""
+    rule_names = sorted(
+        (name for surface in ("backend", "frontend") for name in _entries(surface)),
+        key=len,
+        reverse=True,
+    )
+    problems: list[str] = []
+    for surface in ("backend", "frontend"):
+        for name, entry in _entries(surface).items():
+            if entry["intent"].strip() == entry["title"].strip():
+                problems.append(
+                    f"{surface}/{name}: intent merely repeats the title — say why the rule exists"
+                )
+            for field in ("title", "intent"):
+                text = entry[field]
+                for token in rule_names:
+                    text = text.replace(token, " ")
+                for pattern, why in _REFERENCE_LEAKAGE:
+                    match = pattern.search(text)
+                    if match:
+                        problems.append(f"{surface}/{name}.{field}: {match.group(0)!r} is {why}")
+    assert problems == [], "normative prose must stay stack-neutral:\n" + "\n".join(problems)
