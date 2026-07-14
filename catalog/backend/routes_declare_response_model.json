@@ -9,13 +9,17 @@
       "kind": "build-time",
       "tool": "terp.arch",
       "ref": "check_routes_declare_response_model"
+    },
+    {
+      "kind": "runtime",
+      "tool": "terp.core",
+      "ref": "_validate_routes_declare_response_model"
     }
   ],
   "opt_out": "# arch-allow-routes-declare-response-model: <reason>",
   "runtime": {
-    "applicability": "deferred",
-    "rationale": "A boot-time route scan on the composition seam could refuse a content route without a response_model, with the same dynamic-composition fidelity the sibling _validate_router_response_models control already has (nested/imperative routers a source scan cannot follow). Today the sibling validator deliberately skips response_model=None routes, so declaring a model is held at build time only \u2014 an explicit gap, not an equivalence claim.",
-    "tracking": "AITT-NL/terp-framework docs/internal/STATUS.md \u2014 boot-time route scan for missing response_model on the composition seam"
+    "applicability": "required",
+    "rationale": "At boot, the route scan on the composition seam (the same seam as _validate_router_response_models) walks every composed route \u2014 decorator, imperative add_api_route, and nested included routers alike \u2014 and raises a BootError naming this rule and the route when a content route declares no response_model. No-body 204/205/304 statuses and Response-subclass-annotated non-content routes stay exempt, so the control refuses exactly the routes that would serialize a bare object out of the boundary."
   },
   "guide_topic": "module",
   "corpus": true
