@@ -60,6 +60,11 @@ def _validate(instance: object, schema: dict, path: str) -> list[str]:
     if "enum" in schema and instance not in schema["enum"]:
         return errors + [f"{path}: {instance!r} not in {schema['enum']}"]
     expected = schema.get("type")
+    supported_types = {"object", "array", "string", "integer", "boolean"}
+    if expected is not None and (
+        not isinstance(expected, str) or expected not in supported_types
+    ):
+        return errors + [f"{path}: unsupported schema type {expected!r}"]
     if expected == "object":
         if not isinstance(instance, dict):
             return errors + [f"{path}: expected object, got {type(instance).__name__}"]

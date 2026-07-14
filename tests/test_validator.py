@@ -23,6 +23,13 @@ def test_unknown_schema_keyword_fails_loudly() -> None:
     )
 
 
+def test_unknown_schema_type_fails_loudly() -> None:
+    assert _errors(1.5, {"type": "number"}), (
+        "an unsupported schema type must be reported, never silently ignored"
+    )
+    assert _errors("x", {"type": ["string", "null"]})
+
+
 def test_enum_mismatch_is_rejected() -> None:
     assert _errors("purple", {"enum": ["backend", "frontend"]})
     assert _errors("backend", {"enum": ["backend", "frontend"]}) == []
