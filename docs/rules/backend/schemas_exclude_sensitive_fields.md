@@ -24,6 +24,7 @@ exactly match the checked-in budget (which can only shrink).
 
 ## Enforcement
 
-- Checked while the app runs? Not yet — a runtime control is planned; the gap is explicit and tracked.
+- Checked while the app runs? Yes — the framework also enforces this while the app runs (fail closed).
 - `build-time`: `terp.arch` — `check_schemas_exclude_sensitive_fields`
 - `black-box`: `@terp/conformance` — `standard: responses never expose credential-shaped fields`
+- `runtime`: `terp.core` — `_validate_schemas_exclude_sensitive_fields`

@@ -41,6 +41,15 @@ Additive contract growth (no existing field changed meaning):
   `tenant_scoped_models_use_scoped_service`, `base_query_not_overridden`).
 - **Docs**: generated plain-language rule pages under `docs/rules/`, held to
   the catalog by a parity test.
+- **Deferral closures**: `routes_declare_response_model`,
+  `schemas_exclude_sensitive_fields`, and `list_routes_paginate` move from
+  `runtime.applicability: deferred` to `required` — the reference
+  implementation ships fail-closed boot-time route-scan controls for all
+  three on the composition seam (terp-framework commit `638b132`, ADR 0084:
+  `_validate_routes_declare_response_model`,
+  `_validate_schemas_exclude_sensitive_fields`,
+  `_validate_list_routes_paginate`). No rule's meaning or corpus coverage
+  changed, only its runtime classification.
 
 ## 0.5.0
 
