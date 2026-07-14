@@ -14,17 +14,13 @@
       "kind": "black-box",
       "tool": "@terp/conformance",
       "ref": "standard: responses never expose credential-shaped fields"
-    },
-    {
-      "kind": "runtime",
-      "tool": "terp.core",
-      "ref": "_validate_schemas_exclude_sensitive_fields"
     }
   ],
   "opt_out": "# arch-allow-schemas-exclude-sensitive-fields: <reason>",
   "runtime": {
-    "applicability": "required",
-    "rationale": "At boot, the route scan on the composition seam (the same seam as _validate_router_response_models) walks every composed route \u2014 decorator, imperative add_api_route, and nested included routers alike \u2014 and raises a BootError naming this rule and the route when a declared response DTO carries a credential-shaped field (the same underscore-delimited word match, with the token_version / version / trailing-token exclusions, as the build-time rule; framework-vetted terp.* DTOs exempt). The black-box probe remains a conformance-suite observation on top of this in-app fail-closed control."
+    "applicability": "deferred",
+    "rationale": "A boot-time scan of each route's declared response DTO fields could refuse credential-shaped names on the composition seam _validate_router_response_models already owns, with the same cross-package fidelity; it is not shipped. The black-box probe observes a running app but is a conformance-suite check, not an in-app fail-closed control.",
+    "tracking": "AITT-NL/terp-framework docs/internal/STATUS.md \u2014 boot-time scan of declared response DTO fields on _validate_router_response_models"
   },
   "guide_topic": "module",
   "corpus": true
