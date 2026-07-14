@@ -1,0 +1,21 @@
+{
+  "_comment": "The detector-residual ratchet: the statically-erased or renamed forms DELIBERATELY outside the corpus contract, per rule — known limits of precise, low-false-positive detection, recorded as data so a second implementation neither over-fits nor under-claims. Governed like corpus/PENDING.json: the list only shrinks — closing a residual means seeding the corpus case that contracts it and deleting the entry here, never silently. Every key must be a catalog rule id; held to the catalog by tests/test_standard.py.",
+  "residuals": {
+    "backend/no_dynamic_sql": [
+      "an alias-renamed symbol import (`from sqlalchemy import text as sql_text`) is not required to be resolved to `text`"
+    ],
+    "backend/no_raw_outbound_http": [
+      "dynamic import (`importlib.import_module(\"httpx\")`) is not required to be seen as an import"
+    ],
+    "frontend/generated-client-only": [
+      "egress through receivers other than `window`/`globalThis` (`self.fetch`) is not required"
+    ],
+    "frontend/no-dom-html-injection": [
+      "a computed sink (`el[\"innerHTML\"] = ...`) is not required to be recognised"
+    ],
+    "frontend/no-eval": [
+      "`Function(\"...\")` called without `new` is not required",
+      "a computed global (`window[\"eval\"]`) is not required to be recognised"
+    ]
+  }
+}

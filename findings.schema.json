@@ -26,6 +26,14 @@
       "message": {
         "type": "string",
         "description": "Human-readable explanation; ideally directive (states the compliant fix)."
+      },
+      "fix_hint": {
+        "type": "string",
+        "description": "Agent-oriented remediation metadata: the compliant construct that replaces the violating one, sourced from the catalog entry's non-normative `reference` field (or the checker's own knowledge of the sanctioned pattern). Optional — a consumer must not require it."
+      },
+      "fingerprint": {
+        "type": "string",
+        "description": "A stable, checker-chosen identifier for THIS violation instance (e.g. a hash over rule + path + violating source construct), so consumers can track a finding across line-shifting edits. Optional; the fingerprint scheme is checker-internal — only stability across reformatting is expected."
       }
     }
   }
