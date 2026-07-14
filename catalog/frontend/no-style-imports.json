@@ -17,5 +17,8 @@
     "applicability": "not-applicable",
     "rationale": "A stylesheet import is a build-graph edge; the bundler compiles it into the emitted CSS, after which module authorship does not exist."
   },
+  "restricted_surface": [
+    "styleImportExtensions"
+  ],
   "corpus": true
 }
