@@ -254,6 +254,35 @@ claiming an unrecorded residual is a conformance failure). A consumer can
 re-run the corpus and reproduce the scorecard, making the certification claim
 verifiable.
 
+## Assurance profile
+
+Conformance to the rule catalog proves the *Terp-specific* half of release
+readiness. The **assurance profile** (`assurance-profile.schema.json`) is the
+machine-readable composition of that with the generic evidence lanes a release
+also stands on — one document a toolchain emits from its release verification
+profile, so "this build is releasable" becomes a checkable artifact instead of
+a habit.
+
+The lane vocabulary and each lane's requirement level are **normative** and
+fixed here — an emitter cannot demote a required lane, which is why the
+requirement level is deliberately not a field of the document:
+
+| Lane | Requirement | Evidence |
+|---|---|---|
+| `terp-standard` | **required** | The standard's own enforcement surfaces ran and passed: the architecture gate and the frontend boundary lint, publishing their evaluated-rule inventories (check reports). |
+| `appsec-baseline` | **required** | The delegated generic AppSec baseline passed (the reference realisation: `ruff` with the flake8-bandit `S` rules). |
+| `dependency-audit` | **required** | Dependency trees were audited against known-vulnerability databases (the reference realisation: `pip-audit` and `npm audit`). |
+| `a11y` | recommended | Automated accessibility checks over the running app (e.g. axe). |
+| `blackbox-conformance` | recommended | The black-box behavioural conformance suite over the running workbench. |
+
+The claim (`ok`) is true exactly when every **required** lane passed;
+recommended lanes inform the reader but never carry the claim. Every lane of
+the vocabulary appears exactly once — a lane the toolchain does not realise is
+reported `not-run` (with no composing checks), never dropped and never counted
+as passed. Each realised lane names the verification-check ids whose verdicts
+compose it, so a consumer can trace the claim into the toolchain's own
+verification envelope.
+
 ## Corpus format
 
 ```text

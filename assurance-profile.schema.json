@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://terp.dev/spec/assurance-profile.schema.json",
+  "title": "Terp assurance profile",
+  "description": "The machine-readable release-assurance claim a Terp toolchain emits after running its release verification profile: one document composing the named evidence lanes of the standard. The lane vocabulary and each lane's requirement level are normative and fixed by the spec (see the README's assurance-profile section): terp-standard, appsec-baseline and dependency-audit are REQUIRED - the claim ('ok') is true only when every required lane passed; a11y and blackbox-conformance are RECOMMENDED - they inform the reader but never carry the claim. Requirement levels are deliberately NOT a field of the document: an emitter cannot demote a required lane, and a consumer joins the document to the spec (via spec_version) for the canonical mapping. Every lane of the vocabulary must appear exactly once - omitting a lane would hide it. A lane's verdict is composed from the named verification checks ('checks', the check ids of the toolchain's release profile); a lane the toolchain does not realise yet is reported 'not-run' with no checks, never silently dropped and never counted as passed.",
+  "type": "object",
+  "required": ["terp_assurance", "spec_version", "toolchain", "profile", "ok", "lanes"],
+  "additionalProperties": false,
+  "properties": {
+    "terp_assurance": {
+      "description": "The assurance-profile document format version.",
+      "enum": [1]
+    },
+    "spec_version": {
+      "type": "string",
+      "description": "The spec semver (VERSION) whose lane vocabulary and requirement mapping this document claims against.",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "toolchain": {
+      "type": "object",
+      "description": "The emitting toolchain's identity: tool name and its own version.",
+      "required": ["tool", "version"],
+      "additionalProperties": false,
+      "properties": {
+        "tool": { "type": "string", "minLength": 1 },
+        "version": { "type": "string", "minLength": 1 }
+      }
+    },
+    "profile": {
+      "type": "string",
+      "description": "The verification profile the toolchain realised the lanes from (the reference toolchain: 'release').",
+      "minLength": 1
+    },
+    "ok": {
+      "type": "boolean",
+      "description": "The claim: true exactly when every REQUIRED lane has status 'passed'. Recommended lanes never affect it."
+    },
+    "lanes": {
+      "type": "array",
+      "description": "One entry per lane of the spec's vocabulary, each exactly once.",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "status", "checks"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "description": "The lane, from the spec's fixed vocabulary.",
+            "enum": [
+              "terp-standard",
+              "appsec-baseline",
+              "dependency-audit",
+              "a11y",
+              "blackbox-conformance"
+            ]
+          },
+          "status": {
+            "description": "'passed' (every composing check green), 'failed' (any composing check red), or 'not-run' (the toolchain does not realise the lane, or its precondition was unmet). 'not-run' is never a pass.",
+            "enum": ["passed", "failed", "not-run"]
+          },
+          "checks": {
+            "type": "array",
+            "description": "The verification-check ids whose verdicts compose this lane (evidence pointers into the toolchain's verification envelope). Non-empty for 'passed'/'failed'; empty for 'not-run' - a verdict without evidence is not a verdict.",
+            "items": { "type": "string", "minLength": 1 }
+          }
+        }
+      }
+    }
+  }
+}

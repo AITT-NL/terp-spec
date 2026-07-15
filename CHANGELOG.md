@@ -7,6 +7,27 @@ fields and new rules also bump the minor; prose bumps the patch (see
 checked-in `VERSION` — held by `tests/test_changelog.py`. A checker certified
 against an earlier version reads this file to see exactly what changed since.
 
+## 0.10.0
+
+The **assurance profile**: release readiness as a checkable artifact.
+
+- New `assurance-profile.schema.json` — the machine-readable release-assurance
+  claim a toolchain emits from its release verification profile, composing the
+  Terp-specific evidence (the standard's own enforcement surfaces) with the
+  generic lanes a release also stands on. The lane vocabulary and each lane's
+  requirement level are normative and fixed by the spec (README, "Assurance
+  profile"): `terp-standard`, `appsec-baseline` and `dependency-audit` are
+  **required** — the claim (`ok`) is true only when all three passed — while
+  `a11y` and `blackbox-conformance` are **recommended**. Requirement levels
+  are deliberately not a document field (an emitter cannot demote a required
+  lane); every lane appears exactly once, an unrealised lane is reported
+  `not-run` (never dropped, never passed), and each realised lane names the
+  verification-check ids composing its verdict so the claim traces into the
+  toolchain's own verification envelope.
+- The schema ships in both distributions (`terp-spec` / `@terp/spec`), and the
+  spec suite pins the schema's lane enum to the README's normative table so
+  the two statements of the vocabulary cannot drift.
+
 ## 0.9.0
 
 Corpus depth for the authz, migration, egress and sensitive-field rule
