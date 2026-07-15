@@ -2,21 +2,25 @@
   "id": "backend/tables_have_migrations",
   "surface": "backend",
   "title": "Every app module that defines a table model ships a packaged migration history",
-  "intent": "A deployed Terp app builds its schema from packaged migrations, never from dev-time schema auto-creation (the production boot guard applies the packaged histories) — so a module that declares a table model but ships no migration revision would deploy with that table missing: the boot guard checks only declared histories, so it never notices, and the first request fails on a nonexistent table. This rule fails the build instead, the build-time complement to the runtime boot guard (the two halves of the migration control). Generate and commit the module's migration revision.",
+  "intent": "A deployed Terp app builds its schema from packaged migrations, never from dev-time schema auto-creation — so a module that declares a table model but ships no migration revision would deploy with that table missing, and the first request would fail on a nonexistent table. This rule fails the build first, and the running system's migration guard refuses the same violation at boot (the two halves of the migration control). Generate and commit the module's migration revision.",
   "layer": "static-bespoke",
   "enforcement": [
     {
       "kind": "build-time",
       "tool": "terp.arch",
       "ref": "check_tables_have_migrations"
+    },
+    {
+      "kind": "runtime",
+      "tool": "terp.migrations",
+      "ref": "assert_no_missing_histories"
     }
   ],
-  "reference": "terp migrate make <name> generates the module's migrations/versions/ revision; assert_migrations_current is the production boot guard, create_all the refused dev shortcut.",
+  "reference": "terp migrate make <name> generates the module's migrations/versions/ revision; assert_migrations_current is the production boot guard (it runs assert_no_missing_histories, so a table-owning package without any history refuses to boot), create_all the refused dev shortcut.",
   "opt_out": "# arch-allow-tables-have-migrations: <reason>",
   "runtime": {
-    "applicability": "deferred",
-    "rationale": "The migration runtime owns the seam but does not yet refuse this rule's core violation: assert_no_homeless_tables fails closed only on an unowned table wired into an owned one by a foreign key (deliberately scoped against fixture false-positives), and the boot guard assert_migrations_current refuses only pending revisions of declared histories. A standalone missing history -- the case this rule exists for -- is visible in the same seam's live metadata but not yet refused, so it is held at build time only.",
-    "tracking": "AITT-NL/terp-framework docs/internal/STATUS.md \u2014 extend assert_no_homeless_tables to fail closed on this rule's core violation"
+    "applicability": "required",
+    "rationale": "The boot guard refuses the standalone missing-history case this rule exists for: a declared package that defines table models but ships no migration history at all raises a MissingMigrationsError naming the packages -- fail closed at boot, before a request can hit a table that was never created. The pending-revisions half of the same guard keeps covering histories that exist but are behind head."
   },
   "guide_topic": "migrations",
   "corpus": true

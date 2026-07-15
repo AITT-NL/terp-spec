@@ -9,14 +9,18 @@
       "kind": "build-time",
       "tool": "terp.arch",
       "ref": "check_no_adhoc_middleware"
+    },
+    {
+      "kind": "runtime",
+      "tool": "terp.core",
+      "ref": "_freeze_app_middleware_registration"
     }
   ],
-  "reference": "SecurityConfig declared once and installed by create_app; add_middleware(...), the @app.middleware(\"http\") decorator, and BaseHTTPMiddleware subclasses are refused in app modules.",
+  "reference": "SecurityConfig declared once and installed by create_app; add_middleware(...), the @app.middleware(\"http\") decorator, and BaseHTTPMiddleware subclasses are refused in app modules. On the composed app both registration spellings raise BootError at runtime; create_app's middleware parameter is the one sanctioned composition seam.",
   "opt_out": "# arch-allow-no-adhoc-middleware: <reason>",
   "runtime": {
-    "applicability": "deferred",
-    "rationale": "The composition freeze (_freeze_app_route_registration) refuses post-composition routes and lifecycle hooks but does not yet cover add_middleware / the middleware decorator on the composed app -- extending that same owned seam would close the gap fail-closed. Until then, ad hoc middleware registered between composition and serving is caught at build time only.",
-    "tracking": "AITT-NL/terp-framework docs/internal/STATUS.md \u2014 extend _freeze_app_route_registration to cover add_middleware after composition"
+    "applicability": "required",
+    "rationale": "The composition freeze covers the middleware seam: on the composed app, add_middleware(...) and the @app.middleware(...) decorator are replaced by refusers that raise a BootError naming this rule and the sanctioned alternative (create_app's middleware parameter) -- so middleware registered between composition and serving is refused fail-closed, not just flagged at build time."
   },
   "guide_topic": "capability",
   "corpus": true

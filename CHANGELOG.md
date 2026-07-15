@@ -7,6 +7,27 @@ fields and new rules also bump the minor; prose bumps the patch (see
 checked-in `VERSION` — held by `tests/test_changelog.py`. A checker certified
 against an earlier version reads this file to see exactly what changed since.
 
+## 0.8.0
+
+The two-layer discipline closes its last declared gaps: **zero rules remain
+`deferred`** — every rule is now either `required` with a shipped fail-closed
+runtime control or `not-applicable` by recorded decision.
+
+- **Runtime applicability**: `backend/no_adhoc_middleware`,
+  `backend/no_dependency_overrides` and `backend/tables_have_migrations` flip
+  `deferred` → `required`, each declaring its reference control as a `runtime`
+  enforcement entry — the composition freeze now refuses post-composition
+  middleware registration (both spellings) and rebinding of the composed
+  dependency-override map (outside the local environment: overrides remain the
+  sanctioned test-only seam, recorded in the rationale), and the migration
+  boot guard refuses a declared package whose table models ship no migration
+  history at all (the standalone missing-history case the rule exists for).
+  A Level 3 stack now reproduces 27 runtime controls (was 24).
+- **Corpus**: a new `frontend/escape-hatch` violation case pins that a marker
+  spelled with a retired tool-internal rule id waives nothing — the violation
+  underneath still fires and the stale marker is itself reported (previously
+  proven only in the reference adapter's own suite).
+
 ## 0.7.0
 
 Additive: the application check report joins the interoperability contract.

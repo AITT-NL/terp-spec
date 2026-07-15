@@ -9,14 +9,18 @@
       "kind": "build-time",
       "tool": "terp.arch",
       "ref": "check_no_dependency_overrides"
+    },
+    {
+      "kind": "runtime",
+      "tool": "terp.core",
+      "ref": "_freeze_dependency_overrides"
     }
   ],
-  "reference": "app.dependency_overrides on the create_app-composed app is the refused surface.",
+  "reference": "app.dependency_overrides on the create_app-composed app is the refused surface; composition binds the seams (create_app(principal_provider=...)) before the freeze.",
   "opt_out": "# arch-allow-no-dependency-overrides: <reason>",
   "runtime": {
-    "applicability": "deferred",
-    "rationale": "The composed app's dependency_overrides mapping stays writable after composition; the existing freeze seam could hand back a refusing mapping (the same fail-closed shape as the route freeze) but does not yet. The rule stays build-time-enforced until that seam ships.",
-    "tracking": "AITT-NL/terp-framework docs/internal/STATUS.md \u2014 freeze dependency_overrides after composition (extend the existing freeze seam)"
+    "applicability": "required",
+    "rationale": "Outside the local environment the composed app's dependency-override map is replaced by a refusing mapping: every mutating spelling raises a BootError naming this rule while per-request override reads keep working. The local environment deliberately keeps the map writable -- overrides are the sanctioned test-only seam (a local test suite rebinding the session against a scratch engine), which is exactly the legitimate use the rule's intent carves out; a deployed app can never rebind its auth or session seams post-composition."
   },
   "guide_topic": "capability",
   "corpus": true

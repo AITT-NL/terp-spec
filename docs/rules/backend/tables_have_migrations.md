@@ -8,11 +8,11 @@
 
 ## Why this rule exists
 
-A deployed Terp app builds its schema from packaged migrations, never from dev-time schema auto-creation (the production boot guard applies the packaged histories) — so a module that declares a table model but ships no migration revision would deploy with that table missing: the boot guard checks only declared histories, so it never notices, and the first request fails on a nonexistent table. This rule fails the build instead, the build-time complement to the runtime boot guard (the two halves of the migration control). Generate and commit the module's migration revision.
+A deployed Terp app builds its schema from packaged migrations, never from dev-time schema auto-creation — so a module that declares a table model but ships no migration revision would deploy with that table missing, and the first request would fail on a nonexistent table. This rule fails the build first, and the running system's migration guard refuses the same violation at boot (the two halves of the migration control). Generate and commit the module's migration revision.
 
 ## What to do instead
 
-terp migrate make <name> generates the module's migrations/versions/ revision; assert_migrations_current is the production boot guard, create_all the refused dev shortcut. (reference stack; another stack ships its own realisation.)
+terp migrate make <name> generates the module's migrations/versions/ revision; assert_migrations_current is the production boot guard (it runs assert_no_missing_histories, so a table-owning package without any history refuses to boot), create_all the refused dev shortcut. (reference stack; another stack ships its own realisation.)
 
 ## If you really need an exception
 
@@ -28,5 +28,6 @@ exactly match the checked-in budget (which can only shrink).
 
 ## Enforcement
 
-- Checked while the app runs? Not yet — a runtime control is planned; the gap is explicit and tracked.
+- Checked while the app runs? Yes — the framework also enforces this while the app runs (fail closed).
 - `build-time`: `terp.arch` — `check_tables_have_migrations`
+- `runtime`: `terp.migrations` — `assert_no_missing_histories`
