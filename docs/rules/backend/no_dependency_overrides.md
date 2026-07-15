@@ -12,7 +12,7 @@ Composition binds the authentication and session seams once. Rebinding the app's
 
 ## What to do instead
 
-app.dependency_overrides on the create_app-composed app is the refused surface. (reference stack; another stack ships its own realisation.)
+app.dependency_overrides on the create_app-composed app is the refused surface; composition binds the seams (create_app(principal_provider=...)) before the freeze. (reference stack; another stack ships its own realisation.)
 
 ## If you really need an exception
 
@@ -28,5 +28,6 @@ exactly match the checked-in budget (which can only shrink).
 
 ## Enforcement
 
-- Checked while the app runs? Not yet — a runtime control is planned; the gap is explicit and tracked.
+- Checked while the app runs? Yes — the framework also enforces this while the app runs (fail closed).
 - `build-time`: `terp.arch` — `check_no_dependency_overrides`
+- `runtime`: `terp.core` — `_freeze_dependency_overrides`

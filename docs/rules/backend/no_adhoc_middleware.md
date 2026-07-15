@@ -12,7 +12,7 @@ Cross-cutting HTTP security (headers, CORS, rate-limit, body-size, request-id) i
 
 ## What to do instead
 
-SecurityConfig declared once and installed by create_app; add_middleware(...), the @app.middleware("http") decorator, and BaseHTTPMiddleware subclasses are refused in app modules. (reference stack; another stack ships its own realisation.)
+SecurityConfig declared once and installed by create_app; add_middleware(...), the @app.middleware("http") decorator, and BaseHTTPMiddleware subclasses are refused in app modules. On the composed app both registration spellings raise BootError at runtime; create_app's middleware parameter is the one sanctioned composition seam. (reference stack; another stack ships its own realisation.)
 
 ## If you really need an exception
 
@@ -28,5 +28,6 @@ exactly match the checked-in budget (which can only shrink).
 
 ## Enforcement
 
-- Checked while the app runs? Not yet — a runtime control is planned; the gap is explicit and tracked.
+- Checked while the app runs? Yes — the framework also enforces this while the app runs (fail closed).
 - `build-time`: `terp.arch` — `check_no_adhoc_middleware`
+- `runtime`: `terp.core` — `_freeze_app_middleware_registration`
