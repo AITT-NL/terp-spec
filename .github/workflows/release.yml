@@ -79,6 +79,11 @@ jobs:
   certify-against-reference:
     needs: verify
     runs-on: ubuntu-latest
+    outputs:
+      # The reference commit this release was certified against — recorded in
+      # the GitHub Release so the certification claim is reproducible: check
+      # out exactly this framework commit, substitute the tagged spec, re-run.
+      reference_sha: ${{ steps.reference.outputs.sha }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -87,6 +92,12 @@ jobs:
         with:
           repository: AITT-NL/terp-framework
           path: framework
+      - name: Record the certified reference commit
+        id: reference
+        run: |
+          sha="$(git -C framework rev-parse HEAD)"
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          echo "Certifying against terp-framework@${sha}" | tee -a "$GITHUB_STEP_SUMMARY"
       - name: Install uv
         uses: astral-sh/setup-uv@v5
         with:
@@ -135,10 +146,13 @@ jobs:
       - name: Create the GitHub Release (generated notes)
         env:
           GH_TOKEN: ${{ github.token }}
+          REFERENCE_SHA: ${{ needs.certify-against-reference.outputs.reference_sha }}
         run: |
           # --verify-tag: never create the tag as a side effect — release
           # only an existing remote tag (the one just re-verified above).
+          # The certified reference commit makes the claim reproducible.
           gh release create "$GITHUB_REF_NAME" \
             --verify-tag \
             --title "Terp Standard $GITHUB_REF_NAME" \
-            --generate-notes
+            --generate-notes \
+            --notes "Certified against the reference implementation at [AITT-NL/terp-framework@${REFERENCE_SHA}](https://github.com/AITT-NL/terp-framework/commit/${REFERENCE_SHA})."

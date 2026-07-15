@@ -53,7 +53,10 @@ jobs:
         with:
           repository: AITT-NL/terp-framework
           path: framework
-      - name: Install uv
+      - name: Record the certified reference commit
+        run: |
+          sha="$(git -C framework rev-parse HEAD)"
+          echo "Certifying against terp-framework@${sha}" | tee -a "$GITHUB_STEP_SUMMARY"
         uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
