@@ -7,6 +7,25 @@ fields and new rules also bump the minor; prose bumps the patch (see
 checked-in `VERSION` — held by `tests/test_changelog.py`. A checker certified
 against an earlier version reads this file to see exactly what changed since.
 
+## 0.11.0
+
+The generated-client-only reference now has a sanctioned realtime path: raw
+`WebSocket` / `EventSource` remain refused in app modules, while the reference
+realisation points at `useRealtimeChannel()` for typed subscriptions. The hook
+mints a short-lived, one-use connection ticket through the generated,
+authenticated client before opening the native transport inside react-core —
+the bearer token never enters a URL and app code stays on one governed egress
+surface.
+
+- `frontend/generated-client-only.reference` now distinguishes request/response
+  (`useTerpClient()` + `unwrap`) from typed SSE/WebSocket subscriptions
+  (`useRealtimeChannel()`). Normative title/intent are unchanged and remain
+  stack-neutral; raw transports are still in the refused surface.
+- New `frontend/generated-client-only/compliant-04` exercises the sanctioned
+  hook with a runtime type guard. It raises the corpus certification bar: a
+  conforming checker must keep the replacement clean while continuing to flag
+  the existing raw transport cases.
+
 ## 0.10.0
 
 The **assurance profile**: release readiness as a checkable artifact.
