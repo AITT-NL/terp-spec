@@ -1,6 +1,6 @@
 # `backend/input_str_fields_have_max_length`
 
-**Every ``str`` a client can supply caps its length**
+**Every string a client can supply caps its length**
 
 > Generated from the catalog by `tools/generate_rule_docs.py` — do not
 > edit by hand; the parity test holds this page to
@@ -8,7 +8,11 @@
 
 ## Why this rule exists
 
-A field is client-supplied when it lives on a table model, on a ``*Create`` / ``*Update`` schema, **or** on any class used as a request body (a route handler's body parameter, or a ``build_crud_router`` create/update schema) -- so an input DTO named off-convention (``LoginRequest``, ``UserProvision``) is capped too, not only the ``*Create`` / ``*Update`` ones. ``str``, ``str | None``, and sequence containers of str (``list[str]``) all count; an uncapped one is an unbounded-input (DoS / abuse) hole.
+A field is client-supplied when it lives on a table model, on a *Create / *Update schema, or on any class used as a request body (a route handler's body parameter, or a generated CRUD router's create/update schema) — so an input DTO named off-convention (LoginRequest, UserProvision) is capped too, not only the *Create / *Update ones. Plain strings, optional strings, and sequence containers of strings all count; an uncapped one is an unbounded-input (DoS / abuse) hole.
+
+## What to do instead
+
+str / str | None / list[str] fields declare max_length; build_crud_router create/update schemas are scanned too. (reference stack; another stack ships its own realisation.)
 
 ## If you really need an exception
 

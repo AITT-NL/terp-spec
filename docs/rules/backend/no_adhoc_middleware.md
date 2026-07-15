@@ -8,7 +8,11 @@
 
 ## Why this rule exists
 
-Cross-cutting HTTP security (headers, CORS, rate-limit, body-size, request-id) is declared once as a ``SecurityConfig`` and installed by ``create_app``. A module calling ``add_middleware(...)``, using the ``@app.middleware("http")`` decorator, or subclassing ``BaseHTTPMiddleware`` is assembling a security posture outside that single control plane.
+Cross-cutting HTTP security (headers, CORS, rate-limit, body-size, request-id) is declared once as central security configuration and installed at composition. A module that registers middleware itself — by call, decorator, or subclassing — is assembling a security posture outside that single control plane.
+
+## What to do instead
+
+SecurityConfig declared once and installed by create_app; add_middleware(...), the @app.middleware("http") decorator, and BaseHTTPMiddleware subclasses are refused in app modules. (reference stack; another stack ships its own realisation.)
 
 ## If you really need an exception
 

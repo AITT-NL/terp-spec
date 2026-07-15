@@ -1,6 +1,6 @@
 # `backend/no_app_instantiation`
 
-**App code never constructs ``FastAPI()`` directly**
+**App code never constructs the web application object directly**
 
 > Generated from the catalog by `tools/generate_rule_docs.py` — do not
 > edit by hand; the parity test holds this page to
@@ -8,7 +8,11 @@
 
 ## Why this rule exists
 
-``terp.core.create_app`` owns app composition (deny-by-default guards, the control plane, the error envelope). A hand-built ``FastAPI()`` is an application assembled outside the framework.
+The framework's composer owns app composition (deny-by-default guards, the control plane, the error envelope). A hand-built application object is an application assembled outside the framework — it acquires none of those controls.
+
+## What to do instead
+
+terp.core.create_app composes the app; a bare FastAPI() constructor call is refused. (reference stack; another stack ships its own realisation.)
 
 ## If you really need an exception
 

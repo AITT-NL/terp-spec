@@ -1,6 +1,6 @@
 # `backend/tenant_scoped_models_use_scoped_service`
 
-**A ``TenantScopedMixin`` model's service must extend ``TenantScopedService``**
+**A tenant-scoped model's service extends the tenant-scoped service base**
 
 > Generated from the catalog by `tools/generate_rule_docs.py` — do not
 > edit by hand; the parity test holds this page to
@@ -8,7 +8,11 @@
 
 ## Why this rule exists
 
-This makes tenant isolation structural on the **write** side: reads of a tenant-scoped model are already filtered centrally by the registered tenant scope predicate (ADR 0017), but ``TenantScopedService`` is what stamps ``tenant_id`` on create — so a plain ``BaseService`` (which would insert an unstamped, never-visible row) is rejected at build time.
+This makes tenant isolation structural on the write side: reads of a tenant-scoped model are already filtered centrally by the registered tenant scope predicate, but the tenant-scoped service base is what stamps the tenant on create — so a plain service (which would insert an unstamped, never-visible row) is rejected at build time.
+
+## What to do instead
+
+A TenantScopedMixin model's service extends TenantScopedService (stamps tenant_id on create, ADR 0017); a plain BaseService is refused. (reference stack; another stack ships its own realisation.)
 
 ## If you really need an exception
 

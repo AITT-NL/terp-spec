@@ -1,6 +1,6 @@
 # `frontend/no-deep-imports`
 
-**App modules import @terp/* packages from the root only**
+**App modules import platform packages from the root only**
 
 > Generated from the catalog by `tools/generate_rule_docs.py` — do not
 > edit by hand; the parity test holds this page to
@@ -8,7 +8,11 @@
 
 ## Why this rule exists
 
-A deep import (@terp/*/src/*, @terp/*/dist/*) couples the app to package internals that are free to move; the package root is the published, stable surface. The refused path segments are declared in restricted-surface.json (deepImportPathSegments).
+A deep import into a platform package's internals couples the app to files that are free to move; the package root is the published, stable surface. The refused path segments are declared in restricted-surface.json (deepImportPathSegments).
+
+## What to do instead
+
+@terp/*/src/* and @terp/*/dist/* imports are refused; import from the @terp/* package root. (reference stack; another stack ships its own realisation.)
 
 ## If you really need an exception
 
@@ -16,7 +20,7 @@ Add a justified marker on (or immediately above) the line, and record it
 in your app's escape-hatch budget:
 
 ```
-// terp-allow-no-restricted-imports: <reason>
+// terp-allow-no-deep-imports: <reason>
 ```
 
 An unjustified marker is itself a violation, and marker counts must

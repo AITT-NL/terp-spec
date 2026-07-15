@@ -8,7 +8,11 @@
 
 ## Why this rule exists
 
-Background work (a scheduled sync, an export, a webhook) goes through the typed :func:`terp.core.enqueue` chokepoint and the context-binding kernel runner, so the engine that actually runs it — Celery, Azure Service Bus, Redis, APScheduler — stays a composition-root choice wired into an **opt-in adapter capability**, never an import baked into domain code. This rule forbids importing those broker / scheduler engines (and a raw ``threading`` / ``multiprocessing`` *execution* construct — ``Thread`` / ``Process`` / a pool, or a bare ``import threading`` that can reach one) anywhere in an app module; an explicit synchronization primitive (``from threading import RLock``) is a correctness tool, not background execution, and stays allowed. Its runtime half is the jobs seam itself: every job runs through :func:`terp.core.enqueue` and the active :class:`~terp.core.JobQueue`, so an adapter swap never touches a call site. An adapter capability legitimately imports its engine under a budgeted ``# arch-allow-*`` marker.
+Background work (a scheduled sync, an export, a webhook) goes through the typed enqueue chokepoint and the context-binding kernel runner, so the engine that actually runs it stays a composition-root choice wired into an opt-in adapter capability, never an import baked into domain code. The rule forbids importing broker / scheduler engines (and a raw thread- or process-execution construct, or a bare import that can reach one) anywhere in an app module; an explicit synchronization primitive is a correctness tool, not background execution, and stays allowed. The constructive counterpart is the jobs seam itself: every job runs through the enqueue chokepoint and the active queue, so an adapter swap never touches a call site. An adapter capability legitimately imports its engine under a budgeted opt-out marker.
+
+## What to do instead
+
+terp.core.enqueue + the active JobQueue are the sanctioned seam; Celery / Azure Service Bus / Redis / APScheduler imports and threading/multiprocessing execution constructs (Thread, Process, pools) are refused, while primitives like RLock stay allowed. (reference stack; another stack ships its own realisation.)
 
 ## If you really need an exception
 

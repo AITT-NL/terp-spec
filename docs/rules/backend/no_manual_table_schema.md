@@ -1,6 +1,6 @@
 # `backend/no_manual_table_schema`
 
-**Table models never hand-write a ``schema=`` placement (the layout is managed)**
+**Table models never hand-write a physical schema placement (the layout is managed)**
 
 > Generated from the catalog by `tools/generate_rule_docs.py` — do not
 > edit by hand; the parity test holds this page to
@@ -8,7 +8,11 @@
 
 ## Why this rule exists
 
-The physical schema layout is a **deployment** decision (``DB_SCHEMA_LAYOUT``, ADR 0070): under ``flat`` every table lives in the default schema, and under ``per-module`` the migration runtime routes each package's tables into its own PostgreSQL schema via the search_path — in both layouts the model metadata stays schema-free. A hand-written ``__table_args__ = {"schema": ...}`` pins one table to a fixed schema, silently escaping the managed layout (and breaking SQLite dev/test, which parses a schema prefix as an ATTACH database name).
+The physical schema layout is a deployment decision: under the flat layout every table lives in the default schema, and under the per-module layout the migration runtime routes each package's tables into its own database schema — in both layouts the model metadata stays schema-free. A hand-written schema placement pins one table to a fixed schema, silently escaping the managed layout (and breaking lightweight dev/test databases that parse a schema prefix differently).
+
+## What to do instead
+
+DB_SCHEMA_LAYOUT (flat / per-module via search_path, ADR 0070) owns placement; __table_args__ = {"schema": ...} is refused. (reference stack; another stack ships its own realisation.)
 
 ## If you really need an exception
 

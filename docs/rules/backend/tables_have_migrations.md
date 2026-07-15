@@ -8,7 +8,11 @@
 
 ## Why this rule exists
 
-A deployed Terp app builds its schema from packaged migrations, not ``create_all`` (the production boot guard ``assert_migrations_current`` applies them) — so an ``app/modules/<name>`` that declares a ``table=True`` model but has no ``migrations/versions/`` revision would deploy with that table **missing**: the boot guard checks only *declared* histories, so it never notices, and the first request 500s on a nonexistent table. This rule fails the build instead, the build-time complement to the runtime boot guard (the two halves of the migration control). Run ``terp migrate make <name>`` and commit the generated revision.
+A deployed Terp app builds its schema from packaged migrations, never from dev-time schema auto-creation (the production boot guard applies the packaged histories) — so a module that declares a table model but ships no migration revision would deploy with that table missing: the boot guard checks only declared histories, so it never notices, and the first request fails on a nonexistent table. This rule fails the build instead, the build-time complement to the runtime boot guard (the two halves of the migration control). Generate and commit the module's migration revision.
+
+## What to do instead
+
+terp migrate make <name> generates the module's migrations/versions/ revision; assert_migrations_current is the production boot guard, create_all the refused dev shortcut. (reference stack; another stack ships its own realisation.)
 
 ## If you really need an exception
 

@@ -1,6 +1,6 @@
 # `backend/no_raw_file_references`
 
-**A table model's ``*file_id`` column is declared with ``FileRef(...)``, never bare**
+**A table model's file-pointer column is a declared file reference, never a bare id column**
 
 > Generated from the catalog by `tools/generate_rule_docs.py` — do not
 > edit by hand; the parity test holds this page to
@@ -8,7 +8,11 @@
 
 ## Why this rule exists
 
-A stored pointer to a file object carries **authorization semantics**: the files capability serves delegated reads only through a *declared* reference (``FileService.load_for`` fail-closes on an undeclared column — the runtime half of this rule, ADR 0057). A bare ``file_id: uuid.UUID`` column on a ``table=True`` model is an undeclared reference: nothing ties the file's access to the referencing row, which is the classic object-level (BOLA) drift. Declare the column with ``FileRef(...)`` (from ``terp-cap-files``) so the reference is greppable, verified at runtime, and served through the module's own already-authorized row — never hand-rolled. A non-table schema (a Read DTO exposing ``file_id``) is fine and not policed; only the persisted column is.
+A stored pointer to a file object carries authorization semantics: the files capability serves delegated reads only through a declared reference, failing closed on an undeclared column. A bare id-typed file-pointer column on a table model is an undeclared reference: nothing ties the file's access to the referencing row, which is the classic object-level (BOLA) drift. Declare the column with the files capability's reference type so the pointer is greppable, verified at runtime, and served through the module's own already-authorized row — never hand-rolled. A non-table schema (a read DTO exposing the pointer) is fine and not policed; only the persisted column is.
+
+## What to do instead
+
+FileRef(...) from terp-cap-files declares the column; FileService.load_for fail-closes on an undeclared *file_id column (ADR 0057). (reference stack; another stack ships its own realisation.)
 
 ## If you really need an exception
 

@@ -1,6 +1,6 @@
 # `backend/session_imported_from_sqlmodel`
 
-**The ORM ``Session`` is imported from ``sqlmodel``, never from ``sqlalchemy``**
+**The ORM session type is imported from the framework's canonical source, never the underlying library**
 
 > Generated from the catalog by `tools/generate_rule_docs.py` — do not
 > edit by hand; the parity test holds this page to
@@ -8,7 +8,11 @@
 
 ## Why this rule exists
 
-SQLModel re-exports SQLAlchemy's ``Session``, and the framework standardises on that one everywhere — ``SessionDep``, ``BaseService``, the write guard, and the migrations all speak ``sqlmodel.Session``. Importing ``Session`` from ``sqlalchemy`` / ``sqlalchemy.orm`` quietly forks the app onto a second session type, so the rule names the one canonical import. (Constructing a session is separately banned by ``no_raw_session_construction`` — this only fixes the spelling.)
+The framework standardises on one session type everywhere — the injected request session, the service layer, the write guard, and the migrations all speak the same type, re-exported from one canonical source. Importing the session type from the underlying ORM library instead quietly forks the app onto a second session type, so the rule names the one canonical import. (Constructing a session is separately banned by no_raw_session_construction — this only fixes the spelling.)
+
+## What to do instead
+
+from sqlmodel import Session is canonical (SQLModel re-exports SQLAlchemy's); imports from sqlalchemy / sqlalchemy.orm are refused. (reference stack; another stack ships its own realisation.)
 
 ## If you really need an exception
 

@@ -8,7 +8,7 @@
 
 ## Why this rule exists
 
-A credential-shaped assignment to a non-empty string literal is almost always a secret that should come from sealed config / environment wiring, not source. The rule also rejects common high-confidence secret literal formats anywhere in a module so leaked keys are caught even when assigned to a bland variable name. As a security rule this also scans ``tests/`` and ``migrations/`` dirs inside a module — a real secret is a leak wherever it is committed.
+A credential-shaped assignment to a non-empty string literal is almost always a secret that should come from sealed config / environment wiring, not source. The rule also rejects common high-confidence secret literal formats anywhere in a module so leaked keys are caught even when assigned to a bland variable name. As a security rule this also scans test and migration files inside a module — a real secret is a leak wherever it is committed.
 
 ## If you really need an exception
 

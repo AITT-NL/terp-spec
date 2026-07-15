@@ -127,6 +127,46 @@ def test_the_packaging_manifests_carry_the_spec_version() -> None:
     )
 
 
+# --------------------------------------------------------------------------- #
+# the escape-hatch contract is uniform: a marker names the CATALOG RULE NAME
+# (never a tool-internal rule id — the suppression analogue of findings
+# attribution), and the governance rules themselves carry no opt-out
+# --------------------------------------------------------------------------- #
+_GOVERNANCE_RULES_WITHOUT_OPT_OUT = {
+    "backend/escape_hatch_budget",
+    "backend/ungoverned_escape_hatch",
+    "frontend/escape-hatch",
+}
+
+_OPT_OUT_TEMPLATES = {
+    "backend": "# arch-allow-{name}: <reason>",
+    "frontend": "// terp-allow-{name}: <reason>",
+}
+
+
+def test_opt_outs_derive_from_the_catalog_rule_name() -> None:
+    """Every opt-out marker spelling is the rule's own catalog name (backend
+    snake_case rendered with dashes), so a marker can never waive a sibling
+    rule that happens to share a tool-internal rule id — and the escape-hatch
+    governance rules declare no opt-out at all: governance cannot be waived by
+    the mechanism it governs."""
+    for surface in ("backend", "frontend"):
+        for name, entry in _entries(surface).items():
+            rule_id = f"{surface}/{name}"
+            opt_out = entry.get("opt_out")
+            if rule_id in _GOVERNANCE_RULES_WITHOUT_OPT_OUT:
+                assert opt_out is None, (
+                    f"{rule_id}: an escape-hatch governance rule must not declare an "
+                    "opt_out — waiving governance with governance is refused"
+                )
+                continue
+            expected = _OPT_OUT_TEMPLATES[surface].format(name=name.replace("_", "-"))
+            assert opt_out == expected, (
+                f"{rule_id}: opt_out must name the catalog rule "
+                f"({expected!r}), got {opt_out!r}"
+            )
+
+
 def test_every_catalog_entry_validates_against_the_checked_in_schema() -> None:
     schema = json.loads((_CATALOG / "schema.json").read_text(encoding="utf-8"))
     for surface in ("backend", "frontend"):
@@ -191,32 +231,6 @@ def test_runtime_applicability_is_coherent() -> None:
                     f"{surface}/{name}: runtime.tracking is the deferral lifecycle "
                     f"field and is meaningless for {applicability!r}"
                 )
-
-
-# --------------------------------------------------------------------------- #
-# the escape-hatch spelling is held to the rule id: the normative contract says
-# the marker NAMES THE RULE, so a typo'd opt_out would document a marker no
-# checker honours — an unenforceable escape hatch.
-# --------------------------------------------------------------------------- #
-def test_opt_out_markers_name_their_rule() -> None:
-    for name, entry in _entries("backend").items():
-        expected = f"# arch-allow-{name.replace('_', '-')}: <reason>"
-        assert entry["opt_out"] == expected, (
-            f"backend/{name}: opt_out {entry['opt_out']!r} must spell the reference "
-            f"marker for this rule exactly ({expected!r}) — a typo'd marker is an "
-            "unenforceable opt-out"
-        )
-    for name, entry in _entries("frontend").items():
-        # Suppression happens at the ESLint layer, so the marker names the rule
-        # violations are REPORTED AS (several catalog rules share a core rule id),
-        # with the terp/ plugin prefix dropped from the marker spelling.
-        reported = entry["enforcement"][0].get("reported_as", f"terp/{name}")
-        expected = f"// terp-allow-{reported.removeprefix('terp/')}: <reason>"
-        assert entry["opt_out"] == expected, (
-            f"frontend/{name}: opt_out {entry['opt_out']!r} must spell the marker for "
-            f"the rule id violations surface as ({expected!r}) — a typo'd marker is an "
-            "unenforceable opt-out"
-        )
 
 
 # --------------------------------------------------------------------------- #
@@ -340,6 +354,71 @@ def test_corpus_flags_match_the_corpus_directories() -> None:
             assert all(case.startswith(("violation-", "compliant-")) for case in cases), (
                 f"{surface}/{name}: unexpected case dirs {sorted(cases)}"
             )
+
+
+# --------------------------------------------------------------------------- #
+# the normative prose is stack-neutral: title and intent state the invariant
+# in plain prose — reference-implementation vocabulary (framework symbols,
+# docstring markup, marker spellings, repo-internal pointers) belongs in the
+# non-normative fields (enforcement / reference / opt_out / guide_topic)
+# --------------------------------------------------------------------------- #
+_REFERENCE_LEAKAGE: list[tuple[re.Pattern[str], str]] = [
+    (re.compile(r"``"), "RST literal markup — write plain prose"),
+    (re.compile(r":[a-z]+:`"), "a Sphinx role — write plain prose"),
+    (re.compile(r"\bterp\.[a-z_]"), "a terp.* package path — reference metadata"),
+    (re.compile(r"@terp/"), "an @terp/* package path — reference metadata"),
+    (re.compile(r"\bterp +(?:check|guide|migrate)\b"), "the reference CLI — reference metadata"),
+    (re.compile(r"(?:arch|terp)-allow"), "a marker spelling — belongs in opt_out / reference"),
+    (re.compile(r"\bADR +\d"), "a framework ADR pointer — unresolvable for a spec consumer"),
+    (
+        re.compile(
+            r"\b(?:BaseService|BaseTable|BaseSchema|BaseUpdateSchema|ModuleSpec|SessionDep"
+            r"|create_app|FastAPI|SQLModel|sqlmodel|SQLAlchemy|sqlalchemy|Alembic|alembic"
+            r"|base_query|business_filters|response_model|TenantScopedService|TenantScopedMixin"
+            r"|SoftDeleteMixin|OwnedMixin|ActorStampedMixin|FileRef|WriteGuardedSession"
+            r"|ControlPlane|EventDefinition|JobDefinition|LifecycleEventMap|PaginationDep"
+            r"|SecurityConfig|configure_logging|basicConfig|dictConfig|fileConfig"
+            r"|dependency_overrides|add_middleware|BaseHTTPMiddleware|assert_app_clean"
+            r"|ArchViolation|assert_migrations_current|create_all|httpx|Celery|APScheduler"
+            r"|React)\b"
+        ),
+        "a reference-implementation symbol — belongs in reference / enforcement",
+    ),
+    (
+        re.compile(r"Page\[|Policy\.[a-z_]|Roles\.[A-Z]"),
+        "a reference API shape — belongs in reference / enforcement",
+    ),
+]
+
+
+def test_normative_prose_is_stack_neutral() -> None:
+    """``title`` and ``intent`` are the normative, stack-neutral statement of a
+    rule; the reference realisation lives in ``enforcement`` / ``reference`` /
+    ``opt_out`` / ``guide_topic``. Hold the prose to that split, so
+    docstring-flavoured markup and framework symbols cannot drift back in.
+    Sibling rules are cited by their catalog rule name — that is catalog
+    vocabulary, not leakage, so rule names are scrubbed before matching."""
+    rule_names = sorted(
+        (name for surface in ("backend", "frontend") for name in _entries(surface)),
+        key=len,
+        reverse=True,
+    )
+    problems: list[str] = []
+    for surface in ("backend", "frontend"):
+        for name, entry in _entries(surface).items():
+            if entry["intent"].strip() == entry["title"].strip():
+                problems.append(
+                    f"{surface}/{name}: intent merely repeats the title — say why the rule exists"
+                )
+            for field in ("title", "intent"):
+                text = entry[field]
+                for token in rule_names:
+                    text = text.replace(token, " ")
+                for pattern, why in _REFERENCE_LEAKAGE:
+                    match = pattern.search(text)
+                    if match:
+                        problems.append(f"{surface}/{name}.{field}: {match.group(0)!r} is {why}")
+    assert problems == [], "normative prose must stay stack-neutral:\n" + "\n".join(problems)
 
 
 # --------------------------------------------------------------------------- #

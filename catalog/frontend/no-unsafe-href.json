@@ -2,7 +2,7 @@
   "id": "frontend/no-unsafe-href",
   "surface": "frontend",
   "title": "javascript: URLs are refused in app modules",
-  "intent": "A javascript: href executes script on click \u2014 an XSS vector that survives React's attribute escaping. Links carry http(s), mailto, tel or in-app router paths only.",
+  "intent": "A javascript: href executes script on click \u2014 an XSS vector that survives the framework's attribute escaping. Links carry http(s), mailto, tel or in-app router paths only.",
   "layer": "static-portable",
   "enforcement": [
     {

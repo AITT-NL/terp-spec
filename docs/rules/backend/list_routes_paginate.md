@@ -1,6 +1,6 @@
 # `backend/list_routes_paginate`
 
-**A list route returns a capped ``Page[T]``, never a bare ``list[...]``**
+**A list route returns a capped page envelope, never a bare unbounded collection**
 
 > Generated from the catalog by `tools/generate_rule_docs.py` — do not
 > edit by hand; the parity test holds this page to
@@ -8,7 +8,11 @@
 
 ## Why this rule exists
 
-Pagination is a mandatory cross-cutting control (ADR 0006, Tier A): a route whose ``response_model`` is a bare ``list[...]`` / ``Sequence[...]`` serializes an **unbounded** collection -- a resource-exhaustion and over-exposure footgun on a large table, and a ``Page[T]`` guarantee that was previously only a convention. Wrap the Read DTO in ``terp.core.Page[...]`` (returned via ``Page.of(...)`` with ``PaginationDep``) so every list is capped and uniformly shaped. A single-object ``response_model`` (``NoteRead``) is unaffected; both decorator routes and imperative ``add_api_route`` registration are checked.
+Pagination is a mandatory cross-cutting control: a route whose declared response type is a bare collection serializes an unbounded result — a resource-exhaustion and over-exposure footgun on a large table, and a page-envelope guarantee that was previously only a convention. Wrap the read DTO in the framework's capped page envelope so every list is bounded and uniformly shaped. A single-object response is unaffected; both decorator routes and imperative route registration are checked.
+
+## What to do instead
+
+response_model=Page[ReadDTO] returned via Page.of(...) with PaginationDep (ADR 0006, Tier A); bare list[...] / Sequence[...] response models are refused. (reference stack; another stack ships its own realisation.)
 
 ## If you really need an exception
 
@@ -24,6 +28,7 @@ exactly match the checked-in budget (which can only shrink).
 
 ## Enforcement
 
-- Checked while the app runs? Not yet — a runtime control is planned; the gap is explicit and tracked.
+- Checked while the app runs? Yes — the framework also enforces this while the app runs (fail closed).
 - `build-time`: `terp.arch` — `check_list_routes_paginate`
 - `black-box`: `@terp/conformance` — `standard: list routes return a capped Page envelope`
+- `runtime`: `terp.core` — `_validate_list_routes_paginate`

@@ -8,7 +8,11 @@
 
 ## Why this rule exists
 
-Who created and last modified a row is **provenance**, applied **centrally**: ``BaseService._save`` fills ``created_by_id`` (on insert) and ``modified_by_id`` (on every write) from the request actor (:class:`~terp.core.ActorStampedMixin`, ADR 0012). A module that assigns ``<x>.created_by_id`` / ``<x>.modified_by_id`` is forging or clobbering that trail — the actor must come from the authenticated request, never from caller-supplied data. As with the scope columns, a read DTO may still *expose* the column (an annotation is fine); only attribute access (set / compare) is policed.
+Who created and last modified a row is provenance, applied centrally: the audited write chokepoint fills created_by_id (on insert) and modified_by_id (on every write) from the request actor. A module that assigns those columns is forging or clobbering that trail — the actor must come from the authenticated request, never from caller-supplied data. As with the scope columns, a read DTO may still expose the column (an annotation is fine); only attribute access (set / compare) is policed.
+
+## What to do instead
+
+ActorStampedMixin columns are stamped by BaseService._save (ADR 0012); assignments to created_by_id / modified_by_id in module code are refused. (reference stack; another stack ships its own realisation.)
 
 ## If you really need an exception
 

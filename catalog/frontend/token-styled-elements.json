@@ -13,7 +13,7 @@
     }
   ],
   "reference": "Button, Input, Select, Textarea, DataView, ConfirmDialog and Stack as=\"form\" from @terp/react-core (BOUNDARY_SPEC.restrictedElements maps each element to its replacement).",
-  "opt_out": "// terp-allow-no-restricted-syntax: <reason>",
+  "opt_out": "// terp-allow-token-styled-elements: <reason>",
   "runtime": {
     "applicability": "not-applicable",
     "rationale": "The sanctioned components themselves render the raw elements into the built DOM -- every button on screen is legitimate output of Button. Compilation erases which JSX authored a node, and third-party components legitimately render the same primitives, so a DOM scan cannot soundly attribute a raw element to app authorship (unlike the layout contract's slot check, which verifies the identity of sanctioned components at one owned seam)."

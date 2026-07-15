@@ -1,6 +1,6 @@
 # `backend/no_raw_session_construction`
 
-**App code never constructs a ``Session`` / engine directly; it uses ``SessionDep``**
+**App code never constructs a database session or engine; it uses the injected request session**
 
 > Generated from the catalog by `tools/generate_rule_docs.py` — do not
 > edit by hand; the parity test holds this page to
@@ -8,7 +8,11 @@
 
 ## Why this rule exists
 
-App code never constructs a ``Session`` / engine directly; it uses ``SessionDep``
+The injected request session is where the framework's runtime controls live — the write guard, row scoping, and the audit hooks all ride on the session the framework hands out. A hand-constructed session or engine sits outside every one of those chokepoints by definition: its reads are unscoped, its writes are unaudited and unguarded, and it silently forks the app onto a second connection lifecycle.
+
+## What to do instead
+
+SessionDep injects the guarded request session; Session(...) / create_engine / sessionmaker construction in app code is refused. (reference stack; another stack ships its own realisation.)
 
 ## If you really need an exception
 

@@ -8,7 +8,11 @@
 
 ## Why this rule exists
 
-A sealed configuration value (``enc:v1:...``) stays opaque in app code: a module renders ``mask_config`` and never calls ``decrypt_config``. The single sanctioned decrypt site (design §5.4) carries a justified ``# arch-allow-no-adhoc-config-decrypt`` marker counted against the app's escape-hatch budget. Its runtime half is :func:`terp.core.secrets.decrypt_config`, which fails closed unless called from the one site registered via ``register_decrypt_call_site``.
+A sealed configuration value stays opaque in app code: a module renders the masked form and never unseals a value itself. The single sanctioned decrypt site carries a justified opt-out marker counted against the app's escape-hatch budget. The runtime half is the decrypt chokepoint itself, which fails closed unless called from the one registered call site.
+
+## What to do instead
+
+mask_config renders sealed values (enc:v1:...); terp.core.secrets.decrypt_config fails closed unless called from the site registered via register_decrypt_call_site (design §5.4). (reference stack; another stack ships its own realisation.)
 
 ## If you really need an exception
 

@@ -72,8 +72,46 @@ jobs:
           pip install pytest
           python -m pytest
 
-  github-release:
+  # A spec release must be certified against the live reference implementation
+  # (the same substitution ci.yml runs on every push): a tag can never publish a
+  # catalog or corpus no conformant checker exists for. Fail closed — the
+  # GitHub Release requires this job.
+  certify-against-reference:
     needs: verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: spec
+      - uses: actions/checkout@v4
+        with:
+          repository: AITT-NL/terp-framework
+          path: framework
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - name: Set up Python
+        run: uv python install 3.13
+      - name: Python certification (catalog parity + backend corpus)
+        working-directory: framework
+        run: |
+          uv sync
+          uv pip install -e ../spec
+          uv run --no-sync pytest tests/architecture/test_spec_catalog.py tests/architecture/test_spec_corpus.py -q
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Frontend certification (ESLint adapter corpus + surface + findings)
+        working-directory: framework
+        run: |
+          npm ci
+          rm -rf node_modules/@terp/spec
+          ln -s "$GITHUB_WORKSPACE/spec" node_modules/@terp/spec
+          npx vitest run packages/frontend/eslint-boundaries
+
+  github-release:
+    needs: [verify, certify-against-reference]
     runs-on: ubuntu-latest
     permissions:
       contents: write

@@ -8,7 +8,11 @@
 
 ## Why this rule exists
 
-An input schema is a ``*Create`` / ``*Update`` **or** any class used as a request body (a route handler's body parameter, or a ``build_crud_router`` create/update schema) -- the same role-based definition the input-cap rule uses, so an off-convention DTO (``UserProvision``, ``LoginRequest``) is covered too. ``BaseService.create`` / ``update`` copy a schema's fields onto the model, so a client-settable ``id`` / ``version`` / ``tenant_id`` / ``created_by_id`` is an over-posting (mass-assignment) hole -- a client could forge the primary key, defeat optimistic concurrency, or cross a tenant boundary. The framework assigns every managed column centrally; an input schema must never expose one. (``BaseService`` also strips the same set at runtime -- this rule is the build-time half of that two-layer control.)
+An input schema is a *Create / *Update or any class used as a request body (a route handler's body parameter, or a generated CRUD router's create/update schema) — the same role-based definition the input-cap rule uses, so an off-convention DTO (UserProvision, LoginRequest) is covered too. The write chokepoint copies a schema's fields onto the model, so a client-settable id / version / tenant_id / created_by_id is an over-posting (mass-assignment) hole — a client could forge the primary key, defeat optimistic concurrency, or cross a tenant boundary. The framework assigns every managed column centrally; an input schema must never expose one. (The write chokepoint also strips the same set at runtime — this rule is the build-time half of that two-layer control.)
+
+## What to do instead
+
+BaseService.create/update strip the managed set via _without_managed_columns; build_crud_router create/update schemas are scanned too. (reference stack; another stack ships its own realisation.)
 
 ## If you really need an exception
 

@@ -113,7 +113,14 @@ machine-consumes it, not before.
 ## Catalog format
 
 `catalog/<surface>/<rule>.json`, validated against `catalog/schema.json` (the
-schema is normative and travels with the spec):
+schema is normative and travels with the spec). The normative statement of a
+rule is its `title` + `intent`, and that prose is **stack-neutral by
+construction**: plain prose, no docstring markup, no reference-implementation
+symbols, package paths, marker spellings, or repo-internal pointers (sibling
+rules are cited by catalog rule name). The reference realisation lives in the
+non-normative fields (`enforcement`, `reference`, `opt_out`, `guide_topic`).
+The standalone suite enforces the split
+(`test_normative_prose_is_stack_neutral`).
 
 | Field | Meaning |
 |---|---|
@@ -173,15 +180,19 @@ always carries a tracking reference.
 
 ### The escape-hatch contract
 
-Every rule has exactly one governed opt-out, and its *semantics* are the
+Every rule has **at most one** governed opt-out, and its *semantics* are the
 normative part: a **justified inline marker** on (or immediately above) the
-violating line that names the rule and states a reason; an unjustified marker
-is itself a violation; marker counts must exactly match a checked-in
-per-app budget that can only shrink (the ratchet). The `opt_out` field records
-the reference realisation's concrete spelling (`# arch-allow-<rule>: <reason>`
-in Python, `// terp-allow-<rule>: <reason>` in TypeScript — the marker names
-the rule id violations are *reported as*, held to the catalog by the spec
-suite); another stack implements the same contract with its own comment syntax.
+violating line that names the **catalog rule name** (the `<rule>` half of the
+id — never a tool-internal rule id, mirroring findings attribution) and states
+a reason; an unjustified marker is itself a violation; marker counts must
+exactly match a checked-in per-app budget that can only shrink (the ratchet).
+The `opt_out` field records the reference realisation's concrete spelling
+(`# arch-allow-<rule>: <reason>` in Python, `// terp-allow-<rule>: <reason>`
+in TypeScript) — the spelling is derived from the rule id, and the spec suite
+holds the derivation. The escape-hatch **governance rules themselves** (the
+budget ratchet, the ungoverned-marker condition) carry no `opt_out`:
+governance cannot be waived by the mechanism it governs. Another stack
+implements the same contract with its own comment syntax.
 
 The `<reason>` is free text, and MAY carry structured metadata tokens so a
 long-lived exception stays visible and auditable rather than eternal:

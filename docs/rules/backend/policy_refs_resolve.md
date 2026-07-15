@@ -1,6 +1,6 @@
 # `backend/policy_refs_resolve`
 
-**Every typed authority a ``Policy`` cites resolves in ``control_plane/permissions.py``**
+**Every typed authority a policy cites resolves in the app's authority registry**
 
 > Generated from the catalog by `tools/generate_rule_docs.py` — do not
 > edit by hand; the parity test holds this page to
@@ -8,7 +8,11 @@
 
 ## Why this rule exists
 
-The build-time half of control-plane registry resolution: boot validation (``ControlPlane.validation_errors``) already refuses an undeclared authority at runtime; this rule catches the same drift at the gate, before the app ever boots. Any reference that traces to the app's authority registry — ``perms.BILLING_READ`` via a module alias, or a name imported from ``control_plane.permissions`` — must name something the registry actually declares. References the scan cannot trace to the registry (kernel defaults such as ``Roles.EDITOR``, locally built objects) are left to the runtime check, so the rule stays precise, never heuristic.
+The build-time half of control-plane registry resolution: boot validation already refuses an undeclared authority at runtime; this rule catches the same drift at the gate, before the app ever boots. Any reference that traces to the app's authority registry — via a module alias or a name imported from the registry — must name something the registry actually declares. References the scan cannot trace to the registry (kernel default roles, locally built objects) are left to the runtime check, so the rule stays precise, never heuristic.
+
+## What to do instead
+
+control_plane/permissions.py is the registry; aliased references like perms.BILLING_READ must resolve there, kernel defaults like Roles.EDITOR are left to ControlPlane.validation_errors at boot. (reference stack; another stack ships its own realisation.)
 
 ## If you really need an exception
 

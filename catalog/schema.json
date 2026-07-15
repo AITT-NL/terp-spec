@@ -4,7 +4,7 @@
   "title": "Terp Standard catalog entry",
   "description": "One enforced Terp rule as data (ADR 0080). The file lives at catalog/<surface>/<rule>.json and its id must equal '<surface>/<rule>'. The spec version an entry belongs to is the checked-in spec/VERSION.",
   "type": "object",
-  "required": ["id", "surface", "title", "intent", "layer", "enforcement", "runtime", "opt_out", "corpus"],
+  "required": ["id", "surface", "title", "intent", "layer", "enforcement", "runtime", "corpus"],
   "additionalProperties": false,
   "properties": {
     "id": {
@@ -79,7 +79,7 @@
     },
     "opt_out": {
       "type": "string",
-      "description": "The reference realisation of the abstract escape-hatch contract: a justified inline marker naming the rule, counted against the app's checked-in budget ratchet. Another stack implements the same contract with its own comment syntax; only the semantics are normative.",
+      "description": "The reference realisation of the abstract escape-hatch contract: a justified inline marker naming the CATALOG RULE NAME (the <rule> half of the id — never a tool-internal rule id, mirroring findings attribution), counted against the app's checked-in budget ratchet. Another stack implements the same contract with its own comment syntax; only the semantics are normative. Omitted exactly by the escape-hatch governance rules themselves (the budget ratchet, the ungoverned-marker condition) — governance cannot be waived by the mechanism it governs. The spec suite holds both the derivation and the omissions.",
       "minLength": 1
     },
     "guide_topic": {

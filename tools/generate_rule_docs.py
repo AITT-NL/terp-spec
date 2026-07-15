@@ -54,16 +54,27 @@ def render(entry: dict) -> str:
     lines += [
         "## If you really need an exception",
         "",
-        "Add a justified marker on (or immediately above) the line, and record it",
-        "in your app's escape-hatch budget:",
-        "",
-        "```",
-        entry["opt_out"],
-        "```",
-        "",
-        "An unjustified marker is itself a violation, and marker counts must",
-        "exactly match the checked-in budget (which can only shrink).",
-        "",
+    ]
+    if entry.get("opt_out"):
+        lines += [
+            "Add a justified marker on (or immediately above) the line, and record it",
+            "in your app's escape-hatch budget:",
+            "",
+            "```",
+            entry["opt_out"],
+            "```",
+            "",
+            "An unjustified marker is itself a violation, and marker counts must",
+            "exactly match the checked-in budget (which can only shrink).",
+            "",
+        ]
+    else:
+        lines += [
+            "There is none. This rule governs the escape-hatch mechanism itself,",
+            "so it cannot be waived by that mechanism.",
+            "",
+        ]
+    lines += [
         "## Enforcement",
         "",
         f"- Checked while the app runs? {_RUNTIME_LABEL[entry['runtime']['applicability']]}",

@@ -20,7 +20,7 @@ Add a justified marker on (or immediately above) the line, and record it
 in your app's escape-hatch budget:
 
 ```
-// terp-allow-no-restricted-globals: <reason>
+// terp-allow-generated-client-only: <reason>
 ```
 
 An unjustified marker is itself a violation, and marker counts must

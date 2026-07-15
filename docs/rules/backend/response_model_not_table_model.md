@@ -1,6 +1,6 @@
 # `backend/response_model_not_table_model`
 
-**A route's ``response_model`` is a read DTO, never a ``table=True`` ORM model**
+**A route's declared response type is a read DTO, never the persisted table model**
 
 > Generated from the catalog by `tools/generate_rule_docs.py` — do not
 > edit by hand; the parity test holds this page to
@@ -8,7 +8,11 @@
 
 ## Why this rule exists
 
-:func:`check_routes_declare_response_model` proves a model is *declared*; this rule proves it is not the persisted table itself. A ``response_model`` set to a ``table=True`` model -- directly or wrapped in ``Page[...]`` / ``list[...]`` -- serializes the ORM row, so a column such as ``hashed_password`` leaks straight through the boundary (the ``Page[User]`` footgun). Return a ``*Read`` schema (:class:`terp.core.BaseSchema`) listing exactly the safe fields instead.
+routes_declare_response_model proves a response type is declared; this rule proves it is not the persisted table itself. A declared response type set to a table model — directly or wrapped in a page envelope or collection — serializes the stored row, so a column such as a password hash leaks straight through the boundary. Return a read DTO listing exactly the safe fields instead.
+
+## What to do instead
+
+response_model set to a table=True model, directly or wrapped in Page[...] / list[...] (the Page[User] footgun), is refused; return a *Read schema on terp.core.BaseSchema. (reference stack; another stack ships its own realisation.)
 
 ## If you really need an exception
 

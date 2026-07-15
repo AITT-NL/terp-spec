@@ -1,6 +1,6 @@
 # `backend/modules_declare_policy`
 
-**Every ``modules/<name>/module.py`` declares a ``ModuleSpec`` with a ``policy=``**
+**Every module manifest declares an access policy**
 
 > Generated from the catalog by `tools/generate_rule_docs.py` — do not
 > edit by hand; the parity test holds this page to
@@ -8,7 +8,11 @@
 
 ## Why this rule exists
 
-Every ``modules/<name>/module.py`` declares a ``ModuleSpec`` with a ``policy=``
+The deny-by-default posture hangs on the declaration: composition mounts a module's routes behind the guard its declared policy configures, so a module without one has no stated authority model at all — there is nothing to authorize against, and the framework refuses to guess. Requiring the declaration in the manifest keeps every module's access decision explicit, reviewable, and in one predictable place.
+
+## What to do instead
+
+modules/<name>/module.py declares ModuleSpec(policy=Policy(...)); create_app mounts the router behind the guard built from it (build_guard). (reference stack; another stack ships its own realisation.)
 
 ## If you really need an exception
 

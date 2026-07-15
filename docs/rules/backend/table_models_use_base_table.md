@@ -1,6 +1,6 @@
 # `backend/table_models_use_base_table`
 
-**Every ORM table model inherits ``BaseTable`` (no bare ``SQLModel`` tables)**
+**Every ORM table model inherits the platform base table (no bare tables)**
 
 > Generated from the catalog by `tools/generate_rule_docs.py` — do not
 > edit by hand; the parity test holds this page to
@@ -8,7 +8,11 @@
 
 ## Why this rule exists
 
-A ``table=True`` model that skips ``BaseTable`` bypasses the framework's UUID id, timestamps, and optimistic-concurrency ``version`` — a model living outside the control-plane contract.
+A table model that skips the platform base table bypasses the framework's managed identity, timestamps, and optimistic-concurrency version — a model living outside the control-plane contract, which every chokepoint (the service layer, audit, concurrency) presupposes.
+
+## What to do instead
+
+BaseTable supplies the UUID id, created_at/updated_at and the OCC version; a bare SQLModel table=True model is refused. (reference stack; another stack ships its own realisation.)
 
 ## If you really need an exception
 

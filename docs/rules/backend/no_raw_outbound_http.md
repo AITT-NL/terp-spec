@@ -8,7 +8,11 @@
 
 ## Why this rule exists
 
-Direct ``httpx`` / ``requests`` / ``urllib.request`` / ``urllib3`` / ``aiohttp`` imports — and the lower-level ``socket`` / ``http.client`` escape routes to the same network — make SSRF protection, allowlists, egress auditing, and timeout policy a per-call-site choice. Outbound traffic belongs behind a declared capability that centralizes those controls. As a security rule this also scans ``tests/`` and ``migrations/`` dirs inside a module — they are importable Python, so they are application surface too.
+Directly importing an HTTP client library — or the lower-level socket / protocol primitives that reach the same network — makes SSRF protection, allowlists, egress auditing, and timeout policy a per-call-site choice. Outbound traffic belongs behind a declared capability that centralizes those controls. As a security rule this also scans test and migration files inside a module — they are importable code, so they are application surface too.
+
+## What to do instead
+
+httpx / requests / urllib.request / urllib3 / aiohttp imports and the socket / http.client escape routes are refused in app modules; outbound calls go through a declared egress capability. (reference stack; another stack ships its own realisation.)
 
 ## If you really need an exception
 

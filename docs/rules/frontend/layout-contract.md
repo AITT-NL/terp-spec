@@ -8,7 +8,11 @@
 
 ## Why this rule exists
 
-With a checked-in layout-contract.json, each page archetype's body slot is constrained to the contract's sanctioned components (ADR 0079), so screens stay structurally consistent and the failure message tells an agent exactly how to build the screen. Paired with the fail-closed runtime DOM check in @terp/react-core.
+With a checked-in layout contract, each page archetype's body slot is constrained to the contract's sanctioned components, so screens stay structurally consistent and the failure message tells an agent exactly how to build the screen. Paired with the fail-closed runtime check on the rendered slot.
+
+## What to do instead
+
+frontend/layout-contract.json + the layoutContract bootstrap option (ADR 0079); verifySlotChildren in @terp/react-core is the runtime DOM check. (reference stack; another stack ships its own realisation.)
 
 ## If you really need an exception
 

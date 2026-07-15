@@ -2,7 +2,7 @@
   "id": "frontend/layout-contract",
   "surface": "frontend",
   "title": "An opted-in app's archetype body slots accept only the contract's components",
-  "intent": "With a checked-in layout-contract.json, each page archetype's body slot is constrained to the contract's sanctioned components (ADR 0079), so screens stay structurally consistent and the failure message tells an agent exactly how to build the screen. Paired with the fail-closed runtime DOM check in @terp/react-core.",
+  "intent": "With a checked-in layout contract, each page archetype's body slot is constrained to the contract's sanctioned components, so screens stay structurally consistent and the failure message tells an agent exactly how to build the screen. Paired with the fail-closed runtime check on the rendered slot.",
   "layer": "static-bespoke",
   "enforcement": [
     {
@@ -18,6 +18,7 @@
     }
   ],
   "opt_out": "// terp-allow-layout-contract: <reason>",
+  "reference": "frontend/layout-contract.json + the layoutContract bootstrap option (ADR 0079); verifySlotChildren in @terp/react-core is the runtime DOM check.",
   "runtime": {
     "applicability": "required"
   },

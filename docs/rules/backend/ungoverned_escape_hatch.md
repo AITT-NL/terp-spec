@@ -8,19 +8,16 @@
 
 ## Why this rule exists
 
-:func:`assert_app_clean` refuses (with a plain ``AssertionError``) to honour any ``# arch-allow-*`` marker when no escape-hatch budget governs it. This is the same condition projected as :class:`ArchViolation` values (rule ``ungoverned_escape_hatch``, one per marker line), so a structured renderer (``terp check --format json``) reports it in-band instead of crashing.
+An opt-out marker the governance contract does not honour is itself a violation, reported in-band as structured findings (one per marker line) rather than crashing the harness: a marker used with no escape-hatch budget governing it, and a marker whose missing justification means it never suppressed anything. Either way the fix is to govern the opt-out — add the budget and the reason — never to silently honour it.
+
+## What to do instead
+
+assert_app_clean raises on an ungoverned # arch-allow-* marker; ungoverned_marker_violations projects the budget-less condition and _apply_suppressions re-reports an unjustified marker under the same rule, for terp check --format json. The rule carries no opt_out: governance cannot be waived by the mechanism it governs. (reference stack; another stack ships its own realisation.)
 
 ## If you really need an exception
 
-Add a justified marker on (or immediately above) the line, and record it
-in your app's escape-hatch budget:
-
-```
-# arch-allow-ungoverned-escape-hatch: <reason>
-```
-
-An unjustified marker is itself a violation, and marker counts must
-exactly match the checked-in budget (which can only shrink).
+There is none. This rule governs the escape-hatch mechanism itself,
+so it cannot be waived by that mechanism.
 
 ## Enforcement
 

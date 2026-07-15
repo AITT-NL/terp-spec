@@ -8,7 +8,11 @@
 
 ## Why this rule exists
 
-A soft-deleted row stays in the table, so it keeps occupying every full-table unique index: the "deleted" value (an email, a slug, a code) can never be used again, surfacing as an inexplicable 409 long after the delete. Scope uniqueness to the *live* rows with a partial unique index — ``Index("uq_note_slug_live", "slug", unique=True, postgresql_where=text("deleted_at IS NULL"), sqlite_where=text("deleted_at IS NULL"))`` in ``__table_args__``, which this rule accepts — or deactivate instead of deleting (how the identity user table keeps ``email`` unique).
+A soft-deleted row stays in the table, so it keeps occupying every full-table unique index: the "deleted" value (an email, a slug, a code) can never be used again, surfacing as an inexplicable conflict long after the delete. Scope uniqueness to the live rows with a partial unique index that excludes soft-deleted rows — which this rule accepts — or deactivate instead of deleting.
+
+## What to do instead
+
+A partial unique index in __table_args__ (unique=True with postgresql_where / sqlite_where on deleted_at IS NULL) is the accepted shape; the identity user table keeps email unique by deactivating instead of deleting. (reference stack; another stack ships its own realisation.)
 
 ## If you really need an exception
 

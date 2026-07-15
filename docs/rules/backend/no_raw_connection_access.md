@@ -8,7 +8,11 @@
 
 ## Why this rule exists
 
-The runtime write guard (ADR 0015) covers the request ``Session``'s own persistence methods, but the bound ``Engine`` / ``Connection`` it exposes can issue DML directly -- ``session.get_bind().connect().execute(insert(...))`` or ``session.connection().execute(...)`` -- bypassing the audited chokepoint (the F3 follow-up). A module must never call ``get_bind`` / ``connection``; persist through ``BaseService`` so every write is audited. A ``get_bind().connect()`` escape is already caught here at the ``get_bind`` call, and raw ``Session`` / engine *construction* (``create_engine`` / ``sessionmaker``) is separately banned by ``no_raw_session_construction`` -- so an unrelated ``.connect()`` on a domain object (a websocket / cache / search client) is deliberately *not* flagged.
+The runtime write guard covers the request session's own persistence methods, but the bound engine / connection the session exposes can issue data-modification statements directly, bypassing the audited chokepoint. A module must never reach for the session's underlying bind or connection; persist through the model's service so every write is audited. The escape is caught at the reach itself, and raw session / engine construction is separately banned by no_raw_session_construction — so an unrelated connect call on a domain object (a websocket / cache / search client) is deliberately not flagged.
+
+## What to do instead
+
+session.get_bind() / session.connection() calls are refused (ADR 0015, F3); BaseService is the audited write path, and WriteGuardedSession gates session.connection() at runtime. (reference stack; another stack ships its own realisation.)
 
 ## If you really need an exception
 

@@ -8,7 +8,11 @@
 
 ## Why this rule exists
 
-Structured logging + PII redaction is installed once by ``configure_logging`` (called by ``create_app``). A module calling ``logging.basicConfig`` / ``dictConfig`` / ``fileConfig`` re-points logging and can silently bypass the central secret-redaction filter.
+Structured logging plus secret/PII redaction is installed once, centrally, at composition. A module that re-points the global logging configuration itself can silently bypass the central redaction filter.
+
+## What to do instead
+
+configure_logging (called by create_app) installs the redacting handlers; logging.basicConfig / dictConfig / fileConfig calls in app modules are refused. (reference stack; another stack ships its own realisation.)
 
 ## If you really need an exception
 

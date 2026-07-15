@@ -2,7 +2,7 @@
   "id": "backend/jobs_reference_catalog",
   "surface": "backend",
   "title": "Enqueued / declared jobs are typed catalog constants, never bare strings",
-  "intent": "Background work carries the same no-drift guarantee as the event bus: every job a module enqueues or declares is a typed :class:`~terp.core.JobDefinition` from the control-plane catalog. This rule forbids a bare string (or an inline ``JobDefinition(...)``) wherever a job is named \u2014 the ``job=`` of an ``enqueue(...)`` call and the ``jobs`` list of a ``ModuleSpec(...)`` \u2014 so a job name can never drift in outside the catalog. Its runtime half is :func:`terp.core.enqueue`, which rejects a job not registered in the active catalog.",
+  "intent": "Background work carries the same no-drift guarantee as the event bus: every job a module enqueues or declares is a typed definition from the control-plane catalog. The rule forbids a bare string (or an inline, ad hoc definition) wherever a job is named — the job argument of an enqueue call and the jobs list of the module manifest — so a job name can never drift in outside the catalog. The runtime half is the enqueue chokepoint, which rejects a job not registered in the active catalog.",
   "layer": "static-bespoke",
   "enforcement": [
     {
@@ -16,6 +16,7 @@
       "ref": "enqueue"
     }
   ],
+  "reference": "JobDefinition constants from the control-plane catalog, cited in enqueue(job=...) / ModuleSpec(jobs=[...]); the runtime half is terp.core.enqueue.",
   "opt_out": "# arch-allow-jobs-reference-catalog: <reason>",
   "runtime": {
     "applicability": "required",

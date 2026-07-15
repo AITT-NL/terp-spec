@@ -9,8 +9,24 @@ against an earlier version reads this file to see exactly what changed since.
 
 ## 0.6.0
 
-Additive contract growth (no existing field changed meaning):
+One changed contract (the escape-hatch marker naming), otherwise additive
+growth:
 
+- **Escape-hatch contract**: a marker names the **catalog rule name** (the
+  `<rule>` half of the id — never a tool-internal rule id, mirroring findings
+  attribution), so a marker can never waive a sibling rule that shares a
+  checker-internal id; the `opt_out` spelling is derived from the rule id and
+  held by the spec suite. The escape-hatch **governance rules themselves**
+  (`backend/escape_hatch_budget`, `backend/ungoverned_escape_hatch`,
+  `frontend/escape-hatch`) now declare **no `opt_out`**: governance cannot be
+  waived by the mechanism it governs. The uncatalogued
+  `escape_hatch_requires_justification` finding id is retired — an unjustified
+  marker reports as `backend/ungoverned_escape_hatch`.
+- **Normative prose is stack-neutral, enforced**: `title` + `intent` are held
+  free of reference-implementation vocabulary (framework symbols, docstring
+  markup, marker spellings, repo-internal pointers) by the spec suite;
+  reference realisation lives in `enforcement` / `reference` / `opt_out` /
+  `guide_topic`.
 - **Catalog**: new optional `restricted_surface` field — the structural half
   of a frontend prohibition rule's refused-surface citation (the spec suite
   now resolves the linkage through this field instead of parsing `intent`
@@ -41,6 +57,15 @@ Additive contract growth (no existing field changed meaning):
   `tenant_scoped_models_use_scoped_service`, `base_query_not_overridden`).
 - **Docs**: generated plain-language rule pages under `docs/rules/`, held to
   the catalog by a parity test.
+- **Deferral closures**: `routes_declare_response_model`,
+  `schemas_exclude_sensitive_fields`, and `list_routes_paginate` move from
+  `runtime.applicability: deferred` to `required` — the reference
+  implementation ships fail-closed boot-time route-scan controls for all
+  three on the composition seam (terp-framework commit `c19a01e`, ADR 0084:
+  `_validate_routes_declare_response_model`,
+  `_validate_schemas_exclude_sensitive_fields`,
+  `_validate_list_routes_paginate`). No rule's meaning or corpus coverage
+  changed, only its runtime classification.
 
 ## 0.5.0
 

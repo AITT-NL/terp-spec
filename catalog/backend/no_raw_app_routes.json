@@ -2,7 +2,7 @@
   "id": "backend/no_raw_app_routes",
   "surface": "backend",
   "title": "App code never registers HTTP surface on the composed app object",
-  "intent": "``terp.core.create_app`` mounts every module router behind the deny-by-default policy guard. Surface registered on the composed app itself — ``app.mount(...)``, ``app.include_router(...)``, ``app.add_route(...)``, a verb decorator on a ``create_app``-produced app, or a lifecycle hook (``app.on_event`` / ``app.add_event_handler``) — is served or executed WITHOUT that guard and is invisible to the module permission model. Modules declare one flat router on their ``ModuleSpec``; composition mounts it.",
+  "intent": "Composition mounts every module router behind the deny-by-default policy guard. Surface registered on the composed app itself — a mount, an included router, a directly added route, a verb decorator on the composed app, or a lifecycle hook — is served or executed WITHOUT that guard and is invisible to the module permission model. Modules declare one flat router in their manifest; composition mounts it.",
   "layer": "static-portable",
   "enforcement": [
     {
@@ -16,6 +16,7 @@
       "ref": "_freeze_app_route_registration"
     }
   ],
+  "reference": "app.mount / app.include_router / app.add_route / verb decorators / app.on_event / app.add_event_handler on the create_app-produced app are refused; modules declare one router on their ModuleSpec.",
   "opt_out": "# arch-allow-no-raw-app-routes: <reason>",
   "runtime": {
     "applicability": "required"

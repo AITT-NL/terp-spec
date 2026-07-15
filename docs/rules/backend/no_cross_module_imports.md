@@ -8,7 +8,7 @@
 
 ## Why this rule exists
 
-Both absolute (``from app.modules.tasks...``) and relative (``from ..tasks...``) sibling imports are caught — a relative import is resolved to its absolute module first, so renaming the import style does not re-couple two leaf modules.
+Modules couple only through the platform surface and their own files — a sibling import creates hidden coupling that breaks module isolation and independent evolution. Both absolute and relative sibling imports are caught: a relative import is resolved to its absolute module first, so renaming the import style does not re-couple two leaf modules.
 
 ## If you really need an exception
 

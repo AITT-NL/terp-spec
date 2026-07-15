@@ -8,7 +8,11 @@
 
 ## Why this rule exists
 
-The event bus carries the same no-drift guarantee as the permission model: every event a module emits or subscribes to is a typed :class:`~terp.core.EventDefinition` from the control-plane catalog. This rule forbids a bare string (or an inline ``EventDefinition(...)``) wherever an event is named — the ``event=`` of an ``emit(...)`` call, the argument of a ``subscribe(...)`` decorator, the ``emits`` / ``subscribes`` lists of a ``ModuleSpec(...)``, and the ``created`` / ``updated`` / ``deleted`` of a ``LifecycleEventMap(...)`` — so an event name can never drift in outside the catalog.
+The event bus carries the same no-drift guarantee as the permission model: every event a module emits or subscribes to is a typed definition from the control-plane catalog. The rule forbids a bare string (or an inline, ad hoc definition) wherever an event is named — the event argument of an emit call, the argument of a subscribe decorator, the emits / subscribes lists of the module manifest, and the lifecycle event map — so an event name can never drift in outside the catalog.
+
+## What to do instead
+
+EventDefinition constants from the control-plane catalog, cited in emit(...) / subscribe(...) / ModuleSpec(emits=..., subscribes=...) / LifecycleEventMap(...); the runtime half is terp.core.emit. (reference stack; another stack ships its own realisation.)
 
 ## If you really need an exception
 

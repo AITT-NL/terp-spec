@@ -8,7 +8,11 @@
 
 ## Why this rule exists
 
-Dynamic ``text(...)`` / ``sqlalchemy.text(...)`` calls (f-strings, string concatenation, ``.format``, ``%`` formatting, or a variable) are not statically reviewable and are easy to turn into SQL injection. Keep SQL as a literal and pass data through SQLAlchemy parameters / ORM expressions instead. As a security rule this also scans ``tests/`` and ``migrations/`` dirs inside a module — they are importable Python, so they are application surface too.
+A raw-SQL construct built dynamically — through interpolation, concatenation, format calls, or a variable — is not statically reviewable and is easy to turn into SQL injection. Keep SQL as a literal and pass data through bound parameters / the query builder's typed expressions instead. As a security rule this also scans test and migration files inside a module — they are importable code, so they are application surface too.
+
+## What to do instead
+
+text(...) / sqlalchemy.text(...) with an f-string, concatenation, .format, % formatting, or a variable is refused; SQLAlchemy bound parameters / ORM expressions are the compliant path. (reference stack; another stack ships its own realisation.)
 
 ## If you really need an exception
 

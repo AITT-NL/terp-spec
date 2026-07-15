@@ -1,6 +1,6 @@
 # `backend/reads_use_base_query`
 
-**A scope-trait model is read through ``base_query``, never a raw ``select()``**
+**A scope-trait model is read through the composed scoped query, never a raw query built from scratch**
 
 > Generated from the catalog by `tools/generate_rule_docs.py` — do not
 > edit by hand; the parity test holds this page to
@@ -8,7 +8,11 @@
 
 ## Why this rule exists
 
-A model that mixes :class:`~terp.core.SoftDeleteMixin` or ``TenantScopedMixin`` carries row scope (soft-delete / tenant). A bespoke read that issues ``select(<Model>)`` directly — instead of building on ``base_query()`` — drops that scope, leaking soft-deleted or cross-tenant rows (the F1 follow-up to ADR 0017: closing ``base_query`` to overrides did not close a *new* read method that never calls it). Build reads on ``base_query()`` / ``business_filters()``; the request session re-applies the scope to any single-entity ``select`` as the runtime backstop, and this rule is the build-time early warning. ``base_query`` itself — the one sanctioned ``select(model)`` — lives in the framework, not a module, so it is never scanned here.
+A model that mixes a soft-delete or tenant-scope trait carries row scope. A bespoke read that queries the model directly — instead of building on the composed scoped query — drops that scope, leaking soft-deleted or cross-tenant rows (closing the composition point to overrides did not close a new read method that never calls it). Build reads on the scoped query and the declared filter seam; the request session re-applies the scope to single-entity reads as the runtime backstop, and this rule is the build-time early warning. The one sanctioned raw query — the scoped composition point itself — lives in the framework, not a module, so it is never scanned here.
+
+## What to do instead
+
+select(Model) on a SoftDeleteMixin / TenantScopedMixin model is refused in modules (ADR 0017, F1); build on base_query() / business_filters(), with apply_row_scope as the runtime backstop. (reference stack; another stack ships its own realisation.)
 
 ## If you really need an exception
 

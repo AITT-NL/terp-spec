@@ -1,6 +1,6 @@
 # `backend/base_query_not_overridden`
 
-**A service never overrides ``base_query`` — add read filters via ``business_filters``**
+**A service never overrides the scoped base read query — read filters compose through the declared filter seam**
 
 > Generated from the catalog by `tools/generate_rule_docs.py` — do not
 > edit by hand; the parity test holds this page to
@@ -8,7 +8,11 @@
 
 ## Why this rule exists
 
-``BaseService.base_query`` composes the **non-droppable** row scope (soft-delete + every registered capability predicate, e.g. tenancy) with the service's ``business_filters``. Overriding it — the old, footgun-y seam — can silently drop soft-delete / tenant scoping the moment the override forgets ``super().base_query()``, leaking soft-deleted or cross-tenant rows. Add static conditions via ``business_filters()`` (you return conditions, not a query, so you cannot drop scope and need no ``super()``); a per-call filter belongs in a custom ``list`` that builds on ``base_query().where(...)`` (ADR 0017).
+The base read query composes the non-droppable row scope (soft-delete plus every registered capability predicate, e.g. tenancy) with the service's declared business filters. Overriding that composition point — the old, footgun-y seam — can silently drop soft-delete or tenant scoping the moment the override forgets to delegate up the chain, leaking soft-deleted or cross-tenant rows. Add static read conditions through the declared filter seam (it returns conditions, not a query, so scope cannot be dropped); a per-call filter belongs in a bespoke read built on the scoped base query.
+
+## What to do instead
+
+BaseService.base_query composes the scope; add filters via business_filters(), or build bespoke reads on base_query().where(...) (ADR 0017). (reference stack; another stack ships its own realisation.)
 
 ## If you really need an exception
 

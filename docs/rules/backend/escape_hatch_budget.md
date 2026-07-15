@@ -1,6 +1,6 @@
 # `backend/escape_hatch_budget`
 
-**``# arch-allow-*`` marker counts must match the checked-in budget (a ratchet)**
+**Opt-out marker counts must exactly match the checked-in budget (a ratchet)**
 
 > Generated from the catalog by `tools/generate_rule_docs.py` — do not
 > edit by hand; the parity test holds this page to
@@ -8,19 +8,16 @@
 
 ## Why this rule exists
 
-The budget is a JSON object ``{marker: count}`` checked into the client repo. Actual usage must equal it **exactly**: a marker that *rose* needs a justified budget bump in the same change; one that *dropped* must be lowered to lock in the win; an unbudgeted marker must be added with a justified count. This keeps every secure-by-default opt-out visible, greppable, and governed (design §8).
+The budget is a checked-in per-app object mapping each opt-out marker to its count. Actual usage must equal it exactly: a marker that rose needs a justified budget bump in the same change; one that dropped must be lowered to lock in the win; an unbudgeted marker must be added with a justified count. This keeps every secure-by-default opt-out visible, greppable, and governed.
+
+## What to do instead
+
+# arch-allow-<rule>: <reason> markers reconciled against the app's checked-in escape-hatch budget JSON (design §8). The rule carries no opt_out: governance cannot be waived by the mechanism it governs. (reference stack; another stack ships its own realisation.)
 
 ## If you really need an exception
 
-Add a justified marker on (or immediately above) the line, and record it
-in your app's escape-hatch budget:
-
-```
-# arch-allow-escape-hatch-budget: <reason>
-```
-
-An unjustified marker is itself a violation, and marker counts must
-exactly match the checked-in budget (which can only shrink).
+There is none. This rule governs the escape-hatch mechanism itself,
+so it cannot be waived by that mechanism.
 
 ## Enforcement
 

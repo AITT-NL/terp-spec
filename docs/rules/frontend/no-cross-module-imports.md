@@ -8,7 +8,7 @@
 
 ## Why this rule exists
 
-Modules couple only through the platform surface (@terp/* packages and their own files). A sibling import — static, dynamic import(), relative or via the app alias — creates hidden coupling that breaks module isolation and independent evolution.
+Modules couple only through the platform packages and their own files. A sibling import — static, dynamic import(), relative or via the app alias — creates hidden coupling that breaks module isolation and independent evolution.
 
 ## If you really need an exception
 

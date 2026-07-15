@@ -8,7 +8,7 @@
 
 ## Why this rule exists
 
-A javascript: href executes script on click — an XSS vector that survives React's attribute escaping. Links carry http(s), mailto, tel or in-app router paths only.
+A javascript: href executes script on click — an XSS vector that survives the framework's attribute escaping. Links carry http(s), mailto, tel or in-app router paths only.
 
 ## If you really need an exception
 
