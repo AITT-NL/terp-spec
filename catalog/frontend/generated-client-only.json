@@ -18,5 +18,9 @@
     "applicability": "not-applicable",
     "rationale": "In the running bundle the sanctioned generated client is itself built on fetch, so egress-primitive use cannot be attributed to an app module from inside the app. One typed egress path is an authoring contract; network policy beyond it (CSP connect-src) is deployment configuration the framework does not own per module."
   },
+  "restricted_surface": [
+    "restrictedGlobals",
+    "restrictedMemberCalls"
+  ],
   "corpus": true
 }

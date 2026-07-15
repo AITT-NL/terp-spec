@@ -20,7 +20,8 @@
   "opt_out": "# arch-allow-list-routes-paginate: <reason>",
   "runtime": {
     "applicability": "deferred",
-    "rationale": "A bare list[...] response_model is visible on the composed route table, so the boot seam _validate_router_response_models already occupies could refuse an un-paginated list route -- the same deferred gap as routes_declare_response_model. What ships today does not refuse the violation: PaginationDep caps skip/limit fail-closed only for a route that opts in, and the @terp/conformance probe observes the Page envelope from outside the app. Until the boot check ships, the invariant is held at build time and observed black-box."
+    "rationale": "A bare list[...] response_model is visible on the composed route table, so the boot seam _validate_router_response_models already occupies could refuse an un-paginated list route -- the same deferred gap as routes_declare_response_model. What ships today does not refuse the violation: PaginationDep caps skip/limit fail-closed only for a route that opts in, and the @terp/conformance probe observes the Page envelope from outside the app. Until the boot check ships, the invariant is held at build time and observed black-box.",
+    "tracking": "AITT-NL/terp-framework docs/internal/STATUS.md \u2014 refuse bare list[...] response_model on the boot seam _validate_router_response_models"
   },
   "guide_topic": "service",
   "corpus": true

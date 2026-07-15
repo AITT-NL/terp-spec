@@ -20,7 +20,8 @@
   "opt_out": "# arch-allow-schemas-exclude-sensitive-fields: <reason>",
   "runtime": {
     "applicability": "deferred",
-    "rationale": "A boot-time scan of each route's declared response DTO fields could refuse credential-shaped names on the composition seam _validate_router_response_models already owns, with the same cross-package fidelity; it is not shipped. The black-box probe observes a running app but is a conformance-suite check, not an in-app fail-closed control."
+    "rationale": "A boot-time scan of each route's declared response DTO fields could refuse credential-shaped names on the composition seam _validate_router_response_models already owns, with the same cross-package fidelity; it is not shipped. The black-box probe observes a running app but is a conformance-suite check, not an in-app fail-closed control.",
+    "tracking": "AITT-NL/terp-framework docs/internal/STATUS.md \u2014 boot-time scan of declared response DTO fields on _validate_router_response_models"
   },
   "guide_topic": "module",
   "corpus": true

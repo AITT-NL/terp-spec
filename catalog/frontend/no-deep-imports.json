@@ -18,5 +18,8 @@
     "applicability": "not-applicable",
     "rationale": "Package-boundary form: the bundler resolves and inlines whatever was imported, and the built artifact retains no distinction between a root import and a deep one."
   },
+  "restricted_surface": [
+    "deepImportPathSegments"
+  ],
   "corpus": true
 }

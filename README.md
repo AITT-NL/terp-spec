@@ -55,8 +55,22 @@ The artifacts:
 5. **The refused surface** (`restricted-surface.json`) — the stack-neutral,
    normative declaration of the raw frontend primitives an app module must not
    author (elements, attributes, egress globals/member calls, stylesheet
-   extensions, deep-import segments). The portable prohibition rules cite it;
-   which sanctioned component answers each primitive is per-stack configuration.
+   extensions, deep-import segments). The portable prohibition rules cite it
+   structurally (the `restricted_surface` catalog field); which sanctioned
+   component answers each primitive is per-stack configuration.
+6. **The residual ratchet** (`corpus/RESIDUALS.json`) — the statically-erased
+   or renamed forms deliberately outside the corpus contract, per rule, as
+   shrink-only data (see "Detector boundaries" below).
+7. **The scorecard format** (`scorecard.schema.json`) — the machine-readable
+   certification summary a conformant checker emits (spec version, per-rule
+   verdicts over the corpus, residuals claimed), so "certified against spec
+   X.Y.Z" is a verifiable artifact instead of a claim.
+8. **The changelog** (`CHANGELOG.md`) — the change history keyed to `VERSION`
+   (the top entry must match, held by the spec suite), so a checker certified
+   against an earlier version can see exactly what changed since.
+9. **The rule pages** (`docs/rules/`) — plain-language documentation generated
+   from the catalog (`tools/generate_rule_docs.py`; regenerate-and-compare
+   parity in the spec suite, so the pages cannot drift from the data).
 
 Everything is locked to the live implementations by build-time parity tests
 (`tests/architecture/test_spec_catalog.py`, `tests/architecture/test_spec_corpus.py`,
@@ -116,7 +130,8 @@ The standalone suite enforces the split
 | `intent` | Why the rule exists — the drift or threat it prevents. |
 | `layer` | Cheapest faithful verification for a *new* stack: see below. |
 | `enforcement` | How the reference implementation enforces it (first entry: the `build-time` check). A `runtime` entry names the fail-closed runtime control pairing with it (the two-layer discipline a Level 3 stack must reproduce for the rules that require it); a `black-box` entry names the `@terp/conformance` probe title. For frontend rules, `reported_as` is the ESLint rule id violations surface as — several catalog rules share one core rule id, so the adapter publishes a `catalogRuleId()` mapping and findings are attributed through it. |
-| `runtime` | **Mandatory.** The rule's runtime-applicability classification (`required` / `not-applicable` / `deferred`) plus a `rationale` (mandatory for exemptions) — see “Runtime applicability” below. |
+| `runtime` | **Mandatory.** The rule's runtime-applicability classification (`required` / `not-applicable` / `deferred`) plus a `rationale` (mandatory for exemptions) and, for `deferred`, a `tracking` reference naming where the deferral is tracked — see “Runtime applicability” below. |
+| `restricted_surface` | Frontend prohibition rules only: the `restricted-surface.json` keys the rule realises — the structural citation the spec suite resolves (every key must be claimed by some rule; a prose mention in `intent` must agree with the field). |
 | `opt_out` | The *reference realisation* of the abstract escape-hatch contract (see below). |
 | `reference` | Optional reference-implementation metadata: the compliant realisation the reference stack offers (component / helper names). **Not normative** — the `title` and `intent` state the stack-neutral invariant; another stack ships its own realisation. |
 | `guide_topic` | Reference-implementation metadata (backend only): the `terp guide` topic teaching the compliant pattern. Not normative for other stacks. |
@@ -154,10 +169,14 @@ held coherent by the spec suite:
   the control, by recorded decision.
 - **`deferred`** — a runtime control would add independent fidelity on a seam
   the reference framework owns, but has not shipped yet: an explicit, reviewed
-  gap, never a silent one. The mandatory `rationale` names the seam.
+  gap, never a silent one. The mandatory `rationale` names the seam, and the
+  mandatory `tracking` reference names where the deferral is tracked (an issue
+  URL or the reference implementation's tracker document plus the seam) — so a
+  deferral has a lifecycle instead of being open-ended.
 
 Fail-closed consistency (spec suite): `required` iff a `runtime` enforcement
-entry exists; an exemption always carries a non-empty rationale.
+entry exists; an exemption always carries a non-empty rationale; a deferral
+always carries a tracking reference.
 
 ### The escape-hatch contract
 
@@ -175,15 +194,36 @@ budget ratchet, the ungoverned-marker condition) carry no `opt_out`:
 governance cannot be waived by the mechanism it governs. Another stack
 implements the same contract with its own comment syntax.
 
+The `<reason>` is free text, and MAY carry structured metadata tokens so a
+long-lived exception stays visible and auditable rather than eternal:
+`owner:<who>` (who answers for the exception), `ticket:<ref>` (where its
+removal is tracked), and `review-by:<YYYY-MM-DD>` (when it must be re-justified).
+The tokens are a convention, not a gate — the marker's semantics are unchanged,
+and a checker MUST NOT reject a reason without them — but a toolchain SHOULD
+surface expired `review-by:` dates in its reporting.
+
 ## Finding format
 
 A conformant checker emits an array of findings per checked tree, shaped by
 `findings.schema.json`: each finding names the **catalog rule id** it realises
 (`rule`), the file `path` relative to the checked tree's root, and optionally a
-`line` and a directive `message`. Attribution is always to the stack-neutral
-catalog id — the reference ESLint adapter, whose core rule ids are shared
-between several catalog rules, publishes this mapping as `catalogRuleId()` in
-`@terp/eslint-boundaries`.
+`line`, a directive `message`, a `fix_hint` (the compliant construct, for agent
+consumers acting on findings without re-reading the catalog), and a
+`fingerprint` (a stable, checker-chosen per-instance identifier so a finding
+can be tracked across line-shifting edits). Attribution is always to the
+stack-neutral catalog id — the reference ESLint adapter, whose core rule ids
+are shared between several catalog rules, publishes this mapping as
+`catalogRuleId()` in `@terp/eslint-boundaries`.
+
+## Scorecard format
+
+A checker claiming certification emits a scorecard (`scorecard.schema.json`):
+the spec version it certified against, the checker's identity, and one entry
+per claimed rule with its pass/fail verdict over the corpus and the residuals
+it relies on (which must be a subset of `corpus/RESIDUALS.json` for the rule —
+claiming an unrecorded residual is a conformance failure). A consumer can
+re-run the corpus and reproduce the scorecard, making the certification claim
+verifiable.
 
 ## Corpus format
 
@@ -198,6 +238,15 @@ A case may ship an extra checker input at its root when the rule takes one:
 the `backend/escape_hatch_budget` cases carry the `escape-hatch-budget.json`
 the ratchet is verified against, and a frontend layout-contract case activates
 via a `layout-contract.json` at its root.
+
+A violation case MAY additionally ship an **`expected-findings.json`** at its
+root: the exact findings (rule + path + line, shaped by
+`findings.schema.json`) a maximally-precise checker emits for the rule under
+test. A harness may assert the manifest exactly — hardening the per-case
+contract from "flags something" to "flags the right line" — while the loose
+contract below remains the floor for cases without one (and the ceiling a
+checker must reach to conform). The spec suite holds every checked-in manifest
+to the finding shape and to the case it sits in.
 
 The contract for a checker claiming conformance for a rule is stated **per
 rule**, over the finding format above:
@@ -229,7 +278,11 @@ quoted inside comments and strings).
 
 Some statically-erased or renamed forms are **deliberately outside** the
 contract — known limits of precise, low-false-positive detection, kept out of
-the corpus so a second implementation neither over-fits nor under-claims:
+the corpus so a second implementation neither over-fits nor under-claims.
+These residuals are recorded per rule in **`corpus/RESIDUALS.json`** — a
+machine-readable ratchet governed like `corpus/PENDING.json`: the list only
+shrinks, and closing a residual means seeding the corpus case that contracts
+it and deleting the entry, never silently. Today it records:
 
 - an alias-renamed symbol import (`from sqlalchemy import text as sql_text`)
   is not required to be resolved to `text`;
@@ -280,16 +333,22 @@ rule can ship with its gap explicit and reviewed.
 
 - **New rule** → ship the rule and its catalog entry together (the parity test
   fails otherwise); classify its runtime applicability deliberately (`required`
-  with the declared control, or an exemption with its rationale); seed corpus
-  cases when the rule is portable, or list it in `corpus/PENDING.json`
-  explicitly.
+  with the declared control, or an exemption with its rationale — a deferral
+  also names its `tracking` reference); seed corpus cases when the rule is
+  portable, or list it in `corpus/PENDING.json` explicitly; regenerate the
+  rule pages (`python tools/generate_rule_docs.py`).
 - **New corpus cases** → add `violation-*`/`compliant-*` directories, flip the
   entry's `corpus` flag to `true`, and drop the rule from `corpus/PENDING.json`;
-  the harness picks the cases up by convention.
+  the harness picks the cases up by convention. Ship an `expected-findings.json`
+  when the violating lines are pinned. Closing a documented detector residual
+  also deletes its `corpus/RESIDUALS.json` entry.
 - **New stack** → implement the `static-portable` rules however you like; the
-  corpus is the acceptance test, and findings must attribute to catalog ids.
-- **Format change** → bump `VERSION`. Pre-1.0, a **changed contract** — a new
-  mandatory catalog field (0.5.0's `runtime` block), a changed finding shape —
+  corpus is the acceptance test, findings must attribute to catalog ids, and
+  the certification summary is a scorecard (`scorecard.schema.json`).
+- **Format change** → bump `VERSION` and add the matching `CHANGELOG.md` entry
+  (the suite holds the top entry to the version). Pre-1.0, a **changed
+  contract** — a new mandatory catalog field (0.5.0's `runtime` block), a
+  changed finding shape —
   bumps the **minor** (the strongest signal 0.x semver carries; a 0.x major
   would claim a stability this spec does not yet promise); purely additive
   fields and new rules also bump the minor; prose bumps the patch. From 1.0.0

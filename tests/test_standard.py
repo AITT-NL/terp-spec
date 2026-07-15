@@ -60,6 +60,11 @@ def _validate(instance: object, schema: dict, path: str) -> list[str]:
     if "enum" in schema and instance not in schema["enum"]:
         return errors + [f"{path}: {instance!r} not in {schema['enum']}"]
     expected = schema.get("type")
+    supported_types = {"object", "array", "string", "integer", "boolean"}
+    if expected is not None and (
+        not isinstance(expected, str) or expected not in supported_types
+    ):
+        return errors + [f"{path}: unsupported schema type {expected!r}"]
     if expected == "object":
         if not isinstance(instance, dict):
             return errors + [f"{path}: expected object, got {type(instance).__name__}"]
@@ -214,6 +219,18 @@ def test_runtime_applicability_is_coherent() -> None:
                     "exemption from the two-layer discipline and must carry a non-empty "
                     "rationale"
                 )
+            if applicability == "deferred":
+                assert runtime.get("tracking", "").strip(), (
+                    f"{surface}/{name}: a deferred runtime control is an explicit, "
+                    "reviewed gap and must carry a 'tracking' reference (an issue URL "
+                    "or the reference tracker document plus the named seam) — an "
+                    "untracked deferral is an open-ended gap"
+                )
+            else:
+                assert "tracking" not in runtime, (
+                    f"{surface}/{name}: runtime.tracking is the deferral lifecycle "
+                    f"field and is meaningless for {applicability!r}"
+                )
 
 
 # --------------------------------------------------------------------------- #
@@ -246,20 +263,34 @@ def test_the_declared_refused_surface_is_well_formed() -> None:
 
 
 def test_catalog_citations_of_the_refused_surface_resolve() -> None:
+    """The structural linkage: a rule's ``restricted_surface`` field lists the
+    refused-surface keys it realises (schema-validated against the key enum);
+    every key must be claimed by some rule (an unclaimed key is dead spec
+    data), and a prose mention in ``intent`` must agree with the field —
+    the field is authoritative, prose is free-form commentary."""
     cited: set[str] = set()
     for surface in ("backend", "frontend"):
         for name, entry in _entries(surface).items():
+            declared = set(entry.get("restricted_surface", []))
+            assert declared <= set(_SURFACE_LIST_KEYS), (
+                f"{surface}/{name}: restricted_surface cites unknown keys "
+                f"{sorted(declared - set(_SURFACE_LIST_KEYS))}"
+            )
+            cited |= declared
             for match in re.finditer(
                 r"restricted-surface\.json \(([A-Za-z, ]+)\)", entry["intent"]
             ):
-                for key in (part.strip() for part in match.group(1).split(",")):
-                    assert key in _SURFACE_LIST_KEYS, (
-                        f"{surface}/{name}: intent cites unknown refused-surface key {key!r}"
-                    )
-                    cited.add(key)
+                prose = {part.strip() for part in match.group(1).split(",")}
+                assert prose <= declared, (
+                    f"{surface}/{name}: intent prose cites refused-surface keys "
+                    f"{sorted(prose - declared)} the restricted_surface field does "
+                    "not declare — the field is the structural citation; keep them "
+                    "in agreement"
+                )
     assert cited == set(_SURFACE_LIST_KEYS), (
-        "every refused-surface key must be cited by a catalog entry (an uncited key is "
-        f"dead spec data): uncited {sorted(set(_SURFACE_LIST_KEYS) - cited)}"
+        "every refused-surface key must be claimed by a catalog entry's "
+        "restricted_surface field (an unclaimed key is dead spec data): "
+        f"unclaimed {sorted(set(_SURFACE_LIST_KEYS) - cited)}"
     )
 
 
@@ -388,3 +419,68 @@ def test_normative_prose_is_stack_neutral() -> None:
                     if match:
                         problems.append(f"{surface}/{name}.{field}: {match.group(0)!r} is {why}")
     assert problems == [], "normative prose must stay stack-neutral:\n" + "\n".join(problems)
+
+
+# --------------------------------------------------------------------------- #
+# the detector-residual ratchet (corpus/RESIDUALS.json): the statically-erased
+# or renamed forms deliberately outside the corpus contract, per rule — a
+# machine-readable, shrink-only list (like PENDING.json) instead of README
+# folklore. Closing a residual means seeding the corpus case and deleting the
+# entry, never silently widening or narrowing the contract.
+# --------------------------------------------------------------------------- #
+def test_the_residual_ratchet_is_well_formed() -> None:
+    residuals = json.loads((_CORPUS / "RESIDUALS.json").read_text(encoding="utf-8"))["residuals"]
+    catalogued = {
+        f"{surface}/{name}" for surface in ("backend", "frontend") for name in _entries(surface)
+    }
+    assert list(residuals) == sorted(residuals), "residual rule ids must be sorted"
+    for rule, entries in residuals.items():
+        assert rule in catalogued, (
+            f"RESIDUALS.json names unknown rule {rule!r} — a residual belongs to a "
+            "catalogued rule"
+        )
+        assert isinstance(entries, list) and entries, (
+            f"{rule}: residuals must be a non-empty array (an empty list is a "
+            "closed residual — delete the key)"
+        )
+        assert all(isinstance(e, str) and e.strip() for e in entries), (
+            f"{rule}: each residual is a non-empty description of the "
+            "out-of-contract form"
+        )
+        assert len(entries) == len(set(entries)), f"{rule}: duplicate residual entries"
+
+
+# --------------------------------------------------------------------------- #
+# expected-findings manifests: a corpus case MAY ship expected-findings.json at
+# its root — the exact findings (path + line) a maximally-precise checker emits
+# for the rule under test, shaped by findings.schema.json. A harness may assert
+# it exactly (hardening "flags something" to "flags the right line"); the loose
+# per-case contract stays the floor for cases without one. These assertions
+# hold every checked-in manifest to the shape and to the case it sits in.
+# --------------------------------------------------------------------------- #
+def test_expected_findings_manifests_are_coherent() -> None:
+    findings_schema = json.loads((_SPEC / "findings.schema.json").read_text(encoding="utf-8"))
+    manifests = sorted(_CORPUS.glob("*/*/*/expected-findings.json"))
+    for manifest in manifests:
+        case_dir = manifest.parent
+        rule_id = f"{case_dir.parent.parent.name}/{case_dir.parent.name}"
+        findings = json.loads(manifest.read_text(encoding="utf-8"))
+        errors = _validate(findings, findings_schema, str(manifest.relative_to(_SPEC)))
+        assert errors == [], "\n".join(errors)
+        assert case_dir.name.startswith("violation-"), (
+            f"{manifest}: only a violation-* case carries expected findings — a "
+            "compliant case's contract is already exact (no findings)"
+        )
+        assert findings, f"{manifest}: a violation case's manifest must be non-empty"
+        for finding in findings:
+            assert finding["rule"] == rule_id, (
+                f"{manifest}: finding attributed to {finding['rule']!r}, but the case "
+                f"belongs to {rule_id!r} — a manifest states the rule under test only"
+            )
+            assert (case_dir / finding["path"]).is_file(), (
+                f"{manifest}: finding path {finding['path']!r} does not exist in the case"
+            )
+            assert "line" in finding, (
+                f"{manifest}: an expected finding pins the violating line — without it "
+                "the manifest adds nothing over the loose contract"
+            )

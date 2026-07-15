@@ -6,6 +6,7 @@
   "files": [
     "VERSION",
     "findings.schema.json",
+    "scorecard.schema.json",
     "restricted-surface.json",
     "catalog",
     "corpus"

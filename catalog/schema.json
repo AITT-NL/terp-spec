@@ -49,7 +49,27 @@
           "type": "string",
           "description": "Why the rule is exempt from the runtime half (mandatory for 'not-applicable' and 'deferred'; optional for 'required', e.g. to record which vector the control covers).",
           "minLength": 1
+        },
+        "tracking": {
+          "type": "string",
+          "description": "Where the deferral is tracked (mandatory for 'deferred', held by the spec suite): an issue URL, or the reference implementation's tracker document plus the named seam — so a deferred runtime control has a lifecycle instead of being an open-ended gap.",
+          "minLength": 1
         }
+      }
+    },
+    "restricted_surface": {
+      "type": "array",
+      "description": "The restricted-surface.json keys this rule realises (frontend prohibition rules only). The structural half of the citation: the spec suite resolves each key against the refused surface and requires every key to be claimed by some rule, so the linkage never depends on parsing prose.",
+      "minItems": 1,
+      "items": {
+        "enum": [
+          "restrictedElements",
+          "restrictedAttributes",
+          "restrictedGlobals",
+          "restrictedMemberCalls",
+          "styleImportExtensions",
+          "deepImportPathSegments"
+        ]
       }
     },
     "reference": {

@@ -15,7 +15,8 @@
   "opt_out": "# arch-allow-no-dependency-overrides: <reason>",
   "runtime": {
     "applicability": "deferred",
-    "rationale": "The composed app's dependency_overrides mapping stays writable after composition; the existing freeze seam could hand back a refusing mapping (the same fail-closed shape as the route freeze) but does not yet. The rule stays build-time-enforced until that seam ships."
+    "rationale": "The composed app's dependency_overrides mapping stays writable after composition; the existing freeze seam could hand back a refusing mapping (the same fail-closed shape as the route freeze) but does not yet. The rule stays build-time-enforced until that seam ships.",
+    "tracking": "AITT-NL/terp-framework docs/internal/STATUS.md \u2014 freeze dependency_overrides after composition (extend the existing freeze seam)"
   },
   "guide_topic": "capability",
   "corpus": true

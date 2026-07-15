@@ -15,7 +15,8 @@
   "opt_out": "# arch-allow-routes-declare-response-model: <reason>",
   "runtime": {
     "applicability": "deferred",
-    "rationale": "A boot-time route scan on the composition seam could refuse a content route without a response_model, with the same dynamic-composition fidelity the sibling _validate_router_response_models control already has (nested/imperative routers a source scan cannot follow). Today the sibling validator deliberately skips response_model=None routes, so declaring a model is held at build time only \u2014 an explicit gap, not an equivalence claim."
+    "rationale": "A boot-time route scan on the composition seam could refuse a content route without a response_model, with the same dynamic-composition fidelity the sibling _validate_router_response_models control already has (nested/imperative routers a source scan cannot follow). Today the sibling validator deliberately skips response_model=None routes, so declaring a model is held at build time only \u2014 an explicit gap, not an equivalence claim.",
+    "tracking": "AITT-NL/terp-framework docs/internal/STATUS.md \u2014 boot-time route scan for missing response_model on the composition seam"
   },
   "guide_topic": "module",
   "corpus": true
