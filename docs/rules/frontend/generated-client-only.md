@@ -12,7 +12,7 @@ Raw fetch / XMLHttpRequest / WebSocket / EventSource (and navigator.sendBeacon) 
 
 ## What to do instead
 
-useTerpClient() + unwrap from @terp/react-core — the generated, typed client. (reference stack; another stack ships its own realisation.)
+useTerpClient() + unwrap from @terp/react-core for request/response; useRealtimeChannel() from @terp/react-core for typed SSE/WebSocket subscriptions (one-use ticket minted through the generated client). (reference stack; another stack ships its own realisation.)
 
 ## If you really need an exception
 
