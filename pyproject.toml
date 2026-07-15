@@ -17,7 +17,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "terp-spec"
-version = "0.6.0"
+version = "0.7.0"
 description = "The Terp Standard — stack-neutral rule catalog, violation corpus, finding format, and refused-surface declaration (ADRs 0080/0081)."
 requires-python = ">=3.10"
 license = "Apache-2.0"
@@ -36,6 +36,7 @@ packages = ["terp_spec"]
 [tool.hatch.build.targets.wheel.force-include]
 "VERSION" = "terp_spec/VERSION"
 "findings.schema.json" = "terp_spec/findings.schema.json"
+"app-check-report.schema.json" = "terp_spec/app-check-report.schema.json"
 "scorecard.schema.json" = "terp_spec/scorecard.schema.json"
 "restricted-surface.json" = "terp_spec/restricted-surface.json"
 "catalog" = "terp_spec/catalog"

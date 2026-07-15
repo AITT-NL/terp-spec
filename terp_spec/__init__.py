@@ -1,6 +1,6 @@
 """terp-spec — the Terp Standard's on-disk root, as a dependency (ADR 0082).
 
-The spec is data (``catalog/``, ``corpus/``, ``findings.schema.json``,
+The spec is data (``catalog/``, ``corpus/``, the ``*.schema.json`` formats,
 ``restricted-surface.json``, ``VERSION``); this tiny accessor is the only code
 it ships. Consumers locate the spec through :func:`spec_dir` instead of a
 repo-relative path, so the framework's dependency on the standard is a declared
