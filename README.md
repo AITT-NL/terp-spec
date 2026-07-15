@@ -52,25 +52,30 @@ The artifacts:
    ratchet — the explicit list of rules still without cases, which only shrinks.
 4. **The finding format** (`findings.schema.json`) — what a conformant checker
    emits, so checkers are interoperable and a corpus harness can be generic.
-5. **The refused surface** (`restricted-surface.json`) — the stack-neutral,
+5. **The check-report format** (`app-check-report.schema.json`) — the complete
+   result of one checker invocation over one application tree: the finding
+   format plus the run's own evaluated-rule inventory, spec version, checker
+   identity and verdict, so a driving tool can join per-rule verdicts to the
+   catalog fail-closed.
+6. **The refused surface** (`restricted-surface.json`) — the stack-neutral,
    normative declaration of the raw frontend primitives an app module must not
    author (elements, attributes, egress globals/member calls, stylesheet
    extensions, deep-import segments). The portable prohibition rules cite it
    structurally (the `restricted_surface` catalog field); which sanctioned
    component answers each primitive is per-stack configuration.
-6. **The residual ratchet** (`corpus/RESIDUALS.json`) — the statically-erased
+7. **The residual ratchet** (`corpus/RESIDUALS.json`) — the statically-erased
    or renamed forms deliberately outside the corpus contract, per rule, as
    shrink-only data (see "Detector boundaries" below).
-7. **The scorecard format** (`scorecard.schema.json`) — the machine-readable
+8. **The scorecard format** (`scorecard.schema.json`) — the machine-readable
    certification summary a conformant checker emits (spec version, per-rule
    verdicts over the corpus, residuals claimed), so "certified against spec
    X.Y.Z" is a verifiable artifact instead of a claim.
-8. **The changelog** (`CHANGELOG.md`) — the change history keyed to `VERSION`
+9. **The changelog** (`CHANGELOG.md`) — the change history keyed to `VERSION`
    (the top entry must match, held by the spec suite), so a checker certified
    against an earlier version can see exactly what changed since.
-9. **The rule pages** (`docs/rules/`) — plain-language documentation generated
-   from the catalog (`tools/generate_rule_docs.py`; regenerate-and-compare
-   parity in the spec suite, so the pages cannot drift from the data).
+10. **The rule pages** (`docs/rules/`) — plain-language documentation generated
+    from the catalog (`tools/generate_rule_docs.py`; regenerate-and-compare
+    parity in the spec suite, so the pages cannot drift from the data).
 
 Everything is locked to the live implementations by build-time parity tests
 (`tests/architecture/test_spec_catalog.py`, `tests/architecture/test_spec_corpus.py`,
@@ -214,6 +219,30 @@ can be tracked across line-shifting edits). Attribution is always to the
 stack-neutral catalog id — the reference ESLint adapter, whose core rule ids
 are shared between several catalog rules, publishes this mapping as
 `catalogRuleId()` in `@terp/eslint-boundaries`.
+
+## Check-report format
+
+Findings alone cannot support a per-rule verdict: a rule with zero findings is
+only *passing* if the run actually evaluated it, and the consumer must never
+supply that knowledge itself — its own catalog copy can be newer or older than
+the checked app's pinned toolchain (version skew), and some enforcement is
+conditional (an escape-hatch budget only when one is checked in, a layout
+contract only when the app opts in). So a conformant checker reports a whole
+run as one **application check report** (`app-check-report.schema.json`): a
+format marker (`terp_check_report: 1`), the **spec version** its rule ids
+resolve against, the **checker identity** (the same identity its certification
+scorecard carries), the run **verdict** (`ok`, or an explicit `error` for a
+run that failed to complete — an erroring run never claims ok and never claims
+rules it did not finish evaluating), the **evaluated-rule inventory**
+(`rules`), the opt-in rules published as **`not_applicable`** (their own
+state — never passing, never unknown), the **findings** (exactly the finding
+format's item shape — the spec suite holds the two identical), and
+**`unattributed`** messages (diagnostics outside the standard, surfaced rather
+than dropped). A consumer joins per-rule verdicts to the catalog exclusively
+through the report's inventory, fail closed: pass = evaluated with no
+attributed finding; a rule the run did not publish renders unknown, never
+green. A multi-surface toolchain emits one report per checker run and a
+consumer merges reports through their inventories.
 
 ## Scorecard format
 

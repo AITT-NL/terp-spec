@@ -7,6 +7,24 @@ fields and new rules also bump the minor; prose bumps the patch (see
 checked-in `VERSION` — held by `tests/test_changelog.py`. A checker certified
 against an earlier version reads this file to see exactly what changed since.
 
+## 0.7.0
+
+Additive: the application check report joins the interoperability contract.
+
+- **Check-report format**: new `app-check-report.schema.json` — the complete,
+  self-describing result of one checker invocation over one application tree:
+  a format marker (`terp_check_report: 1`), the spec version the rule ids
+  resolve against, the checker's identity (the same identity the scorecard
+  carries), the run verdict (`ok`, plus an explicit `error` for runs that
+  failed to complete), the evaluated-rule inventory, the opt-in rules
+  published as `not_applicable`, findings in exactly the finding format's
+  shape (`fix_hint` / `fingerprint` included; the spec suite holds the
+  embedded item shape identical to `findings.schema.json`), and
+  `unattributed` messages surfaced rather than dropped. A consumer joins
+  per-rule verdicts to the catalog exclusively through the report's own
+  inventory — fail closed: a rule the run did not publish as evaluated can
+  never render as passing.
+
 ## 0.6.0
 
 One changed contract (the escape-hatch marker naming), otherwise additive

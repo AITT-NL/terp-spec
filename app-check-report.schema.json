@@ -1,0 +1,122 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://terp.dev/spec/app-check-report.schema.json",
+  "title": "Terp Standard application check report",
+  "description": "The complete, self-describing result of ONE checker invocation over ONE application tree. Findings alone cannot support per-rule verdicts: a rule with zero findings is only passing if the run actually evaluated it, and a consumer must never supply that knowledge itself — its own catalog copy can be newer or older than the checked app's pinned toolchain. So the report carries its own evaluated-rule inventory, the spec version its rule ids resolve against, and the checker's identity: everything a driving tool needs to join verdicts to the catalog fail-closed. A rule absent from `rules` and `not_applicable` was not evaluated and can never render as passing. A multi-surface toolchain emits one report per checker run; a consumer merges reports through their inventories.",
+  "type": "object",
+  "required": ["terp_check_report", "spec_version", "checker", "ok", "rules", "findings"],
+  "additionalProperties": false,
+  "properties": {
+    "terp_check_report": {
+      "type": "integer",
+      "enum": [1],
+      "description": "Format marker and major version of this envelope. A consumer refuses an unknown marker value rather than guessing the shape."
+    },
+    "spec_version": {
+      "type": "string",
+      "description": "The spec semver (VERSION) whose catalog the rule ids in this report resolve against — the checked app's own pinned standard, which may differ from any consumer-side catalog copy.",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "checker": {
+      "type": "object",
+      "description": "The checker's identity: tool name and its own version — the same identity the checker's certification scorecard (scorecard.schema.json) carries, so a consumer can tie a report to a verifiable certification claim.",
+      "required": ["tool", "version"],
+      "additionalProperties": false,
+      "properties": {
+        "tool": { "type": "string", "minLength": 1 },
+        "version": { "type": "string", "minLength": 1 }
+      }
+    },
+    "ok": {
+      "type": "boolean",
+      "description": "The run's overall verdict: true only when the checker completed and attributed no findings. Overall only — per-rule verdicts are always derived from `rules` + `findings`, never from this flag."
+    },
+    "error": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Present when the run failed to complete (a crash, a timeout, an unreadable tree): what went wrong, for humans. An erroring report is never ok, and it must not claim rules it did not fully evaluate — fail visible, never a silent pass."
+    },
+    "rules": {
+      "type": "array",
+      "description": "The evaluated-rule inventory: every catalog rule id this run actually held the tree to. Zero findings for a listed rule means pass; an unlisted rule has NO verdict from this run (a consumer renders it unknown, never green). A finding's rule is normally listed here; a consumer treats an attributed finding as a failure regardless.",
+      "items": {
+        "type": "string",
+        "pattern": "^(backend/[a-z0-9_]+|frontend/[a-z0-9-]+)$"
+      }
+    },
+    "not_applicable": {
+      "type": "array",
+      "description": "Opt-in rules the checked tree has not enabled (for example a slot-typed layout contract without its checked-in configuration): published as their own state so a consumer renders them as not applicable — never as passing, never as unknown.",
+      "items": {
+        "type": "string",
+        "pattern": "^(backend/[a-z0-9_]+|frontend/[a-z0-9-]+)$"
+      }
+    },
+    "findings": {
+      "type": "array",
+      "description": "The findings this run attributed to catalog rule ids. Each item is exactly the finding format's shape (findings.schema.json items — the spec suite holds the two identical), so a findings consumer and a report consumer read one shape.",
+      "items": {
+        "type": "object",
+        "required": ["rule", "path"],
+        "additionalProperties": false,
+        "properties": {
+          "rule": {
+            "type": "string",
+            "description": "The Terp Standard catalog id the finding realises (catalog/<surface>/<rule>.json).",
+            "pattern": "^(backend/[a-z0-9_]+|frontend/[a-z0-9-]+)$"
+          },
+          "path": {
+            "type": "string",
+            "description": "File path relative to the checked tree's root (the corpus case root, or the app root), with forward slashes."
+          },
+          "line": {
+            "type": "integer",
+            "description": "1-based line of the violation, when the checker can locate it.",
+            "minimum": 1
+          },
+          "message": {
+            "type": "string",
+            "description": "Human-readable explanation; ideally directive (states the compliant fix)."
+          },
+          "fix_hint": {
+            "type": "string",
+            "description": "Agent-oriented remediation metadata: the compliant construct that replaces the violating one, sourced from the catalog entry's non-normative `reference` field (or the checker's own knowledge of the sanctioned pattern). Optional — a consumer must not require it."
+          },
+          "fingerprint": {
+            "type": "string",
+            "description": "A stable, checker-chosen identifier for THIS violation instance (e.g. a hash over rule + path + violating source construct), so consumers can track a finding across line-shifting edits. Optional; the fingerprint scheme is checker-internal — only stability across reformatting is expected."
+          }
+        }
+      }
+    },
+    "unattributed": {
+      "type": "array",
+      "description": "Messages the run produced OUTSIDE the standard's rules (another configured tool's diagnostics sharing the run, a parse error): surfaced, never dropped — and never attributable to a catalog id, which the finding format's rule pattern refuses by construction.",
+      "items": {
+        "type": "object",
+        "required": ["path", "message"],
+        "additionalProperties": false,
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "File path relative to the checked tree's root, with forward slashes."
+          },
+          "line": {
+            "type": "integer",
+            "description": "1-based line of the message, when the producer located one.",
+            "minimum": 1
+          },
+          "message": {
+            "type": "string",
+            "description": "The diagnostic text, verbatim."
+          },
+          "reported_as": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The tool-internal rule id the message surfaced as, when one exists — omitted (never null) otherwise."
+          }
+        }
+      }
+    }
+  }
+}
