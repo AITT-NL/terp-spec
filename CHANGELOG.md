@@ -7,6 +7,64 @@ fields and new rules also bump the minor; prose bumps the patch (see
 checked-in `VERSION` — held by `tests/test_changelog.py`. A checker certified
 against an earlier version reads this file to see exactly what changed since.
 
+## 0.9.0
+
+Corpus depth for the authz, migration, egress and sensitive-field rule
+families: adversarial cases for the evasion shapes the rules must see
+through, and exact `expected-findings.json` manifests — the per-case contract
+hardens from "flags something" to "flags the right line" wherever a manifest
+now exists. No catalog entry changes; the corpus IS the interoperability
+contract, so the certification bar rises (minor bump).
+
+- **New violation cases** (each with an exact manifest):
+  `backend/no_adhoc_permission_literals` violation-03 (`read=` /
+  `write_role=` literals — the other authority keywords);
+  `backend/safe_methods_are_read_only` violation-02 (imperative
+  `add_api_route(..., methods=["GET"])` calling a mutating service method)
+  and violation-03 (mixed-method `api_route(["GET", "POST"])` calling a
+  `_remove` helper); `backend/mutations_require_write_role` violation-03
+  (explicit static rank inversion, `read=ADMIN`/`write=EDITOR`, behind a
+  PATCH route); `backend/public_modules_are_read_only` violation-02
+  (`Policy.public` with an imperative DELETE registration);
+  `backend/no_destructive_migrations` violation-04 (`drop_column` +
+  `alter_column(type_=...)`) and violation-05 (`DELETE FROM` / `TRUNCATE
+  TABLE` through `op.execute` literals); `backend/tables_have_migrations`
+  violation-02 (two table models, one module — one deduplicated finding at
+  the first table's line); `backend/no_unique_columns_on_soft_delete_models`
+  violation-02 (transitively soft-delete-capable model with a
+  `UniqueConstraint`) and violation-03 (partial unique `Index` missing one of
+  the two verified dialect predicates); `backend/no_raw_outbound_http`
+  violation-06 (`requests` and an `aiohttp` submodule);
+  `backend/schemas_exclude_sensitive_fields` violation-02 (a DTO exposed via
+  `response_model` without a schema base class) and violation-03
+  (`client_secret` / `private_key` / `refresh_token` in one read schema);
+  `backend/no_hardcoded_credentials` violation-05 (destructured parallel
+  literals — `user, password = "svc", "hunter2"` — plus a `ghp_` token
+  literal); `backend/input_schemas_exclude_managed_columns` violation-02 (an
+  off-convention request-body DTO declaring `owner_id`/`tenant_id`);
+  `frontend/generated-client-only` violation-04 (bare `XMLHttpRequest` /
+  `EventSource` global references without a call or `new`).
+- **New compliant (near-miss) cases**:
+  `backend/no_adhoc_permission_literals` compliant-02 (`require_permission`
+  with a typed constant); `backend/safe_methods_are_read_only` compliant-02
+  (`merged.update(...)` on a plain dict inside a GET route — not a service
+  mutation); `backend/no_destructive_migrations` compliant-02 (destructive
+  DDL in `downgrade` only, an `UPDATE …` DML literal, `DROP INDEX`, and an
+  `alter_column` without `type_`); `backend/tables_have_migrations`
+  compliant-02 (a table model under `capabilities/` — outside the rule's
+  module scope); `backend/schemas_exclude_sensitive_fields` compliant-02
+  (`passwordless`/`tokens_issued`/`secretive_mode` near-miss names and a
+  credential column on a `table=True` model).
+- **Backfilled `expected-findings.json` manifests** for the existing
+  violation cases of those same families (`no_adhoc_permission_literals`,
+  `safe_methods_are_read_only`, `mutations_require_write_role`,
+  `public_modules_are_read_only`, `no_destructive_migrations`,
+  `tables_have_migrations`, `no_unique_columns_on_soft_delete_models`,
+  `no_raw_outbound_http`, `schemas_exclude_sensitive_fields`,
+  `no_hardcoded_credentials`, `input_schemas_exclude_managed_columns`) —
+  every manifest generated from and verified against the reference checker,
+  bringing the corpus from 6 to 32 exact-findings manifests.
+
 ## 0.8.0
 
 The two-layer discipline closes its last declared gaps: **zero rules remain
