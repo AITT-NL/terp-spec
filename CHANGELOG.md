@@ -7,6 +7,19 @@ fields and new rules also bump the minor; prose bumps the patch (see
 checked-in `VERSION` — held by `tests/test_changelog.py`. A checker certified
 against an earlier version reads this file to see exactly what changed since.
 
+## 0.12.0
+
+Row ownership now remains structural across background workflows. A worker
+identity is not blanket authority over every user's rows, and application code
+cannot remove ownership merely to make unattended cross-owner maintenance pass.
+
+- `backend/no_manual_ownership_checks` now also covers a job-bearing module
+  whose declared service model omits the ownership trait.
+- The reference runtime rejects the same declared module shape at composition,
+  while the existing write chokepoint continues to enforce owned rows.
+- New `violation-03` freezes the unsafe nightly-maintenance trade as a portable
+  corpus case.
+
 ## 0.11.0
 
 The generated-client-only reference now has a sanctioned realtime path: raw
