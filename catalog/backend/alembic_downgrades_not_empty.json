@@ -1,0 +1,22 @@
+{
+  "id": "backend/alembic_downgrades_not_empty",
+  "surface": "backend",
+  "title": "A migration's downgrade must reverse the change, not be an empty stub",
+  "intent": "A migration that leaves its downgrade step empty (a bare no-op with no operations) cannot be rolled back: reversing the revision silently leaves the schema mismatched instead of restoring the previous state. Each migration's downgrade must either perform the reverse operations or, for a deliberately irreversible step, carry a comment explaining why the no-op is intentional.",
+  "layer": "static-portable",
+  "enforcement": [
+    {
+      "kind": "build-time",
+      "tool": "terp.arch",
+      "ref": "check_alembic_downgrades_not_empty"
+    }
+  ],
+  "reference": "In each revision file under migrations/versions, a downgrade function whose body (after any docstring) is a lone pass / ellipsis or is empty, with no explanatory comment, is flagged; a reverse operation or an in-body '#' comment clears it.",
+  "opt_out": "# arch-allow-alembic-downgrades-not-empty: <reason>",
+  "runtime": {
+    "applicability": "not-applicable",
+    "rationale": "An empty downgrade is a property of the authored revision file; a forward deploy never executes downgrade, so the emptiness is invisible at runtime until a rollback is attempted, and the reversibility guarantee exists only in source."
+  },
+  "guide_topic": "migrations",
+  "corpus": true
+}
