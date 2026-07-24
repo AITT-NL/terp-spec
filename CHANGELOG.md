@@ -7,6 +7,44 @@ fields and new rules also bump the minor; prose bumps the patch (see
 checked-in `VERSION` — held by `tests/test_changelog.py`. A checker certified
 against an earlier version reads this file to see exactly what changed since.
 
+## 0.13.0
+
+The portable backend surface grows with a batch of additive, source-observable
+rules — no existing contract changes, so a checker certified against 0.12.0
+stays valid and simply gains coverage.
+
+Optimistic concurrency and time:
+
+- `backend/no_naive_datetime` — timestamps must be timezone-aware; a naive
+  `datetime` is refused.
+- `backend/update_schemas_inherit_base_update_schema` — an update request
+  contract must carry the optimistic-concurrency token.
+- `backend/no_manual_version_assignment` — that token is never assigned by
+  hand; the persistence layer owns it.
+
+Source hygiene:
+
+- `backend/no_eval_or_exec` — a string is never executed as code.
+- `backend/no_star_imports` — names are imported explicitly, never by wildcard.
+- `backend/no_blocking_sleep` — the thread is never blocked by a synchronous
+  sleep.
+- `backend/no_print` — diagnostics go through the logger, never a bare print.
+- `backend/no_todo_fixme` — no placeholder comments stand in for deferred work.
+- `backend/no_mutable_default_args` — no mutable value is used as a default
+  argument.
+- `backend/no_empty_tests` — every test asserts a real outcome.
+
+Size, query and migration correctness:
+
+- `backend/no_oversized_python_files` — no source file grows past the
+  line-count cap.
+- `backend/path_id_params_are_uuid` — a route path parameter naming a resource
+  id is typed as a UUID.
+- `backend/offset_queries_declare_ordering` — an offset-paginated query must
+  declare an explicit ordering.
+- `backend/alembic_downgrades_not_empty` — a migration's downgrade reverses the
+  change rather than being an empty stub.
+
 ## 0.12.0
 
 Row ownership now remains structural across background workflows. A worker
