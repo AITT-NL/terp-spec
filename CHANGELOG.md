@@ -7,6 +7,26 @@ fields and new rules also bump the minor; prose bumps the patch (see
 checked-in `VERSION` — held by `tests/test_changelog.py`. A checker certified
 against an earlier version reads this file to see exactly what changed since.
 
+## 0.14.0
+
+One additive backend rule closing the storage half of an invariant the standard
+already covered in memory — no existing contract changes, so a checker certified
+against 0.13.0 stays valid and simply gains coverage.
+
+- `backend/datetime_columns_are_timezone_aware` — a stored timestamp column must
+  keep its timezone. `backend/no_naive_datetime` keeps the zone on the value
+  while it is in memory, but a column declared without an explicit timezone maps
+  to a naive database type and discards that zone on the way in, leaving the
+  stored moment ambiguous and any ordering or comparison across zones silently
+  wrong. Columns a table inherits from a mixin count as the table's own.
+
+This is the standard's first `deferred` runtime classification (ADR 0084). The
+in-memory rule is honestly `not-applicable` — the zone is already gone by the
+time a value reaches any runtime seam. This one is not: the mapped column type
+is inspectable on the ORM metadata a framework collects at boot, so a
+fail-closed boot check would add independent fidelity, and the entry's
+`runtime.tracking` names the seam that would close it.
+
 ## 0.13.0
 
 The portable backend surface grows with a batch of additive, source-observable
