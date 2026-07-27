@@ -1,15 +1,20 @@
 name: release
 
-# The Terp Standard's release seam (ADR 0082): consumers pin releases by tag
-# (uv git tag pin / npm github:#tag), so a tag IS the release artifact. This
-# workflow makes tagging fail-closed instead of a raw `git push origin v*`:
+# The Terp Standard's release seam (ADR 0082, published per ADR 0086): a tag
+# turns into two registry releases (`terp-spec` on PyPI, `@terpjs/spec` on npm)
+# plus a GitHub Release. This workflow makes tagging fail-closed instead of a
+# raw `git push origin v*`:
 # the tag must match the checked-in VERSION (and the package manifests, which
 # the test suite holds to VERSION), the tagged commit must be REACHABLE FROM
 # THE DEFAULT BRANCH (provenance: no releasing an unreviewed side branch or a
 # rewritten commit), the self-consistency suite must pass at the tagged
-# commit, and the release job is BOUND to the verified commit (a tag moved or
-# deleted mid-workflow is refused, never released). A GitHub Release then
-# documents it with generated notes.
+# commit, the spec must certify against the reference implementation, and both
+# the publish jobs and the release job are BOUND to the verified commit (a tag
+# moved or deleted mid-workflow is refused, never released). A GitHub Release
+# then documents it with generated notes.
+#
+# Publishing uses Trusted Publishing (OIDC) on both registries — no long-lived
+# token is stored here.
 #
 # tests/test_release_workflow.py holds this file to that contract.
 
@@ -117,12 +122,86 @@ jobs:
         working-directory: framework
         run: |
           npm ci
-          rm -rf node_modules/@terp/spec
-          ln -s "$GITHUB_WORKSPACE/spec" node_modules/@terp/spec
+          # Substitute the candidate spec under BOTH scope paths: the rename to
+          # @terpjs/spec (ADR 0086) lands here first, so the reference framework
+          # may still resolve the legacy @terp/spec until its repin lands. Drop
+          # the legacy leg once no consumer resolves it.
+          for scope in @terp @terpjs; do
+            rm -rf "node_modules/$scope/spec"
+            mkdir -p "node_modules/$scope"
+            ln -s "$GITHUB_WORKSPACE/spec" "node_modules/$scope/spec"
+          done
           npx vitest run packages/frontend/eslint-boundaries
 
-  github-release:
+  # ADR 0086: the standard is published, not only tagged. Both publish jobs
+  # require certification (a version no conformant checker exists for can never
+  # reach a registry) and check out the VERIFIED COMMIT rather than the tag —
+  # a tag force-moved mid-workflow cannot change what gets published. Both are
+  # idempotent so a partially failed release is re-runnable.
+  publish-pypi:
     needs: [verify, certify-against-reference]
+    runs-on: ubuntu-latest
+    # Part of the OIDC identity both registries verify: the trusted-publisher
+    # configurations name repository + workflow file + this environment, so a
+    # publish attempt from anywhere else is refused by the registry itself.
+    environment: release
+    permissions:
+      contents: read
+      id-token: write # PyPI Trusted Publishing (OIDC) — no API token stored
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.verify.outputs.verified_sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build the sdist + wheel
+        run: |
+          pip install build
+          python -m build
+      - name: Publish to PyPI (trusted publishing)
+        # Pinned by digest: this action holds a publishing credential.
+        uses: pypa/gh-action-pypi-publish@ba38be9e461d3875417946c167d0b5f3d385a247 # release/v1
+        with:
+          skip-existing: true
+
+  publish-npm:
+    needs: [verify, certify-against-reference]
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      contents: read
+      id-token: write # npm Trusted Publishing (OIDC) + provenance
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.verify.outputs.verified_sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          registry-url: https://registry.npmjs.org
+      # Trusted Publishing (OIDC) needs npm >= 11.5.1; Node 22 ships an older
+      # npm. Upgrading lets `npm publish` exchange the id-token for a
+      # short-lived registry credential — no stored registry secret.
+      - run: npm install -g npm@latest
+      - name: Publish @terpjs/spec (public, via Trusted Publishing)
+        run: |
+          set -eu
+          # Data only: no dependencies, no build step — nothing to install
+          # before publishing.
+          version="${GITHUB_REF_NAME#v}"
+          if [ "$(npm view "@terpjs/spec@$version" version 2>/dev/null || true)" = "$version" ]; then
+            echo "@terpjs/spec@$version already on the registry — skipping"
+            exit 0
+          fi
+          npm publish --access public --provenance
+
+  github-release:
+    # The Release announces a published standard: it requires both registries
+    # (fail closed) so a Release can never point at a version consumers cannot
+    # install. Publishing binds to the verified COMMIT; the Release additionally
+    # re-verifies the tag IDENTITY below.
+    needs: [verify, certify-against-reference, publish-pypi, publish-npm]
     runs-on: ubuntu-latest
     permissions:
       contents: write

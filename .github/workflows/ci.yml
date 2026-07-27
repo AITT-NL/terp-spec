@@ -7,7 +7,7 @@ name: ci
 # ratchet. The `certify-against-reference` job closes the adoption gap the
 # package seam leaves (framework CI reads the *pinned* release, so a change
 # here would otherwise be exercised by no live implementation until the pins
-# bump): it substitutes this checkout for the pinned terp-spec/@terp/spec and
+# bump): it substitutes this checkout for the pinned terp-spec/@terpjs/spec and
 # runs the framework's parity + corpus certification against it, so a catalog
 # or corpus change is proven against the reference implementation BEFORE it
 # can be released.
@@ -78,6 +78,13 @@ jobs:
         working-directory: framework
         run: |
           npm ci
-          rm -rf node_modules/@terp/spec
-          ln -s "$GITHUB_WORKSPACE/spec" node_modules/@terp/spec
+          # Substitute the candidate spec under BOTH scope paths: the rename to
+          # @terpjs/spec (ADR 0086) lands here first, so the reference framework
+          # may still resolve the legacy @terp/spec until its repin lands. Drop
+          # the legacy leg once no consumer resolves it.
+          for scope in @terp @terpjs; do
+            rm -rf "node_modules/$scope/spec"
+            mkdir -p "node_modules/$scope"
+            ln -s "$GITHUB_WORKSPACE/spec" "node_modules/$scope/spec"
+          done
           npx vitest run packages/frontend/eslint-boundaries

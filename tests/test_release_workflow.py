@@ -32,6 +32,15 @@ def _workflow_text() -> str:
     return _WORKFLOW.read_text(encoding="utf-8")
 
 
+def _job_block(text: str, job: str) -> str:
+    """The lines belonging to one top-level job — string-level, like the rest
+    of this module: a job starts at two-space indent and runs until the next
+    key at that indent."""
+    match = re.search(rf"^  {re.escape(job)}:\n(.*?)(?=^  \S|\Z)", text, re.M | re.S)
+    assert match, f"the release workflow declares no {job!r} job"
+    return match.group(1)
+
+
 def test_release_workflow_verifies_tag_against_version() -> None:
     text = _workflow_text()
     assert "VERSION" in text and "GITHUB_REF_NAME#v" in text, (
@@ -100,11 +109,16 @@ def test_release_requires_certification_against_the_reference() -> None:
     assert "repository: AITT-NL/terp-framework" in text, (
         "certification checks out the reference framework"
     )
-    assert "uv pip install -e ../spec" in text and "node_modules/@terp/spec" in text, (
+    assert "uv pip install -e ../spec" in text and "node_modules/$scope/spec" in text, (
         "certification must substitute the tagged checkout for BOTH pinned "
-        "spec packages (terp-spec and @terp/spec)"
+        "spec packages (terp-spec and @terpjs/spec)"
     )
-    assert re.search(r"needs:\s*\[verify,\s*certify-against-reference\]", text), (
+    assert re.search(r"for scope in .*@terpjs", text), (
+        "the npm substitution must cover the @terpjs scope (ADR 0086)"
+    )
+    assert re.search(
+        r"needs:\s*\[verify,\s*certify-against-reference(,[^\]]*)?\]", text
+    ), (
         "the GitHub Release must require the certification job — a failed "
         "certification refuses the release"
     )
@@ -121,12 +135,68 @@ def test_release_workflow_keeps_permissions_minimal() -> None:
     )
 
 
-def test_release_workflow_stays_registry_free() -> None:
-    """ADR 0082: the Git tag is the release artifact; registry publishing is
-    out of scope — the workflow must not grow it silently."""
+def test_release_publishes_to_both_registries() -> None:
+    """ADR 0086: a tag publishes the standard, it does not only announce it.
+    Both distributions go out from this workflow, gated on certification and
+    bound to the verified commit, with no long-lived registry token."""
     text = _workflow_text()
-    for marker in ("npm publish", "twine", "pypi-publish", "uv publish"):
-        assert marker not in text, (
-            f"registry publishing ({marker!r}) is out of ADR 0082's scope — "
-            "revisit the ADR before adding it"
+    assert "publish-pypi:" in text and "publish-npm:" in text, (
+        "the release must publish both distributions (terp-spec on PyPI, "
+        "@terpjs/spec on npm) \u2014 ADR 0086"
+    )
+    for job in ("publish-pypi", "publish-npm"):
+        block = _job_block(text, job)
+        assert re.search(r"needs:\s*\[verify,\s*certify-against-reference\]", block), (
+            f"{job} must require certification \u2014 a version no conformant "
+            "checker exists for may never reach a registry"
         )
+        assert "ref: ${{ needs.verify.outputs.verified_sha }}" in block, (
+            f"{job} must check out the VERIFIED COMMIT, not the tag name \u2014 "
+            "a tag force-moved mid-workflow must not change what is published"
+        )
+        assert "id-token: write" in block, (
+            f"{job} must publish via Trusted Publishing (OIDC), which needs "
+            "id-token: write"
+        )
+        assert "environment: release" in block, (
+            f"{job} must run in the 'release' environment \u2014 it is part of "
+            "the OIDC identity both registries' trusted publishers verify, so "
+            "dropping it makes the registry refuse the publish"
+        )
+
+
+def test_release_is_gated_on_publishing() -> None:
+    """A GitHub Release may never announce a version the registries do not
+    have: the release job requires both publish jobs (fail closed)."""
+    block = _job_block(_workflow_text(), "github-release")
+    needs = re.search(r"needs:\s*\[([^\]]*)\]", block)
+    assert needs, "the release job must declare its dependencies"
+    for job in ("publish-pypi", "publish-npm"):
+        assert job in needs.group(1), (
+            f"the GitHub Release must require {job} \u2014 a failed publish "
+            "must refuse the release, not leave a Release pointing at a "
+            "version nobody can install"
+        )
+
+
+def test_publishing_stores_no_registry_token() -> None:
+    """Trusted Publishing only: a long-lived npm/PyPI credential in this
+    workflow would reintroduce exactly the risk OIDC removes."""
+    text = _workflow_text()
+    for marker in ("NPM_TOKEN", "NODE_AUTH_TOKEN", "PYPI_API_TOKEN", "TWINE_PASSWORD"):
+        assert marker not in text, (
+            f"{marker} must not appear \u2014 both registries publish via "
+            "Trusted Publishing (OIDC), ADR 0086"
+        )
+
+
+def test_publishing_is_idempotent() -> None:
+    """A partially failed release must be re-runnable: neither registry job
+    may fail because a sibling job already published its half."""
+    text = _workflow_text()
+    assert "skip-existing: true" in text, (
+        "the PyPI upload must skip an already-published version"
+    )
+    assert "npm view" in text, (
+        "the npm publish must skip a version already on the registry"
+    )

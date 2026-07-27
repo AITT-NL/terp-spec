@@ -16,9 +16,13 @@ The directory doubles as two thin distributions over one data set:
   accessor — `spec_dir()` returns the on-disk spec root, `spec_version()` the
   `VERSION` semver. A uv workspace member; the framework's certification tests
   locate the spec only through it.
-- **`@terp/spec`** (npm, `package.json`): data only; consumers resolve the spec
-  root via `require.resolve("@terp/spec/package.json")`. An npm workspace
+- **`@terpjs/spec`** (npm, `package.json`): data only; consumers resolve the
+  spec root via `require.resolve("@terpjs/spec/package.json")`. An npm workspace
   member; the ESLint adapter's corpus/surface tests depend on it.
+
+Both are **published from the tag workflow** (ADR 0086) — `terp-spec` on PyPI,
+`@terpjs/spec` on npm, via Trusted Publishing (OIDC), so a consumer pins an
+ordinary version. Pinning the git tag instead keeps working.
 
 Both manifests carry the **spec version** (`VERSION`) — independent of the
 platform's lockstep release version, per ADR 0081's certification model; the
@@ -31,11 +35,11 @@ run standalone (`python -m pytest` from `spec/`; CI: the path-filtered
 that needs the live implementations. Because the framework consumes a **pinned
 release**, this repository's CI additionally runs `certify-against-reference`:
 it checks out the reference framework, substitutes the candidate spec for the
-pinned `terp-spec` / `@terp/spec`, and runs the framework's parity + corpus
+pinned `terp-spec` / `@terpjs/spec`, and runs the framework's parity + corpus
 certification — so a catalog or corpus change is proven against the live
 implementations *before* release, and the framework's later pin bump re-proves
 it in the framework's own gate. Splitting the spec out is then purely a
-manifest change: move `spec/` + `spec.yml`, repin `terp-spec` / `@terp/spec`
+manifest change: move `spec/` + `spec.yml`, repin `terp-spec` / `@terpjs/spec`
 from workspace sources to a git tag or registry release
 (`tests/architecture/test_repo_split_readiness.py` fails the build if code
 re-couples the units by path).

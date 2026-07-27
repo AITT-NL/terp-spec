@@ -7,6 +7,28 @@ fields and new rules also bump the minor; prose bumps the patch (see
 checked-in `VERSION` — held by `tests/test_changelog.py`. A checker certified
 against an earlier version reads this file to see exactly what changed since.
 
+## 0.15.0
+
+A distribution change only — the catalog, corpus, schemas and refused surface
+are byte-identical to 0.14.0, so a checker certified against 0.14.0 stays
+certified. What changes is how the standard is obtained.
+
+- **The standard is published** (ADR 0086). `terp-spec` goes to PyPI and the npm
+  package to the registry, both from the tag workflow via Trusted Publishing
+  (OIDC), gated on certification against the reference implementation and bound
+  to the verified commit. Consumers pin a **version** instead of a git tag; the
+  tag pin keeps working for anyone who prefers it.
+- **The npm package is renamed `@terp/spec` → `@terpjs/spec`.** The `@terp`
+  scope is not ours; the reference implementation's packages already publish
+  under `@terpjs/*` and the spec joins them. Only the manifest name changes —
+  the data, the layout and the resolution idiom are untouched
+  (`require.resolve("@terpjs/spec/package.json")`).
+
+Migration for a JavaScript consumer: replace the `@terp/spec` dependency with
+`@terpjs/spec` at this version and update the resolve specifier. Python
+consumers replace the git pin with `terp-spec>=0.15`; the import path
+(`terp_spec.spec_dir()`) is unchanged.
+
 ## 0.14.0
 
 One additive backend rule closing the storage half of an invariant the standard

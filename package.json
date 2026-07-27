@@ -1,8 +1,7 @@
 {
-  "name": "@terp/spec",
-  "version": "0.14.0",
-  "private": true,
-  "description": "The Terp Standard — stack-neutral rule catalog, violation corpus, finding format, and refused-surface declaration (ADRs 0080/0081; packaged per ADR 0082). Data only: consumers resolve the spec root via require.resolve('@terp/spec/package.json').",
+  "name": "@terpjs/spec",
+  "version": "0.15.0",
+  "description": "The Terp Standard — stack-neutral rule catalog, violation corpus, finding format, and refused-surface declaration (ADRs 0080/0081; packaged per ADR 0082, published per ADR 0086). Data only: consumers resolve the spec root via require.resolve('@terpjs/spec/package.json').",
   "files": [
     "VERSION",
     "findings.schema.json",
@@ -14,8 +13,11 @@
     "corpus"
   ],
   "license": "Apache-2.0",
+  "publishConfig": {
+    "access": "public"
+  },
   "repository": {
     "type": "git",
-    "url": "https://github.com/AITT-NL/terp-spec.git"
+    "url": "git+https://github.com/AITT-NL/terp-spec.git"
   }
 }
