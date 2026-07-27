@@ -17,7 +17,7 @@
     },
     {
       "kind": "black-box",
-      "tool": "@terp/conformance",
+      "tool": "@terpjs/conformance",
       "ref": "standard: safe methods observably mutate nothing"
     }
   ],

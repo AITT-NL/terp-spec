@@ -12,7 +12,7 @@
     },
     {
       "kind": "black-box",
-      "tool": "@terp/conformance",
+      "tool": "@terpjs/conformance",
       "ref": "standard: responses never expose credential-shaped fields"
     },
     {

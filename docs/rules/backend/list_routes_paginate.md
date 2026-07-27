@@ -30,5 +30,5 @@ exactly match the checked-in budget (which can only shrink).
 
 - Checked while the app runs? Yes — the framework also enforces this while the app runs (fail closed).
 - `build-time`: `terp.arch` — `check_list_routes_paginate`
-- `black-box`: `@terp/conformance` — `standard: list routes return a capped Page envelope`
+- `black-box`: `@terpjs/conformance` — `standard: list routes return a capped Page envelope`
 - `runtime`: `terp.core` — `_validate_list_routes_paginate`

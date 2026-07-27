@@ -31,4 +31,4 @@ exactly match the checked-in budget (which can only shrink).
 - Checked while the app runs? Yes — the framework also enforces this while the app runs (fail closed).
 - `build-time`: `terp.arch` — `check_safe_methods_are_read_only`
 - `runtime`: `terp.core` — `build_read_only_request_binder`
-- `black-box`: `@terp/conformance` — `standard: safe methods observably mutate nothing`
+- `black-box`: `@terpjs/conformance` — `standard: safe methods observably mutate nothing`

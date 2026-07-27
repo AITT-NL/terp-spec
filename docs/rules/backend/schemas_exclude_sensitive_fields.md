@@ -30,5 +30,5 @@ exactly match the checked-in budget (which can only shrink).
 
 - Checked while the app runs? Yes — the framework also enforces this while the app runs (fail closed).
 - `build-time`: `terp.arch` — `check_schemas_exclude_sensitive_fields`
-- `black-box`: `@terp/conformance` — `standard: responses never expose credential-shaped fields`
+- `black-box`: `@terpjs/conformance` — `standard: responses never expose credential-shaped fields`
 - `runtime`: `terp.core` — `_validate_schemas_exclude_sensitive_fields`

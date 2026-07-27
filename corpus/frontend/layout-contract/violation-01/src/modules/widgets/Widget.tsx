@@ -1,4 +1,4 @@
-import { DetailList, HubPage } from "@terp/react-core";
+import { DetailList, HubPage } from "@terpjs/react-core";
 export function Widget() {
   return (
     <HubPage title="Notes">

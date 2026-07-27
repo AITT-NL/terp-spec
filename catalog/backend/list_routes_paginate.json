@@ -12,7 +12,7 @@
     },
     {
       "kind": "black-box",
-      "tool": "@terp/conformance",
+      "tool": "@terpjs/conformance",
       "ref": "standard: list routes return a capped Page envelope"
     },
     {
@@ -25,7 +25,7 @@
   "opt_out": "# arch-allow-list-routes-paginate: <reason>",
   "runtime": {
     "applicability": "required",
-    "rationale": "At boot, the route scan on the composition seam (the same seam as _validate_router_response_models) walks every composed route \u2014 decorator, imperative add_api_route, and nested included routers alike \u2014 and raises a BootError naming this rule and the route when a route declares a bare list[...] / Sequence[...] response_model instead of Page[T]. PaginationDep's fail-closed skip/limit caps and the @terp/conformance Page-envelope probe remain in place on top of this in-app refusal."
+    "rationale": "At boot, the route scan on the composition seam (the same seam as _validate_router_response_models) walks every composed route \u2014 decorator, imperative add_api_route, and nested included routers alike \u2014 and raises a BootError naming this rule and the route when a route declares a bare list[...] / Sequence[...] response_model instead of Page[T]. PaginationDep's fail-closed skip/limit caps and the @terpjs/conformance Page-envelope probe remain in place on top of this in-app refusal."
   },
   "guide_topic": "service",
   "corpus": true

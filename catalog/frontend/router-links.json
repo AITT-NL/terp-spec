@@ -7,12 +7,12 @@
   "enforcement": [
     {
       "kind": "build-time",
-      "tool": "@terp/eslint-boundaries",
+      "tool": "@terpjs/eslint-boundaries",
       "ref": "BOUNDARY_SPEC.restrictInAppAnchors",
       "reported_as": "no-restricted-syntax"
     }
   ],
-  "reference": "Link from @terp/react-core (router-integrated, role-aware).",
+  "reference": "Link from @terpjs/react-core (router-integrated, role-aware).",
   "opt_out": "// terp-allow-router-links: <reason>",
   "runtime": {
     "applicability": "not-applicable",

@@ -113,7 +113,7 @@ def test_the_spec_is_versioned() -> None:
 
 def test_the_packaging_manifests_carry_the_spec_version() -> None:
     """The distribution version IS the spec version (ADR 0082): terp-spec and
-    @terp/spec are two thin manifests over one data directory, so all three
+    @terpjs/spec are two thin manifests over one data directory, so all three
     version declarations must agree."""
     version = spec_version()
     pyproject = (_SPEC / "pyproject.toml").read_text(encoding="utf-8")
@@ -366,7 +366,7 @@ _REFERENCE_LEAKAGE: list[tuple[re.Pattern[str], str]] = [
     (re.compile(r"``"), "RST literal markup — write plain prose"),
     (re.compile(r":[a-z]+:`"), "a Sphinx role — write plain prose"),
     (re.compile(r"\bterp\.[a-z_]"), "a terp.* package path — reference metadata"),
-    (re.compile(r"@terp/"), "an @terp/* package path — reference metadata"),
+    (re.compile(r"@terpjs?/"), "an @terpjs/* package path — reference metadata"),
     (re.compile(r"\bterp +(?:check|guide|migrate)\b"), "the reference CLI — reference metadata"),
     (re.compile(r"(?:arch|terp)-allow"), "a marker spelling — belongs in opt_out / reference"),
     (re.compile(r"\bADR +\d"), "a framework ADR pointer — unresolvable for a spec consumer"),

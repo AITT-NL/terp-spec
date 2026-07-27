@@ -7,18 +7,18 @@
   "enforcement": [
     {
       "kind": "build-time",
-      "tool": "@terp/eslint-boundaries",
+      "tool": "@terpjs/eslint-boundaries",
       "ref": "terp/layout-contract",
       "reported_as": "terp/layout-contract"
     },
     {
       "kind": "runtime",
-      "tool": "@terp/react-core",
+      "tool": "@terpjs/react-core",
       "ref": "verifySlotChildren"
     }
   ],
   "opt_out": "// terp-allow-layout-contract: <reason>",
-  "reference": "frontend/layout-contract.json + the layoutContract bootstrap option (ADR 0079); verifySlotChildren in @terp/react-core is the runtime DOM check.",
+  "reference": "frontend/layout-contract.json + the layoutContract bootstrap option (ADR 0079); verifySlotChildren in @terpjs/react-core is the runtime DOM check.",
   "runtime": {
     "applicability": "required"
   },

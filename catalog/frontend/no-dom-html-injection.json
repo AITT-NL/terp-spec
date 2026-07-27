@@ -7,12 +7,12 @@
   "enforcement": [
     {
       "kind": "build-time",
-      "tool": "@terp/eslint-boundaries",
+      "tool": "@terpjs/eslint-boundaries",
       "ref": "terp/no-dom-html-injection",
       "reported_as": "terp/no-dom-html-injection"
     }
   ],
-  "reference": "The Markdown component from @terp/react-core for rich text.",
+  "reference": "The Markdown component from @terpjs/react-core for rich text.",
   "opt_out": "// terp-allow-no-dom-html-injection: <reason>",
   "runtime": {
     "applicability": "not-applicable",

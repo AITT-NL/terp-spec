@@ -138,7 +138,7 @@ The standalone suite enforces the split
 | `title` | One-line statement of the invariant. |
 | `intent` | Why the rule exists — the drift or threat it prevents. |
 | `layer` | Cheapest faithful verification for a *new* stack: see below. |
-| `enforcement` | How the reference implementation enforces it (first entry: the `build-time` check). A `runtime` entry names the fail-closed runtime control pairing with it (the two-layer discipline a Level 3 stack must reproduce for the rules that require it); a `black-box` entry names the `@terp/conformance` probe title. For frontend rules, `reported_as` is the ESLint rule id violations surface as — several catalog rules share one core rule id, so the adapter publishes a `catalogRuleId()` mapping and findings are attributed through it. |
+| `enforcement` | How the reference implementation enforces it (first entry: the `build-time` check). A `runtime` entry names the fail-closed runtime control pairing with it (the two-layer discipline a Level 3 stack must reproduce for the rules that require it); a `black-box` entry names the `@terpjs/conformance` probe title. For frontend rules, `reported_as` is the ESLint rule id violations surface as — several catalog rules share one core rule id, so the adapter publishes a `catalogRuleId()` mapping and findings are attributed through it. |
 | `runtime` | **Mandatory.** The rule's runtime-applicability classification (`required` / `not-applicable` / `deferred`) plus a `rationale` (mandatory for exemptions) and, for `deferred`, a `tracking` reference naming where the deferral is tracked — see “Runtime applicability” below. |
 | `restricted_surface` | Frontend prohibition rules only: the `restricted-surface.json` keys the rule realises — the structural citation the spec suite resolves (every key must be claimed by some rule; a prose mention in `intent` must agree with the field). |
 | `opt_out` | The *reference realisation* of the abstract escape-hatch contract (see below). |
@@ -159,7 +159,7 @@ The standalone suite enforces the split
 
 The classification is a judgment about *porting cost*, not a limit on the
 reference implementation — today every rule is enforced by `terp.arch` or
-`@terp/eslint-boundaries` regardless of layer.
+`@terpjs/eslint-boundaries` regardless of layer.
 
 ### Runtime applicability (the two-layer discipline, per rule)
 
@@ -222,7 +222,7 @@ consumers acting on findings without re-reading the catalog), and a
 can be tracked across line-shifting edits). Attribution is always to the
 stack-neutral catalog id — the reference ESLint adapter, whose core rule ids
 are shared between several catalog rules, publishes this mapping as
-`catalogRuleId()` in `@terp/eslint-boundaries`.
+`catalogRuleId()` in `@terpjs/eslint-boundaries`.
 
 ## Check-report format
 
@@ -380,7 +380,7 @@ rule can ship with its gap explicit and reviewed.
 ## Conformance levels
 
 - **Level 1 — black-box:** the app passes the runnable conformance suite
-  (`@terp/conformance`) for the capabilities it claims, including the
+  (`@terpjs/conformance`) for the capabilities it claims, including the
   `standard:` probes the `black-box` catalog entries name.
 - **Level 2 — static rule pack:** additionally, a checker validated against
   this corpus enforces the `static-portable` rules for the app's language(s),
@@ -388,8 +388,8 @@ rule can ship with its gap explicit and reviewed.
 - **Level 3 — full harness:** additionally, the `static-bespoke` rules, the
   paired `runtime` controls of every rule whose `runtime.applicability` is
   `required`, and the governed escape-hatch budget ratchet are enforced (today:
-  the `terp.arch` + `@terp/eslint-boundaries` reference harness on top of
-  `terp.core` / `@terp/react-core`).
+  the `terp.arch` + `@terpjs/eslint-boundaries` reference harness on top of
+  `terp.core` / `@terpjs/react-core`).
 
 ## Growing the spec
 

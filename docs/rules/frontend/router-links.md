@@ -12,7 +12,7 @@ A raw <a href="/..."> forces a full reload and skips the role-aware route guard;
 
 ## What to do instead
 
-Link from @terp/react-core (router-integrated, role-aware). (reference stack; another stack ships its own realisation.)
+Link from @terpjs/react-core (router-integrated, role-aware). (reference stack; another stack ships its own realisation.)
 
 ## If you really need an exception
 
@@ -29,4 +29,4 @@ exactly match the checked-in budget (which can only shrink).
 ## Enforcement
 
 - Checked while the app runs? No — this is a property of the written source only; the build-time check is the control, by recorded decision.
-- `build-time`: `@terp/eslint-boundaries` — `BOUNDARY_SPEC.restrictInAppAnchors`
+- `build-time`: `@terpjs/eslint-boundaries` — `BOUNDARY_SPEC.restrictInAppAnchors`

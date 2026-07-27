@@ -7,7 +7,7 @@
   "enforcement": [
     {
       "kind": "build-time",
-      "tool": "@terp/eslint-boundaries",
+      "tool": "@terpjs/eslint-boundaries",
       "ref": "terp/no-unsafe-href",
       "reported_as": "terp/no-unsafe-href"
     }

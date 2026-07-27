@@ -12,7 +12,7 @@ Raw fetch / XMLHttpRequest / WebSocket / EventSource (and navigator.sendBeacon) 
 
 ## What to do instead
 
-useTerpClient() + unwrap from @terp/react-core for request/response; useRealtimeChannel() from @terp/react-core for typed SSE/WebSocket subscriptions (one-use ticket minted through the generated client). (reference stack; another stack ships its own realisation.)
+useTerpClient() + unwrap from @terpjs/react-core for request/response; useRealtimeChannel() from @terpjs/react-core for typed SSE/WebSocket subscriptions (one-use ticket minted through the generated client). (reference stack; another stack ships its own realisation.)
 
 ## If you really need an exception
 
@@ -29,4 +29,4 @@ exactly match the checked-in budget (which can only shrink).
 ## Enforcement
 
 - Checked while the app runs? No — this is a property of the written source only; the build-time check is the control, by recorded decision.
-- `build-time`: `@terp/eslint-boundaries` — `BOUNDARY_SPEC.restrictedGlobals`
+- `build-time`: `@terpjs/eslint-boundaries` — `BOUNDARY_SPEC.restrictedGlobals`

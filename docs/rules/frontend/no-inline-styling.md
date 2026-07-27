@@ -12,7 +12,7 @@ A style or className attribute is a side channel into hand-authored CSS that dri
 
 ## What to do instead
 
-Layout via Stack, DetailList and the page archetypes from @terp/react-core; theming via the app's token source. (reference stack; another stack ships its own realisation.)
+Layout via Stack, DetailList and the page archetypes from @terpjs/react-core; theming via the app's token source. (reference stack; another stack ships its own realisation.)
 
 ## If you really need an exception
 
@@ -29,4 +29,4 @@ exactly match the checked-in budget (which can only shrink).
 ## Enforcement
 
 - Checked while the app runs? No — this is a property of the written source only; the build-time check is the control, by recorded decision.
-- `build-time`: `@terp/eslint-boundaries` — `BOUNDARY_SPEC.restrictedAttributes`
+- `build-time`: `@terpjs/eslint-boundaries` — `BOUNDARY_SPEC.restrictedAttributes`

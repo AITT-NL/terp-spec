@@ -7,7 +7,7 @@
   "enforcement": [
     {
       "kind": "build-time",
-      "tool": "@terp/eslint-boundaries",
+      "tool": "@terpjs/eslint-boundaries",
       "ref": "terp/escape-hatch",
       "reported_as": "terp/escape-hatch"
     }

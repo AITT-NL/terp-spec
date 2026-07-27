@@ -12,7 +12,7 @@ A raw <button>/<input>/<select>/<textarea>/<table>/<dialog>/<form> bypasses the 
 
 ## What to do instead
 
-Button, Input, Select, Textarea, DataView, ConfirmDialog and Stack as="form" from @terp/react-core (BOUNDARY_SPEC.restrictedElements maps each element to its replacement). (reference stack; another stack ships its own realisation.)
+Button, Input, Select, Textarea, DataView, ConfirmDialog and Stack as="form" from @terpjs/react-core (BOUNDARY_SPEC.restrictedElements maps each element to its replacement). (reference stack; another stack ships its own realisation.)
 
 ## If you really need an exception
 
@@ -29,4 +29,4 @@ exactly match the checked-in budget (which can only shrink).
 ## Enforcement
 
 - Checked while the app runs? No — this is a property of the written source only; the build-time check is the control, by recorded decision.
-- `build-time`: `@terp/eslint-boundaries` — `BOUNDARY_SPEC.restrictedElements`
+- `build-time`: `@terpjs/eslint-boundaries` — `BOUNDARY_SPEC.restrictedElements`

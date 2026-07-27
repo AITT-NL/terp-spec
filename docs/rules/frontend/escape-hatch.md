@@ -22,4 +22,4 @@ so it cannot be waived by that mechanism.
 ## Enforcement
 
 - Checked while the app runs? No — this is a property of the written source only; the build-time check is the control, by recorded decision.
-- `build-time`: `@terp/eslint-boundaries` — `terp/escape-hatch`
+- `build-time`: `@terpjs/eslint-boundaries` — `terp/escape-hatch`

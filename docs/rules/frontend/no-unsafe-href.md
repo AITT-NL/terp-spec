@@ -25,4 +25,4 @@ exactly match the checked-in budget (which can only shrink).
 ## Enforcement
 
 - Checked while the app runs? No — this is a property of the written source only; the build-time check is the control, by recorded decision.
-- `build-time`: `@terp/eslint-boundaries` — `terp/no-unsafe-href`
+- `build-time`: `@terpjs/eslint-boundaries` — `terp/no-unsafe-href`

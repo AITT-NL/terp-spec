@@ -12,7 +12,7 @@ dangerouslySetInnerHTML, innerHTML/outerHTML assignment, insertAdjacentHTML and 
 
 ## What to do instead
 
-The Markdown component from @terp/react-core for rich text. (reference stack; another stack ships its own realisation.)
+The Markdown component from @terpjs/react-core for rich text. (reference stack; another stack ships its own realisation.)
 
 ## If you really need an exception
 
@@ -29,4 +29,4 @@ exactly match the checked-in budget (which can only shrink).
 ## Enforcement
 
 - Checked while the app runs? No — this is a property of the written source only; the build-time check is the control, by recorded decision.
-- `build-time`: `@terp/eslint-boundaries` — `terp/no-dom-html-injection`
+- `build-time`: `@terpjs/eslint-boundaries` — `terp/no-dom-html-injection`

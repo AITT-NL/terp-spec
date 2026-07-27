@@ -7,6 +7,24 @@ fields and new rules also bump the minor; prose bumps the patch (see
 checked-in `VERSION` — held by `tests/test_changelog.py`. A checker certified
 against an earlier version reads this file to see exactly what changed since.
 
+## 0.16.0
+
+Reference metadata only — every rule's title, intent and normative prose is
+byte-identical to 0.15.0, so a checker certified against 0.15.0 stays certified
+on the invariants. What changes is the name each rule's enforcing tool is
+recorded under.
+
+- **The catalog's `enforcement[].tool` ids move to the published scope.** The
+  17 entries naming `@terp/eslint-boundaries`, `@terp/conformance` and
+  `@terp/react-core` now name `@terpjs/*` — the scope the reference
+  implementation's packages actually publish under (0.15.0 moved the spec's own
+  npm package there). The same rename lands in the non-normative `reference`
+  fields, the frontend corpus fixtures' import specifiers, and the generated
+  rule pages.
+
+Migration for a checker that attributes findings by tool id: read the new ids.
+A checker that only matches catalog rule ids needs no change.
+
 ## 0.15.0
 
 A distribution change only — the catalog, corpus, schemas and refused surface

@@ -7,12 +7,12 @@
   "enforcement": [
     {
       "kind": "build-time",
-      "tool": "@terp/eslint-boundaries",
+      "tool": "@terpjs/eslint-boundaries",
       "ref": "BOUNDARY_SPEC.restrictedElements",
       "reported_as": "no-restricted-syntax"
     }
   ],
-  "reference": "Button, Input, Select, Textarea, DataView, ConfirmDialog and Stack as=\"form\" from @terp/react-core (BOUNDARY_SPEC.restrictedElements maps each element to its replacement).",
+  "reference": "Button, Input, Select, Textarea, DataView, ConfirmDialog and Stack as=\"form\" from @terpjs/react-core (BOUNDARY_SPEC.restrictedElements maps each element to its replacement).",
   "opt_out": "// terp-allow-token-styled-elements: <reason>",
   "runtime": {
     "applicability": "not-applicable",

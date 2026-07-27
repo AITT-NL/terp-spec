@@ -1,4 +1,4 @@
-import { useRealtimeChannel } from "@terp/react-core";
+import { useRealtimeChannel } from "@terpjs/react-core";
 
 type Notice = { sequence: number; text: string };
 

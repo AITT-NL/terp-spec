@@ -12,7 +12,7 @@ A deep import into a platform package's internals couples the app to files that 
 
 ## What to do instead
 
-@terp/*/src/* and @terp/*/dist/* imports are refused; import from the @terp/* package root. (reference stack; another stack ships its own realisation.)
+@terpjs/*/src/* and @terpjs/*/dist/* imports are refused; import from the @terpjs/* package root. (reference stack; another stack ships its own realisation.)
 
 ## If you really need an exception
 
@@ -29,4 +29,4 @@ exactly match the checked-in budget (which can only shrink).
 ## Enforcement
 
 - Checked while the app runs? No — this is a property of the written source only; the build-time check is the control, by recorded decision.
-- `build-time`: `@terp/eslint-boundaries` — `BOUNDARY_SPEC.internalImportPatterns`
+- `build-time`: `@terpjs/eslint-boundaries` — `BOUNDARY_SPEC.internalImportPatterns`

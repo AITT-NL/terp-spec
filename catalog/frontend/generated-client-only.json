@@ -7,12 +7,12 @@
   "enforcement": [
     {
       "kind": "build-time",
-      "tool": "@terp/eslint-boundaries",
+      "tool": "@terpjs/eslint-boundaries",
       "ref": "BOUNDARY_SPEC.restrictedGlobals",
       "reported_as": "no-restricted-globals"
     }
   ],
-  "reference": "useTerpClient() + unwrap from @terp/react-core for request/response; useRealtimeChannel() from @terp/react-core for typed SSE/WebSocket subscriptions (one-use ticket minted through the generated client).",
+  "reference": "useTerpClient() + unwrap from @terpjs/react-core for request/response; useRealtimeChannel() from @terpjs/react-core for typed SSE/WebSocket subscriptions (one-use ticket minted through the generated client).",
   "opt_out": "// terp-allow-generated-client-only: <reason>",
   "runtime": {
     "applicability": "not-applicable",

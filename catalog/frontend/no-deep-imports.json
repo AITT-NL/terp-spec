@@ -7,12 +7,12 @@
   "enforcement": [
     {
       "kind": "build-time",
-      "tool": "@terp/eslint-boundaries",
+      "tool": "@terpjs/eslint-boundaries",
       "ref": "BOUNDARY_SPEC.internalImportPatterns",
       "reported_as": "no-restricted-imports"
     }
   ],
-  "reference": "@terp/*/src/* and @terp/*/dist/* imports are refused; import from the @terp/* package root.",
+  "reference": "@terpjs/*/src/* and @terpjs/*/dist/* imports are refused; import from the @terpjs/* package root.",
   "opt_out": "// terp-allow-no-deep-imports: <reason>",
   "runtime": {
     "applicability": "not-applicable",

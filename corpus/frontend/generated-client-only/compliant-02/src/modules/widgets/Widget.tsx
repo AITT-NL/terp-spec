@@ -1,4 +1,4 @@
-import { useTerpClient } from "@terp/react-core";
+import { useTerpClient } from "@terpjs/react-core";
 
 const repository = {
   fetch(id: string): string {

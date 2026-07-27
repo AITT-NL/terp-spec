@@ -78,13 +78,9 @@ jobs:
         working-directory: framework
         run: |
           npm ci
-          # Substitute the candidate spec under BOTH scope paths: the rename to
-          # @terpjs/spec (ADR 0086) lands here first, so the reference framework
-          # may still resolve the legacy @terp/spec until its repin lands. Drop
-          # the legacy leg once no consumer resolves it.
-          for scope in @terp @terpjs; do
-            rm -rf "node_modules/$scope/spec"
-            mkdir -p "node_modules/$scope"
-            ln -s "$GITHUB_WORKSPACE/spec" "node_modules/$scope/spec"
-          done
+          # Substitute the candidate spec for the pinned release — the same
+          # seam the framework's pin bump will move, exercised early.
+          rm -rf node_modules/@terpjs/spec
+          mkdir -p node_modules/@terpjs
+          ln -s "$GITHUB_WORKSPACE/spec" node_modules/@terpjs/spec
           npx vitest run packages/frontend/eslint-boundaries

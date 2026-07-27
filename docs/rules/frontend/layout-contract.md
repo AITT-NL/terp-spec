@@ -12,7 +12,7 @@ With a checked-in layout contract, each page archetype's body slot is constraine
 
 ## What to do instead
 
-frontend/layout-contract.json + the layoutContract bootstrap option (ADR 0079); verifySlotChildren in @terp/react-core is the runtime DOM check. (reference stack; another stack ships its own realisation.)
+frontend/layout-contract.json + the layoutContract bootstrap option (ADR 0079); verifySlotChildren in @terpjs/react-core is the runtime DOM check. (reference stack; another stack ships its own realisation.)
 
 ## If you really need an exception
 
@@ -29,5 +29,5 @@ exactly match the checked-in budget (which can only shrink).
 ## Enforcement
 
 - Checked while the app runs? Yes — the framework also enforces this while the app runs (fail closed).
-- `build-time`: `@terp/eslint-boundaries` — `terp/layout-contract`
-- `runtime`: `@terp/react-core` — `verifySlotChildren`
+- `build-time`: `@terpjs/eslint-boundaries` — `terp/layout-contract`
+- `runtime`: `@terpjs/react-core` — `verifySlotChildren`
