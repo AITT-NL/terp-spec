@@ -12,7 +12,7 @@ A revision whose parent is missing, or a second revision claiming to start the h
 
 ## What to do instead
 
-Within each migrations/versions directory, every revision's declared parent (one id, or each id of a merge revision's tuple) must name a revision defined in that same directory, and at most one revision may declare no parent. (reference stack; another stack ships its own realisation.)
+Within each non-empty migrations/versions directory, exactly one revision must declare no parent; every other revision's declared parent (one id, or each id of a merge revision's tuple) must name a revision defined in that same directory, and every revision must be reachable from that first revision (no cycles or disconnected chains). (reference stack; another stack ships its own realisation.)
 
 ## If you really need an exception
 

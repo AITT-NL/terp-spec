@@ -11,7 +11,7 @@
       "ref": "check_migration_history_is_intact"
     }
   ],
-  "reference": "Within each migrations/versions directory, every revision's declared parent (one id, or each id of a merge revision's tuple) must name a revision defined in that same directory, and at most one revision may declare no parent.",
+  "reference": "Within each non-empty migrations/versions directory, exactly one revision must declare no parent; every other revision's declared parent (one id, or each id of a merge revision's tuple) must name a revision defined in that same directory, and every revision must be reachable from that first revision (no cycles or disconnected chains).",
   "opt_out": "# arch-allow-migration-history-is-intact: <reason>",
   "runtime": {
     "applicability": "not-applicable",
