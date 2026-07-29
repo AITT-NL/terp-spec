@@ -109,11 +109,11 @@ def test_release_requires_certification_against_the_reference() -> None:
     assert "repository: AITT-NL/terp-framework" in text, (
         "certification checks out the reference framework"
     )
-    assert "uv pip install -e ../spec" in text and "node_modules/$scope/spec" in text, (
+    assert "uv pip install -e ../spec" in text and "node_modules/@terpjs/spec" in text, (
         "certification must substitute the tagged checkout for BOTH pinned "
         "spec packages (terp-spec and @terpjs/spec)"
     )
-    assert re.search(r"for scope in .*@terpjs", text), (
+    assert 'ln -s "$GITHUB_WORKSPACE/spec" node_modules/@terpjs/spec' in text, (
         "the npm substitution must cover the @terpjs scope (ADR 0086)"
     )
     assert re.search(
