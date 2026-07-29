@@ -7,6 +7,21 @@ fields and new rules also bump the minor; prose bumps the patch (see
 checked-in `VERSION` — held by `tests/test_changelog.py`. A checker certified
 against an earlier version reads this file to see exactly what changed since.
 
+## 0.18.0
+
+One existing backend rule is strengthened. Everything else is byte-identical
+to 0.17.0.
+
+- **`backend/migration_history_is_intact`** — a non-empty history must now have
+  exactly one first revision, and every revision must be reachable from it.
+  The 0.17.0 wording required every parent to exist and allowed at most one
+  first revision; a closed cycle can satisfy both conditions while still
+  providing no valid baseline, and a disconnected cycle can hide next to one.
+  The corpus now carries the zero-root cycle explicitly.
+
+Migration for a checker: reject a history with no first revision and reject
+revisions not reachable from its sole first revision.
+
 ## 0.17.0
 
 One new backend rule. Everything else is byte-identical to 0.16.0, so a checker
