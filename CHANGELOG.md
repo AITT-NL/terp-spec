@@ -7,6 +7,24 @@ fields and new rules also bump the minor; prose bumps the patch (see
 checked-in `VERSION` — held by `tests/test_changelog.py`. A checker certified
 against an earlier version reads this file to see exactly what changed since.
 
+## 0.17.0
+
+One new backend rule. Everything else is byte-identical to 0.16.0, so a checker
+certified against 0.16.0 stays certified on the invariants it already covers.
+
+- **`backend/migration_history_is_intact`** — each migration history must be one
+  unbroken chain from a single first revision. A revision whose declared parent
+  names no revision in the same history, or a second revision declaring no
+  parent at all, means an existing chain was edited rather than extended: every
+  database that applied the removed revision becomes unupgradable, while the
+  build stays green, because a database rebuilt from the rewritten history is
+  perfectly consistent with the models. Classified `not-applicable` for the
+  runtime half — chain integrity is a property of the authored files. The
+  complementary live-database invariant (an applied revision the code no longer
+  defines) is a different check on a different input and is not claimed here.
+
+Migration for a checker: implement the new rule, or report it unimplemented.
+
 ## 0.16.0
 
 Reference metadata only — every rule's title, intent and normative prose is
