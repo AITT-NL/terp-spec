@@ -1,6 +1,6 @@
 # `backend/no_cross_module_imports`
 
-**A module never imports a sibling module (leaf domains stay independent)**
+**A module imports a sibling only across an edge it declared**
 
 > Generated from the catalog by `tools/generate_rule_docs.py` — do not
 > edit by hand; the parity test holds this page to
@@ -8,7 +8,7 @@
 
 ## Why this rule exists
 
-Modules couple only through the platform surface and their own files — a sibling import creates hidden coupling that breaks module isolation and independent evolution. Both absolute and relative sibling imports are caught: a relative import is resolved to its absolute module first, so renaming the import style does not re-couple two leaf modules.
+Modules are independent by default; a real dependency is DECLARED, never implicit. The depending module names the sibling as a dependency edge in its own manifest, which puts the coupling where a reader already looks; an undeclared sibling import is refused. Both absolute and relative sibling imports are caught: a relative import is resolved to its absolute module first, so renaming the import style does not re-couple two leaf modules. The declaration is read from source, so one a static reader cannot resolve grants nothing (fail closed).
 
 ## If you really need an exception
 

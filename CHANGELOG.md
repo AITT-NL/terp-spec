@@ -7,7 +7,32 @@ fields and new rules also bump the minor; prose bumps the patch (see
 checked-in `VERSION` — held by `tests/test_changelog.py`. A checker certified
 against an earlier version reads this file to see exactly what changed since.
 
-## 0.18.0
+## 0.19.0
+
+Modules gain a declared way to depend on each other. Two backend rules are
+added and one is restated; nothing else changes.
+
+Until now the standard said only that a module never imports a sibling. That
+is the right default, but it left a real dependency with nowhere to go: the
+observed consequence is that apps hand-roll dependency inversion — a protocol,
+a module-global registry and a composition-root adapter — which is the same
+coupling, unchecked, spread across three files and carrying mutable global
+state. The standard now names the sanctioned form instead.
+
+- **`backend/no_cross_module_imports`** — restated. A sibling import is
+  refused unless the depending module **declares** the edge in its own
+  manifest. What is forbidden is undeclared coupling, not coupling.
+- **`backend/cross_module_imports_use_public_surface`** — new. A declared
+  edge grants the dependency's `models` / `schemas` / `service` / `events`
+  only. Never its router (that couples the two through HTTP shapes and lets
+  an in-process call walk past the policy guarding those routes), never an
+  underscore-prefixed internal, and never the bare package.
+- **`backend/module_dependency_graph_is_acyclic`** — new, and the one rule of
+  the three with a runtime half: the composition root sees every manifest, so
+  it refuses to boot on a cycle. A cycle means two "independent" modules have
+  become one.
+
+
 
 One existing backend rule is strengthened. Everything else is byte-identical
 to 0.17.0.
