@@ -66,6 +66,11 @@ jobs:
       - name: Python certification (catalog parity + backend corpus)
         working-directory: framework
         run: |
+          # Drop the reference framework's pinned terp-spec release BEFORE
+          # resolving: the pin may already name the unpublished version this
+          # branch is heading towards, which would make `uv sync` unresolvable
+          # and fail the job for a reason that has nothing to do with the spec.
+          sed -i '/"terp-spec==/d' pyproject.toml
           uv sync
           # Substitute this checkout for the pinned terp-spec release — the
           # same seam the framework's pin bump will move, exercised early.

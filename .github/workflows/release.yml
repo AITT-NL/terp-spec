@@ -112,6 +112,14 @@ jobs:
       - name: Python certification (catalog parity + backend corpus)
         working-directory: framework
         run: |
+          # Drop the reference framework's pinned terp-spec release BEFORE
+          # resolving. The pin names a published version, and the whole point
+          # of this job is to certify against a version that is not published
+          # yet — so a reference that already pins THIS release would make
+          # `uv sync` unresolvable and deadlock the release against the very
+          # framework commit that carries the rules being certified.
+          # Substituting the checkout below is what this job actually tests.
+          sed -i '/"terp-spec==/d' pyproject.toml
           uv sync
           uv pip install -e ../spec
           uv run --no-sync pytest tests/architecture/test_spec_catalog.py tests/architecture/test_spec_corpus.py -q
