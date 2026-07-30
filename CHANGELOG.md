@@ -9,8 +9,9 @@ against an earlier version reads this file to see exactly what changed since.
 
 ## 0.19.0
 
-Modules gain a declared way to depend on each other. Two backend rules are
-added and one is restated; nothing else changes.
+Modules gain a declared way to depend on each other, and a table gains one
+owning package. Three backend rules are added and one is restated; nothing
+else changes.
 
 Until now the standard said only that a module never imports a sibling. That
 is the right default, but it left a real dependency with nowhere to go: the
@@ -32,7 +33,22 @@ state. The standard now names the sanctioned form instead.
   it refuses to boot on a cycle. A cycle means two "independent" modules have
   become one.
 
+Separately, a table now has exactly one owning package. Per-package migration
+histories are independent, so splitting a table's model from the history that
+creates it emits no schema change at all: the losing package no longer owns
+the table and cannot propose dropping it, and the gaining package sees a
+database where it already exists and cannot propose creating it. Every
+existing database keeps upgrading and the build stays green. The next
+ordinary change to that model is then authored into the gaining package's
+history, which - ordered only by foreign keys - a fresh install may run
+before the history that creates the table. Only fresh installs break, months
+later, blamed on an unrelated change.
 
+- **`backend/table_ownership_is_not_split`** - new. The package whose models
+  declare a table must be the package whose history creates it. Move a table
+  between packages by expand/contract, never by moving the declaration alone.
+
+## 0.18.0
 
 One existing backend rule is strengthened. Everything else is byte-identical
 to 0.17.0.
