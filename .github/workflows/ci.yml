@@ -82,7 +82,14 @@ jobs:
       - name: Frontend certification (ESLint adapter corpus + surface + findings)
         working-directory: framework
         run: |
-          npm ci
+          # Drop the reference framework's pinned @terpjs/spec release BEFORE
+          # resolving, for the same reason the Python step does: the pin may
+          # already name the unpublished version this branch is heading
+          # towards, and `npm ci` would fail on ETARGET for a reason that has
+          # nothing to do with the spec.
+          npm pkg delete devDependencies.@terpjs/spec \
+            --workspace @terpjs/eslint-boundaries
+          npm install --no-audit --no-fund
           # Substitute the candidate spec for the pinned release — the same
           # seam the framework's pin bump will move, exercised early.
           rm -rf node_modules/@terpjs/spec

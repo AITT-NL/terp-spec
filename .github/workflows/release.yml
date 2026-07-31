@@ -129,10 +129,16 @@ jobs:
       - name: Frontend certification (ESLint adapter corpus + surface + findings)
         working-directory: framework
         run: |
-          npm ci
-          # Substitute the candidate spec for the resolved package, so the
-          # reference framework certifies against THIS commit rather than the
-          # pinned release. The framework resolves @terpjs/spec (ADR 0086).
+          # Drop the reference framework's pinned @terpjs/spec release BEFORE
+          # resolving, for the same reason the Python step does: the pin names
+          # a published version, and this job exists to certify one that is not
+          # published yet. `npm ci` would fail on ETARGET against the very
+          # framework commit that carries the rules being certified, so this
+          # resolves without the pin and substitutes the checkout instead —
+          # which is what the job actually tests.
+          npm pkg delete devDependencies.@terpjs/spec \
+            --workspace @terpjs/eslint-boundaries
+          npm install --no-audit --no-fund
           rm -rf node_modules/@terpjs/spec
           mkdir -p node_modules/@terpjs
           ln -s "$GITHUB_WORKSPACE/spec" node_modules/@terpjs/spec
