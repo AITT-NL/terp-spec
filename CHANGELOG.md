@@ -7,6 +7,27 @@ fields and new rules also bump the minor; prose bumps the patch (see
 checked-in `VERSION` — held by `tests/test_changelog.py`. A checker certified
 against an earlier version reads this file to see exactly what changed since.
 
+## 0.20.0
+
+One backend rule is added; nothing else changes.
+
+- **`backend/emitted_events_are_declared`** — new. A module emits only the
+  events its manifest declares. The emits list is the module's published
+  contract — what the control plane validates, what an operator reads to know
+  what a module produces, what another team subscribes against — and an
+  undeclared emit makes that contract quietly untrue: the event really does go
+  out, so nothing fails, while the document everyone reasons from says it
+  cannot happen. This is the same defect class as 0.19.0's owning-package
+  rule, seen from the other side: there a declaration had no reality behind
+  it, here a reality has no declaration in front of it.
+
+  Build-time only, by recorded decision. An emit call carries no module
+  identity, so the running system cannot attribute an emit to the manifest
+  that should have declared it; the association exists only in the source
+  layout. Passing a module handle to the emit call to make it checkable at
+  runtime would put the answer in the caller's hands, which is exactly what
+  the rule is verifying.
+
 ## 0.19.0
 
 Modules gain a declared way to depend on each other, and a table gains one
