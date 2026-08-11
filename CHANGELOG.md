@@ -7,6 +7,15 @@ fields and new rules also bump the minor; prose bumps the patch (see
 checked-in `VERSION` — held by `tests/test_changelog.py`. A checker certified
 against an earlier version reads this file to see exactly what changed since.
 
+## 0.21.1
+
+No change to the standard. 0.21.0 reached npm but never reached PyPI: the
+release job built the wheel with an unpinned build backend that had moved on to
+`Metadata-Version: 2.5`, which the digest-pinned publisher's twine refused as
+invalid. Two pins that were each defensible on their own drifted apart, and the
+result was a version consumers could only half-install. **Pin `0.21.1`, not
+`0.21.0`** — the catalog content of the two is identical.
+
 ## 0.21.0
 
 One backend rule is added; nothing else changes.

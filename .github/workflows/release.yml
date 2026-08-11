@@ -172,7 +172,14 @@ jobs:
           python -m build
       - name: Publish to PyPI (trusted publishing)
         # Pinned by digest: this action holds a publishing credential.
-        uses: pypa/gh-action-pypi-publish@ba38be9e461d3875417946c167d0b5f3d385a247 # release/v1
+        #
+        # Keep this pin moving with the build backend. The build above resolves
+        # `hatchling` unpinned, so the metadata version it emits floats forward,
+        # while this action's bundled twine is frozen at whatever the digest
+        # points to. 0.21.0 died exactly in that gap: hatchling wrote
+        # `Metadata-Version: 2.5` and the pinned twine refused it as invalid —
+        # a release broken by two inputs that were each fine on their own.
+        uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2
         with:
           skip-existing: true
 
