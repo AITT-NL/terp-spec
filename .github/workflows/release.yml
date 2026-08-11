@@ -148,7 +148,9 @@ jobs:
   # require certification (a version no conformant checker exists for can never
   # reach a registry) and check out the VERIFIED COMMIT rather than the tag —
   # a tag force-moved mid-workflow cannot change what gets published. Both are
-  # idempotent so a partially failed release is re-runnable.
+  # idempotent so a partially failed release is re-runnable, and they run in
+  # sequence (PyPI, then npm) so a failure cannot half-publish a version — see
+  # publish-npm.
   publish-pypi:
     needs: [verify, certify-against-reference]
     runs-on: ubuntu-latest
@@ -184,7 +186,17 @@ jobs:
           skip-existing: true
 
   publish-npm:
-    needs: [verify, certify-against-reference]
+    # Ordered AFTER PyPI, not run alongside it. Both registries are immutable,
+    # so a version half of them accepted is a version that can never be
+    # completed or withdrawn — it is simply burned, while still being pinnable.
+    # 0.21.0 was burned exactly so: npm accepted it, PyPI rejected the wheel.
+    # PyPI is the half that can fail on the artifact (it builds one; npm
+    # publishes checked-in data), so it goes first: its failure now leaves
+    # NOTHING published and the version free to re-cut, and the reverse
+    # ordering's unrecoverable case cannot happen. Serialising costs one
+    # registry round-trip and no extra approval (the environment is approved
+    # per run, not per job).
+    needs: [verify, certify-against-reference, publish-pypi]
     runs-on: ubuntu-latest
     environment: release
     permissions:

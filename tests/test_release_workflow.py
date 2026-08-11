@@ -146,7 +146,10 @@ def test_release_publishes_to_both_registries() -> None:
     )
     for job in ("publish-pypi", "publish-npm"):
         block = _job_block(text, job)
-        assert re.search(r"needs:\s*\[verify,\s*certify-against-reference\]", block), (
+        needs = re.search(r"needs:\s*\[([^\]]*)\]", block)
+        assert needs and {"verify", "certify-against-reference"} <= {
+            name.strip() for name in needs.group(1).split(",")
+        }, (
             f"{job} must require certification \u2014 a version no conformant "
             "checker exists for may never reach a registry"
         )
@@ -188,6 +191,24 @@ def test_publishing_stores_no_registry_token() -> None:
             f"{marker} must not appear \u2014 both registries publish via "
             "Trusted Publishing (OIDC), ADR 0086"
         )
+
+
+def test_publishing_cannot_half_publish_a_version() -> None:
+    """Both registries are immutable, so a version only one of them accepted can
+    never be completed or withdrawn — it is burned, and still pinnable. Running
+    the publishes in parallel makes that outcome reachable from any one-sided
+    failure; ordering them makes the failure leave nothing published and the
+    version free to re-cut. PyPI goes first because it is the half that builds
+    an artifact and can therefore fail on one (npm publishes checked-in data).
+    0.21.0 is the worked example: npm accepted it, PyPI rejected the wheel."""
+    block = _job_block(_workflow_text(), "publish-npm")
+    needs = re.search(r"needs:\s*\[([^\]]*)\]", block)
+    assert needs, "publish-npm must declare its dependencies"
+    assert "publish-pypi" in {name.strip() for name in needs.group(1).split(",")}, (
+        "publish-npm must require publish-pypi — published in parallel, a wheel "
+        "PyPI refuses still leaves the version published on npm, where it can "
+        "neither be completed nor withdrawn"
+    )
 
 
 def test_publishing_is_idempotent() -> None:
