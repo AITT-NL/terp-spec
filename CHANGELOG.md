@@ -7,6 +7,21 @@ fields and new rules also bump the minor; prose bumps the patch (see
 checked-in `VERSION` — held by `tests/test_changelog.py`. A checker certified
 against an earlier version reads this file to see exactly what changed since.
 
+## 0.21.0
+
+One backend rule is added; nothing else changes.
+
+- **`backend/forwarded_filters_are_declared`** — new. Every filter name a
+  read endpoint forwards must be a declared filter. An endpoint forwards its
+  optional query parameters unchanged, so a name that matches no declaration
+  carries no value on any request that omits that parameter: the narrowing
+  appears applied while the read stays unnarrowed, and no test that omits the
+  parameter can observe the difference. Classified `required` — the read layer
+  resolves each name against the declarations while serving the request and
+  rejects an undeclared one before the read is built, so the invariant is
+  observable and enforced fail-closed. Names that are not statically knowable
+  (a filter mapping built elsewhere, a computed name) are not judged.
+
 ## 0.20.0
 
 One backend rule is added; nothing else changes.
