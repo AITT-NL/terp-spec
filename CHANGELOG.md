@@ -7,6 +7,26 @@ fields and new rules also bump the minor; prose bumps the patch (see
 checked-in `VERSION` — held by `tests/test_changelog.py`. A checker certified
 against an earlier version reads this file to see exactly what changed since.
 
+## 0.22.0
+
+### Added
+
+- **`backend/declared_read_only_routes_do_not_write`** — a route may now declare
+  that it computes and never persists, and be held to it. Write authority is
+  derived from the HTTP method, which is right for almost every route and blind to
+  one: the handler that uses an unsafe method because its *input* is a body, not
+  because it writes — validating a candidate document, previewing an import,
+  costing a plan. Undeclared, such a route is pure only by the absence of a write,
+  a guarantee made of missing code that holds until an edit adds a line. The rule
+  is enforced in both layers (build-time against the declaration, runtime at the
+  write chokepoint) and does **not** change authorization: a declared route is
+  still authorized at the write tier, because declaring purity narrows what the
+  handler may do, never what the caller must hold.
+
+  A checker certified against 0.21.x remains correct for every rule it already
+  implements; this is additive, and a checker that does not implement it simply
+  reports one fewer rule.
+
 ## 0.21.1
 
 No change to the standard. 0.21.0 reached npm but never reached PyPI: the
