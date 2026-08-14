@@ -7,6 +7,30 @@ fields and new rules also bump the minor; prose bumps the patch (see
 checked-in `VERSION` — held by `tests/test_changelog.py`. A checker certified
 against an earlier version reads this file to see exactly what changed since.
 
+## 0.24.0
+
+### Changed
+
+- **`backend/schemas_avoid_positional_tuples` is scoped to the positional shape
+  only: a variadic `tuple[X, ...]` is now compliant.** The 0.23.0 intent named
+  `tuple[str, ...]` among the violating spellings, but the rule's own rationale
+  is the *positional* array shape (`prefixItems`, or the list form of `items`)
+  that client generators disagree on — and a variadic tuple never produces it:
+  `tuple[X, ...]` serialises byte-identically to `list[X]`. Refusing it forced
+  apps into source rewrites with provably zero wire effect while the violation
+  message asserted something false, and it penalised the natural annotation for
+  a frozen value object (an immutable, hashable homogeneous sequence). The
+  fixed-length form stays refused wherever it sits, including nested inside a
+  variadic one (`tuple[tuple[str, int], ...]`, corpus `violation-03`); the
+  variadic form is pinned compliant by corpus `compliant-02`.
+
+  The runtime rationale now also records what the reference implementation
+  learned enforcing it: the check validates the generated OpenAPI document
+  itself rather than the annotations that produced it (a discriminated-union
+  member can hide a positional shape from any annotation walk, but not from the
+  document), and it reports every offending location in one pass instead of
+  raising on the first.
+
 ## 0.23.0
 
 ### Added
