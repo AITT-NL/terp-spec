@@ -7,6 +7,34 @@ fields and new rules also bump the minor; prose bumps the patch (see
 checked-in `VERSION` — held by `tests/test_changelog.py`. A checker certified
 against an earlier version reads this file to see exactly what changed since.
 
+## 0.23.0
+
+### Added
+
+- **`backend/schemas_avoid_positional_tuples`** — a schema field may no longer cross
+  the wire as a positional tuple. A fixed-length tuple annotation serialises into the
+  contract as an array whose element types are positional (`prefixItems`, or the list
+  form of `items`), and client generators do not agree on that shape: one emits the
+  positional form, another the widened element array. The two descriptions of the same
+  field then come out structurally unrelated, and an app that exposes a tuple anywhere
+  in its API cannot type its own calls against it. What makes this worth a rule rather
+  than a note is the failure mode, not the frequency: the error lands at the *call
+  site* as an opaque generic-instantiation mismatch, nowhere near the field that caused
+  it, and the two types it names are printed identically unless error truncation is
+  disabled. The fix is one line per field once you know; finding it is an afternoon.
+  A tuple is a weak contract regardless — the positions carry meaning that no name
+  records — so the compliant shapes are a nested model with named fields, or a
+  homogeneous sequence.
+
+  Enforced in both layers, and deliberately so: the build-time half reads the
+  annotation, while the runtime half walks the generated OpenAPI document and so also
+  catches a tuple that reaches the contract through a type alias, a generic parameter,
+  or a custom `__get_pydantic_core_schema__` — the vectors a source scan cannot see.
+
+  A checker certified against 0.22.x remains correct for every rule it already
+  implements; this is additive, and a checker that does not implement it simply
+  reports one fewer rule.
+
 ## 0.22.0
 
 ### Added

@@ -17,7 +17,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "terp-spec"
-version = "0.22.0"
+version = "0.23.0"
 description = "The Terp Standard â€” stack-neutral rule catalog, violation corpus, finding format, and refused-surface declaration (ADRs 0080/0081)."
 requires-python = ">=3.10"
 license = "Apache-2.0"
