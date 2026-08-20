@@ -7,6 +7,55 @@ fields and new rules also bump the minor; prose bumps the patch (see
 checked-in `VERSION` — held by `tests/test_changelog.py`. A checker certified
 against an earlier version reads this file to see exactly what changed since.
 
+## 0.25.0
+
+### Added
+
+- **`backend/no_manual_lease_columns`** — an application table may no longer
+  declare its own lease bookkeeping: a holder column paired with an expiry, a
+  heartbeat stamp, or an equivalent claim deadline. The pattern shows up wherever
+  a table is used as a queue, and it is refused because the hand-rolled version
+  reliably omits the half that makes a lease safe.
+
+  Expiry is the easy half. It establishes that a holder *may* have died, and a
+  reader can act on that. What it cannot do is stop a holder that merely
+  **paused** — a stalled process, a long GC, a suspended container — from waking
+  after its own deadline, finding its name still written on the row, and
+  completing work a successor has already taken over. Two writers then believe
+  they own one unit of work, which is precisely the condition the columns were
+  added to prevent. Preventing it needs a *fence*: a monotonic grant token that
+  every subsequent write is matched against, so a superseded holder is refused
+  rather than trusted. Nothing about a holder-plus-deadline pair provides one, and
+  the omission is invisible until the day it matters.
+
+  The rule therefore names four properties a conformant platform must supply
+  rather than leave to each table: the grant is **fenced**; it is taken
+  **atomically** with the state change it guards (a claim that commits while the
+  row change rolls back strands the resource just as badly as the reverse); it is
+  renewable by a **heartbeat that fails closed**, so a holder that has lost its
+  grant is told to stop instead of receiving a flag it can forget to check; and it
+  is **recoverable** — an expired grant triggers the owning domain's declared
+  recovery, so work a crashed holder abandoned returns to a retryable state
+  instead of needing a hand-written `UPDATE` from someone with database access.
+  That last property is the one no table-local pattern can express, because only
+  the domain knows whether the right answer is "queue it again", "close it failed"
+  or "leave it for a human".
+
+  The related need reads from the other side: "at most one active run per
+  pipeline" is the same primitive expressed as a mutex, on a resource that is not
+  a row at all — which is why the rule's reference implementation keys custody on
+  an opaque `(kind, key)` pair rather than on a table.
+
+  Platform-owned delivery infrastructure is a reviewed exception, not an
+  application pattern: a durable outbox claims *batches* of its own rows for
+  throughput and needs no domain recovery, since a lapsed claim is simply
+  reclaimed and re-delivered. `layer` is `static-portable` (the violating shape is
+  a column declaration any checker can see) and `runtime.applicability` is
+  `not-applicable`, with the rationale recording why: column presence is
+  observable at runtime but not *attributable*, because one shared model registry
+  holds both the application's tables and the platform's own delivery table, which
+  legitimately declares exactly these columns.
+
 ## 0.24.0
 
 ### Changed
