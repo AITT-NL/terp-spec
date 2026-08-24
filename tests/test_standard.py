@@ -278,6 +278,21 @@ def test_the_layout_declaration_schema_is_well_formed() -> None:
         "an unknown top-level key must be refused, not ignored — a declaration that "
         "does nothing must not look like one that works"
     )
+    # The per-stack keys: a plain string because the values are a stack's to publish,
+    # which is exactly why each one owes a description saying what naming it means. An
+    # enum-free string with no prose would be a key a consumer can read and cannot act on.
+    for key in sorted(schema["properties"]):
+        definition = schema["properties"][key]
+        if definition.get("type") != "string":
+            continue
+        assert definition.get("minLength") == 1, (
+            f"{key}: a per-stack name must refuse the empty string — an empty name is not "
+            "the app declining to declare, it is a declaration of nothing"
+        )
+        assert definition.get("description", "").strip(), (
+            f"{key}: say what naming it means — the schema is the normative statement"
+        )
+
     shell = schema["properties"]["shell"]
     assert shell["additionalProperties"] is False
     for key, definition in sorted(shell["properties"].items()):
@@ -303,11 +318,22 @@ def test_the_layout_declaration_schema_is_well_formed() -> None:
         )
         == []
     )
+    assert _validate({"defaultTheme": "midnight"}, schema, "root") == [], (
+        "the palette an app opens on is per-stack, so any non-empty name validates here "
+        "and it is the consumer that refuses one it does not ship"
+    )
+    assert _validate({"defaultTheme": "system"}, schema, "root") == [], (
+        "the one reserved name, and it must validate like any other"
+    )
+    # "theme", not "defaultTheme": a near-miss of a real key is the interesting case, because
+    # that is the shape a hand-edit produces and the shape `additionalProperties` exists for.
     assert _validate({"theme": "dark"}, schema, "root"), "an unknown top-level key"
     assert _validate({"shell": {"sidebarWidth": "20rem"}}, schema, "root"), "an unknown shell key"
     assert _validate({"shell": {"density": "compakt"}}, schema, "root"), "a value off the enum"
     assert _validate({"contract": ""}, schema, "root"), "an empty contract name"
     assert _validate({"contract": 1}, schema, "root"), "a contract that is not a string"
+    assert _validate({"defaultTheme": ""}, schema, "root"), "an empty palette name"
+    assert _validate({"defaultTheme": 1}, schema, "root"), "a palette that is not a string"
 
 
 def test_the_layout_declaration_schema_is_claimed_by_a_rule() -> None:

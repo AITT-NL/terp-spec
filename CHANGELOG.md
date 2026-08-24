@@ -33,6 +33,19 @@ against an earlier version reads this file to see exactly what changed since.
   non-normative `reference` field. The shell's vocabulary is fixed here, because a
   density or a navigation placement means the same thing on any stack.
 
+  **`defaultTheme` joins them, and is the clearest case of the same reason.** Which
+  palette an app opens on is among the most visible choices its operator makes, and it too
+  was reachable only by editing the app's own code. It sits at the top level rather than
+  under `shell` because a palette paints the frame and the page alike, while `shell` is
+  where the frame's *geometry* is declared — and because the two halves of the split fall
+  differently: shell vocabulary is fixed normatively, palette names are a stack's own to
+  publish. So it follows `contract`'s half rather than the shell's — a plain string, with
+  the values recorded non-normatively in the catalog entry's `reference` field. The one
+  reserved portable name is `system`: the app opens on whatever light or dark preference
+  the viewer's own platform reports. A consumer must refuse a name its stack does not ship
+  rather than fall back to one it does, because falling back is precisely how a declaration
+  ends up doing nothing while looking like it works.
+
   Three properties of the schema are load-bearing rather than stylistic.
   `additionalProperties: false` at both levels, so a consumer refuses a key it does not
   recognise instead of ignoring it — a declaration that does nothing must not look like

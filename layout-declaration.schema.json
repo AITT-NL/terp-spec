@@ -1,6 +1,6 @@
 {
   "title": "Terp Standard - the app's layout declaration",
-  "description": "The normative, stack-neutral schema for the document an app checks in to declare its layout: which slot-typed page contract it opts into, and how its application shell is shaped. One document, so a build-time checker and a running app read the same bytes and neither can hold a different answer - and so a tool that edits files, rather than code, can read and rewrite these choices. Naming the contract is the app's to do and the values are per-stack, hence a plain string; the shell's vocabulary is fixed here, because a density or a navigation placement means the same thing on any stack. Every key is optional: an absent key is not a default, it is the app declining to declare, and a consumer must leave whatever was already in force alone. A key a consumer does not recognise must be refused rather than ignored, or a declaration that does nothing looks like one that works.",
+  "description": "The normative, stack-neutral schema for the document an app checks in to declare its layout: which slot-typed page contract it opts into, which palette it starts on, and how its application shell is shaped. One document, so a build-time checker and a running app read the same bytes and neither can hold a different answer - and so a tool that edits files, rather than code, can read and rewrite these choices. Naming the contract and naming a palette are the app's to do and the values are per-stack, hence plain strings; the shell's vocabulary is fixed here, because a density or a navigation placement means the same thing on any stack. Every key is optional: an absent key is not a default, it is the app declining to declare, and a consumer must leave whatever was already in force alone. A key a consumer does not recognise must be refused rather than ignored, or a declaration that does nothing looks like one that works.",
   "type": "object",
   "additionalProperties": false,
   "properties": {
@@ -8,6 +8,11 @@
       "type": "string",
       "minLength": 1,
       "description": "The named slot-typed page contract this app opts into. Which contracts exist, and which components each of their page slots admits, is per-stack configuration recorded non-normatively in the catalog entry's reference field - the portable part is that the opt-in is declared here, once, for every consumer that enforces it."
+    },
+    "defaultTheme": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The palette the app starts on, until a person chooses another and for as long as they have not. Declared here rather than in the app's own code for the reason the shell's shape is: a choice reachable only by editing code is out of reach of anything that edits files, and which palette an app opens on is among the most visible choices its operator makes. Which palettes exist is per-stack configuration recorded non-normatively in the catalog entry's reference field, hence a plain string rather than an enum - the portable part is that the choice is declared here, once. The one reserved name is \"system\", which declares that the app opens on whatever light or dark preference the viewer's own platform reports; every other value names a palette the stack ships, and a consumer must refuse a name it does not ship rather than fall back to one it does."
     },
     "shell": {
       "type": "object",

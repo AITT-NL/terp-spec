@@ -8,11 +8,11 @@
 
 ## Why this rule exists
 
-With a checked-in layout declaration, each page archetype's body slot is constrained to the contract's sanctioned components, so screens stay structurally consistent and the failure message tells an agent exactly how to build the screen. Paired with the fail-closed runtime check on the rendered slot. The declaration is the single source for the opt-in and for the shell's own shape (layout-declaration.schema.json): a build-time checker and the running app read the same document, so neither can enforce a contract the other does not, and a key declared both in the document and in the app's own code is refused rather than resolved by an invisible precedence.
+With a checked-in layout declaration, each page archetype's body slot is constrained to the contract's sanctioned components, so screens stay structurally consistent and the failure message tells an agent exactly how to build the screen. Paired with the fail-closed runtime check on the rendered slot. The declaration is the single source for the opt-in, for the palette the app opens on, and for the shell's own shape (layout-declaration.schema.json): a build-time checker and the running app read the same document, so neither can enforce a contract the other does not, and a key declared both in the document and in the app's own code is refused rather than resolved by an invisible precedence.
 
 ## What to do instead
 
-frontend/layout-contract.json, the document layout-declaration.schema.json describes (ADR 0079); the app imports it and the reference stack's bootstrap resolves it, refusing an unknown key, a value outside its enum, and any key declared twice. verifySlotChildren in @terpjs/react-core is the runtime DOM check. (reference stack; another stack ships its own realisation.)
+frontend/layout-contract.json, the document layout-declaration.schema.json describes (ADR 0079); the app imports it and the reference stack's bootstrap resolves it, refusing an unknown key, a value outside its enum, and any key declared twice. The per-stack values: contracts are the keys of LAYOUT_CONTRACTS in @terpjs/react-core, and defaultTheme names one of the palettes @terpjs/contract compiles (light, dark, midnight, twilight, contrast) or the reserved system. verifySlotChildren in @terpjs/react-core is the runtime DOM check. (reference stack; another stack ships its own realisation.)
 
 ## If you really need an exception
 

@@ -69,13 +69,14 @@ The artifacts:
    component answers each primitive is per-stack configuration.
 7. **The layout declaration** (`layout-declaration.schema.json`) — the
    stack-neutral, normative schema for the document an app checks in to declare
-   which slot-typed page contract it opts into and how its application shell is
-   shaped (content measure, density, navigation placement). One document, so a
-   build-time checker and the running app read the same bytes and neither can
-   hold a different answer — and so a tool that edits files rather than code can
-   read and rewrite those choices. Naming the contract is the app's to do and its
-   values are per-stack, hence a plain string; the shell's vocabulary is fixed
-   normatively, and the reference stack's resolver is parity-tested against it.
+   which slot-typed page contract it opts into, which palette it starts on, and
+   how its application shell is shaped (content measure, density, navigation
+   placement). One document, so a build-time checker and the running app read the
+   same bytes and neither can hold a different answer — and so a tool that edits
+   files rather than code can read and rewrite those choices. Naming the contract
+   and naming a palette are the app's to do and their values are per-stack, hence
+   plain strings; the shell's vocabulary is fixed normatively, and the reference
+   stack's resolver is parity-tested against it.
 8. **The residual ratchet** (`corpus/RESIDUALS.json`) — the statically-erased
    or renamed forms deliberately outside the corpus contract, per rule, as
    shrink-only data (see "Detector boundaries" below).
