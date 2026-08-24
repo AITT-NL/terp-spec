@@ -17,7 +17,7 @@
     "shell": {
       "type": "object",
       "additionalProperties": false,
-      "description": "How the application shell is shaped. Separate from the contract above because that governs the inside of a page and this governs the frame around it.",
+      "description": "How the application shell is shaped. Separate from the contract above because that governs the inside of a page and this governs the frame around it. Everything in here has a vocabulary this schema fixes, which is what separates it from the two keys above: a density, a navigation placement and the parts of a navigation group all mean the same thing on any stack, while which page contracts and which palettes exist do not.",
       "properties": {
         "contentWidth": {
           "enum": ["full", "measured"],
@@ -26,6 +26,30 @@
         "density": {
           "enum": ["comfortable", "compact"],
           "description": "The app-wide control height and cell padding, declared once for the whole shell rather than per screen."
+        },
+        "navGroups": {
+          "type": "array",
+          "description": "The navigation groups this app declares, which is the only place they can be declared: a group spans modules, so no module can own one. A module's navigation item names a group by id, an item naming a group this list does not declare is not an error but the normal state of an app mid-adoption, and every such item falls into a trailing group with no label. Declaring two groups with the same id is an authoring error a consumer must refuse.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "label"],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "description": "The group's own name, referenced by a navigation item to say which group it belongs to. Non-empty: a consumer may well treat the empty string as a usable key at render time, where being total matters more than being strict, but declaring one is an authoring error with no legitimate transient form - it is a group nothing can name on purpose."
+              },
+              "label": {
+                "type": "string",
+                "description": "What a consumer renders above the group's list. The empty string declares a positioning-only group: no label element at all, which is how an app places otherwise ungrouped items somewhere other than the end without inventing a heading for them. Required rather than optional, so that having no label is a decision this document states rather than a key someone forgot."
+              },
+              "order": {
+                "type": "integer",
+                "description": "Sort key against sibling groups, ascending. Absent is the same as zero and the sort is stable, so groups that tie keep the order they are declared in - which means an app that wants only a sequence can write the groups in that sequence and set this on none of them. An integer, because a sort key is an ordinal."
+              }
+            }
+          }
         },
         "navPlacement": {
           "enum": ["header", "sidebar"],

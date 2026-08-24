@@ -46,6 +46,28 @@ against an earlier version reads this file to see exactly what changed since.
   rather than fall back to one it does, because falling back is precisely how a declaration
   ends up doing nothing while looking like it works.
 
+  **`shell.navGroups` joins it too, and it is the first nested shape in the document.** A
+  navigation group spans modules, so no module can own one — which left the app's own code
+  as the only place a group could be declared, and therefore left the order of an app's
+  navigation out of reach of anything that edits files. This one goes UNDER `shell`, unlike
+  the palette, and the split is the same test applied honestly: what a group's entries are
+  called and what their fields mean is fixed here for every stack, so it belongs with the
+  keys whose vocabulary this schema fixes. Only the values are the app's.
+
+  An entry is `id`, `label` and an optional integer `order`. Three of those carry a decision.
+  `id` is non-empty, because a consumer may reasonably treat the empty string as a usable key
+  at render time — where being total matters more than being strict — while declaring one is
+  an authoring error with no legitimate transient form. `label` is REQUIRED and the empty
+  string is its declared way to say "render no label at all", so a positioning-only group is
+  something the document states rather than a key someone forgot. And `order` is an integer
+  with absent meaning zero over a stable sort, so an app that only wants a sequence writes the
+  groups in that sequence and sets it on none of them.
+
+  Six mutations, all red: a group entry that accepts an unknown field, `label` no longer
+  required, an empty id made legal, a sort key that is not an ordinal, an empty label refused
+  (which would remove the only way to declare a positioning-only group), and `navGroups`
+  stopped being a list.
+
   Three properties of the schema are load-bearing rather than stylistic.
   `additionalProperties: false` at both levels, so a consumer refuses a key it does not
   recognise instead of ignoring it — a declaration that does nothing must not look like

@@ -296,7 +296,14 @@ def test_the_layout_declaration_schema_is_well_formed() -> None:
     shell = schema["properties"]["shell"]
     assert shell["additionalProperties"] is False
     for key, definition in sorted(shell["properties"].items()):
-        values = definition["enum"]
+        assert definition.get("description", "").strip(), (
+            f"shell.{key}: say what the key means — the schema is the normative statement"
+        )
+        values = definition.get("enum")
+        if values is None:
+            # Not every shell key is a choice between fixed values; the structured one is
+            # held to its own discipline below rather than skipped.
+            continue
         assert isinstance(values, list) and len(values) > 1, (
             f"shell.{key}: an enum of one is a constant, not a choice"
         )
@@ -304,8 +311,26 @@ def test_the_layout_declaration_schema_is_well_formed() -> None:
         assert values == sorted(values) and len(values) == len(set(values)), (
             f"shell.{key}: enum entries must be sorted and unique"
         )
+
+    # The one shell key an app fills in rather than chooses. What is fixed normatively is the
+    # shape of an entry, so the entry is held to the same rules the document itself is: refuse
+    # an unknown field, name what it requires, and say what every field means.
+    group = shell["properties"]["navGroups"]["items"]
+    assert group["type"] == "object" and group["additionalProperties"] is False, (
+        "an unknown field on a navigation group must be refused, not ignored"
+    )
+    assert set(group["required"]) == {"id", "label"}, (
+        "a group with no id is one nothing can name, and a group with no label leaves "
+        "'renders no label' an omission rather than a decision the document states"
+    )
+    assert group["properties"]["id"].get("minLength") == 1
+    assert "minLength" not in group["properties"]["label"], (
+        "the empty label is the declared way to say 'positioning-only group' — refusing it "
+        "would remove the only way to state that"
+    )
+    for field, definition in sorted(group["properties"].items()):
         assert definition.get("description", "").strip(), (
-            f"shell.{key}: say what the key means — the schema is the normative statement"
+            f"navGroups.items.{field}: say what the field means"
         )
 
     # A compliant document, and one per way of being wrong. `_validate` reports an
@@ -334,6 +359,27 @@ def test_the_layout_declaration_schema_is_well_formed() -> None:
     assert _validate({"contract": 1}, schema, "root"), "a contract that is not a string"
     assert _validate({"defaultTheme": ""}, schema, "root"), "an empty palette name"
     assert _validate({"defaultTheme": 1}, schema, "root"), "a palette that is not a string"
+
+    # The navigation groups, whose entries are the only nested shape in the document.
+    def groups(*entries: object) -> dict:
+        return {"shell": {"navGroups": list(entries)}}
+
+    assert _validate(groups(), schema, "root") == [], "declaring no groups is legal"
+    assert (
+        _validate(groups({"id": "work", "label": "Workspace", "order": 1}), schema, "root") == []
+    )
+    assert _validate(groups({"id": "work", "label": ""}), schema, "root") == [], (
+        "the positioning-only group: an empty label is a declaration, not an omission"
+    )
+    assert _validate(groups({"id": "", "label": "Workspace"}), schema, "root"), "an empty id"
+    assert _validate(groups({"id": "work"}), schema, "root"), "a group with no label at all"
+    assert _validate(
+        groups({"id": "work", "label": "Workspace", "colour": "red"}), schema, "root"
+    ), "an unknown field on a group"
+    assert _validate(
+        groups({"id": "work", "label": "Workspace", "order": "1"}), schema, "root"
+    ), "a sort key that is not an integer"
+    assert _validate({"shell": {"navGroups": {}}}, schema, "root"), "groups that are not a list"
 
 
 def test_the_layout_declaration_schema_is_claimed_by_a_rule() -> None:

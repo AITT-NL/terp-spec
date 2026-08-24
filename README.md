@@ -71,7 +71,7 @@ The artifacts:
    stack-neutral, normative schema for the document an app checks in to declare
    which slot-typed page contract it opts into, which palette it starts on, and
    how its application shell is shaped (content measure, density, navigation
-   placement). One document, so a build-time checker and the running app read the
+   placement, and the navigation groups a module's items name by id). One document, so a build-time checker and the running app read the
    same bytes and neither can hold a different answer — and so a tool that edits
    files rather than code can read and rewrite those choices. Naming the contract
    and naming a palette are the app's to do and their values are per-stack, hence
