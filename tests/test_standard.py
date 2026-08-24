@@ -312,9 +312,30 @@ def test_the_layout_declaration_schema_is_well_formed() -> None:
             f"shell.{key}: enum entries must be sorted and unique"
         )
 
-    # The one shell key an app fills in rather than chooses. What is fixed normatively is the
-    # shape of an entry, so the entry is held to the same rules the document itself is: refuse
-    # an unknown field, name what it requires, and say what every field means.
+    # Every shell key that is a SHAPE rather than a choice between fixed values. What is fixed
+    # normatively is the shape, so it is held to the same rules the document itself is: refuse
+    # an unknown field, declare a type for each one so a consumer never has to guess, and say
+    # what every field means. Written over all of them rather than over the first one, because
+    # the first one is how the second arrives unchecked — `brand` did.
+    for key, definition in sorted(shell["properties"].items()):
+        if "enum" in definition:
+            continue
+        assert definition.get("type") in {"object", "array"}, (
+            f"shell.{key}: a key that is not a choice must say what shape it is"
+        )
+        entry = definition["items"] if definition["type"] == "array" else definition
+        assert entry.get("type") == "object", f"shell.{key}: entries are objects"
+        assert entry.get("additionalProperties") is False, (
+            f"shell.{key}: an unknown field must be refused, not ignored"
+        )
+        assert entry.get("properties"), f"shell.{key}: an empty shape declares nothing"
+        for field, field_definition in sorted(entry["properties"].items()):
+            assert field_definition.get("type"), f"shell.{key}.{field}: declare a type"
+            assert field_definition.get("description", "").strip(), (
+                f"shell.{key}.{field}: say what the field means"
+            )
+
+    # And the navigation group's own two decisions, which are not derivable from the shape.
     group = shell["properties"]["navGroups"]["items"]
     assert group["type"] == "object" and group["additionalProperties"] is False, (
         "an unknown field on a navigation group must be refused, not ignored"
@@ -328,10 +349,16 @@ def test_the_layout_declaration_schema_is_well_formed() -> None:
         "the empty label is the declared way to say 'positioning-only group' — refusing it "
         "would remove the only way to state that"
     )
-    for field, definition in sorted(group["properties"].items()):
-        assert definition.get("description", "").strip(), (
-            f"navGroups.items.{field}: say what the field means"
-        )
+    # The brand's two keys are BOTH optional and both floored: an empty path is a mark a
+    # consumer would try to load and fail on, where an absent key is the app saying it has no
+    # second asset — which is a different and legitimate statement.
+    brand = shell["properties"]["brand"]["properties"]
+    assert "required" not in shell["properties"]["brand"], (
+        "an app with one mark declares one; requiring the dark counterpart would force every "
+        "app to claim a second asset it may not have"
+    )
+    for field, definition in sorted(brand.items()):
+        assert definition.get("minLength") == 1, f"brand.{field}: an empty path is not a mark"
 
     # A compliant document, and one per way of being wrong. `_validate` reports an
     # unknown schema KEYWORD too, so a green pass here also proves the schema stays
@@ -380,6 +407,25 @@ def test_the_layout_declaration_schema_is_well_formed() -> None:
         groups({"id": "work", "label": "Workspace", "order": "1"}), schema, "root"
     ), "a sort key that is not an integer"
     assert _validate({"shell": {"navGroups": {}}}, schema, "root"), "groups that are not a list"
+
+    # The brand mark.
+    assert _validate({"shell": {"brand": {"logo": "/logo.png"}}}, schema, "root") == [], (
+        "one mark is a complete declaration"
+    )
+    assert (
+        _validate(
+            {"shell": {"brand": {"logo": "/logo.png", "logoDark": "/logo-dark.png"}}},
+            schema,
+            "root",
+        )
+        == []
+    )
+    assert _validate({"shell": {"brand": {}}}, schema, "root") == [], (
+        "declaring the group and nothing in it is legal, like every other absent key"
+    )
+    assert _validate({"shell": {"brand": {"logo": ""}}}, schema, "root"), "an empty path"
+    assert _validate({"shell": {"brand": {"icon": "/x.png"}}}, schema, "root"), "an unknown mark"
+    assert _validate({"shell": {"brand": {"logo": 1}}}, schema, "root"), "a path that is not text"
 
 
 def test_the_layout_declaration_schema_is_claimed_by_a_rule() -> None:

@@ -68,6 +68,25 @@ against an earlier version reads this file to see exactly what changed since.
   (which would remove the only way to declare a positioning-only group), and `navGroups`
   stopped being a list.
 
+  **`shell.brand` is the third thing an app could only say in code.** A mark is among the
+  most visible things about an app, and declaring one meant editing that app's source — so
+  a tool that puts a logo in front of an operator had nowhere to put the answer. It is two
+  optional paths, `logo` and `logoDark`, and the second is declared rather than derived
+  because a mark with fixed colours cannot survive a dark background and no consumer can
+  tell whether this one can. An app with one mark declares one; requiring the counterpart
+  would force every app to claim a second asset it may not have.
+
+  A consumer holding both must choose by the appearance of the palette actually in force,
+  not by the viewer's platform preference. The distinction is not pedantry now that an app
+  can pin a palette: an app that opens on a dark palette on a light platform would otherwise
+  be handed the light mark on a dark background.
+
+  The well-formedness gate stopped being about one key while this landed. It held the
+  navigation group's entry to refusing unknown fields, describing every field and declaring
+  a type for each, and it did that by naming `navGroups` — so `brand` arrived unchecked. It
+  now runs over every shell key that is a shape rather than a choice, which is how the third
+  one will be checked without anyone remembering to. Six mutations, all red.
+
   Three properties of the schema are load-bearing rather than stylistic.
   `additionalProperties: false` at both levels, so a consumer refuses a key it does not
   recognise instead of ignoring it — a declaration that does nothing must not look like

@@ -17,8 +17,25 @@
     "shell": {
       "type": "object",
       "additionalProperties": false,
-      "description": "How the application shell is shaped. Separate from the contract above because that governs the inside of a page and this governs the frame around it. Everything in here has a vocabulary this schema fixes, which is what separates it from the two keys above: a density, a navigation placement and the parts of a navigation group all mean the same thing on any stack, while which page contracts and which palettes exist do not.",
+      "description": "How the application shell is shaped. Separate from the contract above because that governs the inside of a page and this governs the frame around it. Everything in here has a vocabulary this schema fixes, which is what separates it from the two keys above: a density, a navigation placement, the parts of a navigation group and the parts of a brand mark all mean the same thing on any stack, while which page contracts and which palettes exist do not.",
       "properties": {
+        "brand": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "The app's own mark, as paths a consumer resolves the way it resolves any other static asset the app ships. Declared here for the reason everything else in this document is: a mark is among the most visible things about an app and it was reachable only by editing that app's source, which put it out of reach of anything that edits files. Both keys are optional, and an app that declares neither shows whatever placeholder its stack ships.",
+          "properties": {
+            "logo": {
+              "type": "string",
+              "minLength": 1,
+              "description": "The mark shown inside the app's own frame. A consumer sizes it to the frame rather than to itself, so an oversized asset is scaled down rather than clipped."
+            },
+            "logoDark": {
+              "type": "string",
+              "minLength": 1,
+              "description": "The mark for a dark palette, declared separately rather than derived. A mark with fixed colours cannot survive a dark background and no consumer can tell whether this one can, so an app that has a second asset says so and an app that does not says nothing and keeps one mark everywhere. A consumer that has both must choose by the appearance of the palette actually in force, not by the viewer's platform preference: an app may open on a dark palette on a light platform, and a mark chosen by the platform would then be the wrong one."
+            }
+          }
+        },
         "contentWidth": {
           "enum": ["full", "measured"],
           "description": "Whether routed content is capped at the shell's declared reading measure or spans the full track."
