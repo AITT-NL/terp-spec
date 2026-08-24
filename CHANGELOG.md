@@ -7,6 +7,50 @@ fields and new rules also bump the minor; prose bumps the patch (see
 checked-in `VERSION` — held by `tests/test_changelog.py`. A checker certified
 against an earlier version reads this file to see exactly what changed since.
 
+## 0.26.0
+
+### Added
+
+- **`layout-declaration.schema.json`** — the normative, stack-neutral schema for the
+  document an app checks in to declare its layout. It promotes into the standard what
+  was previously only a convention in one stack's template, and it exists because that
+  convention was carrying a defect: the document declared which page contract the app
+  opted into, the running app was told the same thing a second time in its own code,
+  and the template instructed the reader to "keep the two in sync". An unenforced
+  invariant with a human assigned to it. Delete either side and the app keeps a
+  build-time rule with no runtime check, or a runtime check no checker agrees with,
+  and nothing anywhere says which.
+
+  So the schema states the document as the single source, and widens it past the
+  contract to the shell's own shape — `contentWidth`, `density`, `navPlacement`. Those
+  three were reachable only by editing code, which put them out of reach of anything
+  that edits files. Declaring them here is what lets a tool read and rewrite how an
+  app's shell is shaped without writing that app's TypeScript.
+
+  The portable/per-stack split follows `restricted-surface.json`'s precedent exactly.
+  `contract` is a plain string: which contracts exist, and which components each of
+  their page slots admits, is per-stack configuration and stays in the catalog entry's
+  non-normative `reference` field. The shell's vocabulary is fixed here, because a
+  density or a navigation placement means the same thing on any stack.
+
+  Three properties of the schema are load-bearing rather than stylistic.
+  `additionalProperties: false` at both levels, so a consumer refuses a key it does not
+  recognise instead of ignoring it — a declaration that does nothing must not look like
+  one that works. Every key is optional, and an absent key is not a default: it is the
+  app declining to declare, and a consumer leaves whatever was already in force alone.
+  And the schema stays inside the minimal validator subset this spec ships, because the
+  smallest consumer available is that validator, and a schema reaching for a keyword it
+  cannot honour is unusable by exactly the audience it was written for.
+
+### Changed
+
+- **`frontend/layout-contract`** now states that the declaration is the single source
+  for both halves of the rule, and cites the schema. The rule itself is unchanged — an
+  opted-in app's archetype body slots still admit only the contract's components. What
+  changed is that where the opt-in is declared is now normative, and that a key declared
+  both in the document and in the app's own code is refused rather than resolved by an
+  invisible precedence.
+
 ## 0.25.0
 
 ### Added

@@ -67,17 +67,26 @@ The artifacts:
    extensions, deep-import segments). The portable prohibition rules cite it
    structurally (the `restricted_surface` catalog field); which sanctioned
    component answers each primitive is per-stack configuration.
-7. **The residual ratchet** (`corpus/RESIDUALS.json`) — the statically-erased
+7. **The layout declaration** (`layout-declaration.schema.json`) — the
+   stack-neutral, normative schema for the document an app checks in to declare
+   which slot-typed page contract it opts into and how its application shell is
+   shaped (content measure, density, navigation placement). One document, so a
+   build-time checker and the running app read the same bytes and neither can
+   hold a different answer — and so a tool that edits files rather than code can
+   read and rewrite those choices. Naming the contract is the app's to do and its
+   values are per-stack, hence a plain string; the shell's vocabulary is fixed
+   normatively, and the reference stack's resolver is parity-tested against it.
+8. **The residual ratchet** (`corpus/RESIDUALS.json`) — the statically-erased
    or renamed forms deliberately outside the corpus contract, per rule, as
    shrink-only data (see "Detector boundaries" below).
-8. **The scorecard format** (`scorecard.schema.json`) — the machine-readable
+9. **The scorecard format** (`scorecard.schema.json`) — the machine-readable
    certification summary a conformant checker emits (spec version, per-rule
    verdicts over the corpus, residuals claimed), so "certified against spec
    X.Y.Z" is a verifiable artifact instead of a claim.
-9. **The changelog** (`CHANGELOG.md`) — the change history keyed to `VERSION`
+10. **The changelog** (`CHANGELOG.md`) — the change history keyed to `VERSION`
    (the top entry must match, held by the spec suite), so a checker certified
    against an earlier version can see exactly what changed since.
-10. **The rule pages** (`docs/rules/`) — plain-language documentation generated
+11. **The rule pages** (`docs/rules/`) — plain-language documentation generated
     from the catalog (`tools/generate_rule_docs.py`; regenerate-and-compare
     parity in the spec suite, so the pages cannot drift from the data).
 

@@ -262,6 +262,73 @@ def test_the_declared_refused_surface_is_well_formed() -> None:
         )
 
 
+def test_the_layout_declaration_schema_is_well_formed() -> None:
+    """The document an app checks in to declare its layout, held to the same
+    discipline as the refused-surface file: sorted, unique, non-empty enums, and
+    nothing outside the validator subset this spec ships.
+
+    The subset check is not pedantry. This schema exists to be applied by a
+    consumer, and the smallest consumer available is the validator in this file —
+    so if the schema reaches for a keyword that validator cannot honour, the
+    schema is unusable by exactly the audience it was written for. Exercised by
+    validating documents through it rather than by inspecting its keys, which is
+    the only form that proves both at once."""
+    schema = json.loads((_SPEC / "layout-declaration.schema.json").read_text(encoding="utf-8"))
+    assert schema["additionalProperties"] is False, (
+        "an unknown top-level key must be refused, not ignored — a declaration that "
+        "does nothing must not look like one that works"
+    )
+    shell = schema["properties"]["shell"]
+    assert shell["additionalProperties"] is False
+    for key, definition in sorted(shell["properties"].items()):
+        values = definition["enum"]
+        assert isinstance(values, list) and len(values) > 1, (
+            f"shell.{key}: an enum of one is a constant, not a choice"
+        )
+        assert all(isinstance(v, str) and v.strip() for v in values), f"shell.{key}"
+        assert values == sorted(values) and len(values) == len(set(values)), (
+            f"shell.{key}: enum entries must be sorted and unique"
+        )
+        assert definition.get("description", "").strip(), (
+            f"shell.{key}: say what the key means — the schema is the normative statement"
+        )
+
+    # A compliant document, and one per way of being wrong. `_validate` reports an
+    # unknown schema KEYWORD too, so a green pass here also proves the schema stays
+    # inside the subset.
+    assert _validate({}, schema, "root") == [], "every key is optional"
+    assert (
+        _validate(
+            {"contract": "standard", "shell": {"density": "compact"}}, schema, "root"
+        )
+        == []
+    )
+    assert _validate({"theme": "dark"}, schema, "root"), "an unknown top-level key"
+    assert _validate({"shell": {"sidebarWidth": "20rem"}}, schema, "root"), "an unknown shell key"
+    assert _validate({"shell": {"density": "compakt"}}, schema, "root"), "a value off the enum"
+    assert _validate({"contract": ""}, schema, "root"), "an empty contract name"
+    assert _validate({"contract": 1}, schema, "root"), "a contract that is not a string"
+
+
+def test_the_layout_declaration_schema_is_claimed_by_a_rule() -> None:
+    """Normative data joins this spec when a rule realises it, not before.
+
+    The same standard the refused-surface linkage holds: an unclaimed file is dead
+    spec data. This one is claimed by the rule that enforces the contract the
+    document opts into, which is also the rule whose two halves the document exists
+    to keep from disagreeing."""
+    claimants = [
+        f"frontend/{name}"
+        for name, entry in _entries("frontend").items()
+        if "layout-declaration.schema.json" in entry.get("reference", "")
+        or "layout-declaration.schema.json" in entry["intent"]
+    ]
+    assert claimants, (
+        "no catalog entry cites layout-declaration.schema.json — normative data with no "
+        "rule realising it is dead spec data"
+    )
+
+
 def test_catalog_citations_of_the_refused_surface_resolve() -> None:
     """The structural linkage: a rule's ``restricted_surface`` field lists the
     refused-surface keys it realises (schema-validated against the key enum);

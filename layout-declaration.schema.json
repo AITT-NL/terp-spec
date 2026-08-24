@@ -1,0 +1,32 @@
+{
+  "title": "Terp Standard - the app's layout declaration",
+  "description": "The normative, stack-neutral schema for the document an app checks in to declare its layout: which slot-typed page contract it opts into, and how its application shell is shaped. One document, so a build-time checker and a running app read the same bytes and neither can hold a different answer - and so a tool that edits files, rather than code, can read and rewrite these choices. Naming the contract is the app's to do and the values are per-stack, hence a plain string; the shell's vocabulary is fixed here, because a density or a navigation placement means the same thing on any stack. Every key is optional: an absent key is not a default, it is the app declining to declare, and a consumer must leave whatever was already in force alone. A key a consumer does not recognise must be refused rather than ignored, or a declaration that does nothing looks like one that works.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "contract": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The named slot-typed page contract this app opts into. Which contracts exist, and which components each of their page slots admits, is per-stack configuration recorded non-normatively in the catalog entry's reference field - the portable part is that the opt-in is declared here, once, for every consumer that enforces it."
+    },
+    "shell": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "How the application shell is shaped. Separate from the contract above because that governs the inside of a page and this governs the frame around it.",
+      "properties": {
+        "contentWidth": {
+          "enum": ["full", "measured"],
+          "description": "Whether routed content is capped at the shell's declared reading measure or spans the full track."
+        },
+        "density": {
+          "enum": ["comfortable", "compact"],
+          "description": "The app-wide control height and cell padding, declared once for the whole shell rather than per screen."
+        },
+        "navPlacement": {
+          "enum": ["header", "sidebar"],
+          "description": "Where the primary navigation sits on a wide viewport: a full-height rail beside the content, or a row within the header."
+        }
+      }
+    }
+  }
+}
