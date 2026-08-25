@@ -7,6 +7,56 @@ fields and new rules also bump the minor; prose bumps the patch (see
 checked-in `VERSION` — held by `tests/test_changelog.py`. A checker certified
 against an earlier version reads this file to see exactly what changed since.
 
+## 0.27.0
+
+### Added
+
+- **`backend/declared_read_controls_are_forwarded`** — a declared filter or sort must be
+  reachable from an endpoint that forwards it. The catalogue already refused a forwarded
+  name that matches no declaration; this is the other direction, and it is the one that
+  fails quietly. A declaration no endpoint forwards is inert: the capability is described in
+  the source, absent from the API, and silent about the difference. It presents as an
+  implemented feature — a client generated from the contract offers no way to sort, a screen
+  built against it ships with every column's sorting disabled, and nothing in the read layer
+  is wrong.
+
+  **Judged by PRESENCE, per module and per control kind, never by name**, and that is the
+  design rather than a shortcut. A per-name comparison cannot be sound here: the counterpart
+  rule reads literal mapping keys and says so, because a filters mapping built elsewhere
+  hides its names — and in this direction that blind spot flips from a missed detection to a
+  FALSE one, rejecting a filter that is forwarded through a computed mapping. The keyword is
+  visible in the source even when its value is not, so requiring a module that declares a
+  filter to forward *a* filters mapping is decidable where requiring a specific name is not.
+  The module is the unit because pairing one declaration to one endpoint is not statically
+  knowable either.
+
+  This is a **build-time-only** rule, and the runtime entry records why rather than
+  deferring: the defect is the absence of a call. A request carrying that filter never
+  arrives, because the endpoint exposes no parameter for it, so no code path runs and no
+  fail-closed control can fire. Its counterpart is enforced at runtime precisely because
+  there a request does reach the read layer.
+
+- **`backend/frozen_values_hold_no_mutable_collection`** — a frozen value object must not
+  hold a list, dict or set. Freezing binds the attributes, not what they point at, so a
+  frozen object holding a mutable collection is immutable exactly one level deep — the level
+  nobody checks. Callers rely on the declaration: they share the value between requests,
+  cache it, use it as a registry key and skip defensive copies because the type says none
+  are needed. `plan.columns.append(...)` succeeds on a frozen dataclass, and the mutation
+  arrives somewhere else entirely as state that changed with no assignment near it.
+
+  Recognised by declaration rather than convention — a dataclass frozen at the decorator, a
+  NamedTuple, a model configured immutable — and the message names the immutable counterpart
+  (a tuple, a Mapping, a frozenset) rather than only refusing. A NamedTuple is the sharper
+  case in practice: it is the shape people reach for *because* it is safe to share, so the
+  false guarantee travels further.
+
+  Also build-time-only by nature. A runtime control would have to intercept mutation of an
+  object the frozen value merely references — the list belongs to whoever else holds it, its
+  mutating methods are not the frozen object's to override, and deep-freezing on
+  construction would change the value's semantics rather than check them.
+
+84 rules: 71 backend, 13 frontend.
+
 ## 0.26.1
 
 No change to the standard's content. 0.26.0 announced
