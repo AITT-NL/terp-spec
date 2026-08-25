@@ -7,6 +7,24 @@ fields and new rules also bump the minor; prose bumps the patch (see
 checked-in `VERSION` — held by `tests/test_changelog.py`. A checker certified
 against an earlier version reads this file to see exactly what changed since.
 
+## 0.26.1
+
+No change to the standard's content. 0.26.0 announced
+`layout-declaration.schema.json` and shipped it in neither artifact: the file was
+added to the repository and to no packaging manifest, so the wheel's
+`force-include` table and `package.json`'s `files` list both omitted it. The
+consequence is the one that matters for a standard consumed as a distribution
+(ADR 0086) — the schema described as normative and stack-neutral was unreadable
+by every consumer, and the reference implementation's parity test for it skipped
+rather than failed, because a schema that is absent and a schema that is
+satisfied are the same silence. **Pin `0.26.1`, not `0.26.0`** — the catalog
+content of the two is identical.
+
+Also adds the gate that would have caught it:
+`test_every_shipped_artifact_is_in_both_packaging_manifests` holds every
+root-level data artifact to both manifests in both directions, so a schema added
+without a manifest entry now fails here rather than in a consumer's skip.
+
 ## 0.26.0
 
 ### Added

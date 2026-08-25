@@ -1,6 +1,6 @@
 {
   "name": "@terpjs/spec",
-  "version": "0.26.0",
+  "version": "0.26.1",
   "description": "The Terp Standard â€” stack-neutral rule catalog, violation corpus, finding format, and refused-surface declaration (ADRs 0080/0081; packaged per ADR 0082, published per ADR 0086). Data only: consumers resolve the spec root via require.resolve('@terpjs/spec/package.json').",
   "files": [
     "VERSION",
@@ -8,6 +8,7 @@
     "app-check-report.schema.json",
     "scorecard.schema.json",
     "assurance-profile.schema.json",
+    "layout-declaration.schema.json",
     "restricted-surface.json",
     "catalog",
     "corpus"

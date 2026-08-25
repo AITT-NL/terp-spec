@@ -127,6 +127,59 @@ def test_the_packaging_manifests_carry_the_spec_version() -> None:
     )
 
 
+#: What the spec ships, beside the root-level ``*.json`` artifacts discovered below.
+#: ``package.json`` is the npm manifest itself, never a payload.
+_SHIPPED_DIRECTORIES = ("catalog", "corpus")
+_SHIPPED_FILES = ("VERSION",)
+
+
+def test_every_shipped_artifact_is_in_both_packaging_manifests() -> None:
+    """A data artifact the repository holds but neither manifest names is invisible to
+    every consumer, and the absence is SILENT.
+
+    0.26.1 exists because of exactly this: 0.26.0 added
+    ``layout-declaration.schema.json`` to the repository and to neither manifest, so the
+    schema the release announced as normative reached no wheel and no tarball. Nothing
+    failed — the reference implementation's parity test for it *skipped*, because a schema
+    that is absent and a schema that is satisfied are the same silence. Version parity
+    (above) could not see it: both manifests agreed on the version and disagreed with the
+    repository about the contents.
+
+    So this holds the two manifests to the directory in BOTH directions. An artifact on
+    disk that no manifest names fails here; a manifest entry with nothing behind it fails
+    here too, which is what stops the fix for the first failure from being a stale line.
+    """
+    pyproject = (_SPEC / "pyproject.toml").read_text(encoding="utf-8")
+    force_include = re.search(
+        r"^\[tool\.hatch\.build\.targets\.wheel\.force-include\]\n((?:.+\n)*)",
+        pyproject,
+        re.MULTILINE,
+    )
+    assert force_include, "spec/pyproject.toml declares no wheel force-include table"
+    wheel_keys = set(re.findall(r'^"([^"]+)" = ', force_include.group(1), re.MULTILINE))
+    npm_files = set(json.loads((_SPEC / "package.json").read_text(encoding="utf-8"))["files"])
+
+    shipped = {
+        path.name for path in _SPEC.glob("*.json") if path.name != "package.json"
+    } | set(_SHIPPED_FILES)
+    shipped |= {name for name in _SHIPPED_DIRECTORIES if (_SPEC / name).is_dir()}
+
+    assert not shipped - wheel_keys, (
+        "artifacts in the repository that the wheel does not carry — add them to "
+        f"[tool.hatch.build.targets.wheel.force-include]: {sorted(shipped - wheel_keys)}"
+    )
+    assert not shipped - npm_files, (
+        "artifacts in the repository that the npm tarball does not carry — add them to "
+        f'package.json "files": {sorted(shipped - npm_files)}'
+    )
+    assert not wheel_keys - shipped, (
+        f"wheel force-include names artifacts that do not exist: {sorted(wheel_keys - shipped)}"
+    )
+    assert not npm_files - shipped, (
+        f'package.json "files" names artifacts that do not exist: {sorted(npm_files - shipped)}'
+    )
+
+
 # --------------------------------------------------------------------------- #
 # the escape-hatch contract is uniform: a marker names the CATALOG RULE NAME
 # (never a tool-internal rule id — the suppression analogue of findings
