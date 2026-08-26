@@ -219,3 +219,7 @@ __marimo__/
 
 # Data-only spec package: no runtime deps, the lock is test-env noise.
 uv.lock
+
+# graphify: a knowledge graph an agent builds FROM this repository. Derived
+# data that is rebuilt on demand and goes stale the moment the code moves.
+graphify-out/
