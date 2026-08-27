@@ -1,0 +1,21 @@
+{
+  "id": "frontend/no-untranslated-ui",
+  "surface": "frontend",
+  "title": "Static user-facing text participates in localization",
+  "intent": "Static user-facing text anywhere in app-authored frontend source must use the translation seam. Bare visible copy, accessibility labels, component text properties, labels stored in data, and standard toast feedback are otherwise absent from every translation catalog and silently remain in the source language.",
+  "layer": "static-portable",
+  "enforcement": [
+    {
+      "kind": "build-time",
+      "tool": "@terpjs/eslint-boundaries",
+      "ref": "terp/no-untranslated-ui"
+    }
+  ],
+  "reference": "Use UiText descriptors and Trans from @terpjs/react-core throughout app-authored frontend source.",
+  "opt_out": "// terp-allow-no-untranslated-ui: <reason>",
+  "runtime": {
+    "applicability": "not-applicable",
+    "rationale": "The rendered value cannot prove whether it originated from a descriptor or a bare literal, while dynamic business data legitimately remains untranslated."
+  },
+  "corpus": true
+}

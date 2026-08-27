@@ -1,4 +1,4 @@
-import { Link } from "@terpjs/react-core";
+import { Link, Trans } from "@terpjs/react-core";
 export function Widget() {
-  return <Link to="/notes">notes</Link>;
+  return <Link to="/notes"><Trans id="widget.notes" message="Notes" /></Link>;
 }

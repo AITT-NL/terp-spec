@@ -1,4 +1,4 @@
-import { useRealtimeChannel } from "@terpjs/react-core";
+import { Trans, useRealtimeChannel } from "@terpjs/react-core";
 
 type Notice = { sequence: number; text: string };
 
@@ -13,5 +13,9 @@ export function Widget() {
     channel: "system.notices",
     validate: isNotice,
   });
-  return <p>{notices.lastMessage?.text ?? "Waiting"}</p>;
+  return (
+    <p>
+      {notices.lastMessage?.text ?? <Trans id="realtime.waiting" message="Waiting" />}
+    </p>
+  );
 }

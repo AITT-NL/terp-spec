@@ -1,3 +1,5 @@
+import { Trans } from "@terpjs/react-core";
+
 export function Widget() {
-  return <a href="https://example.com" target="_blank" rel="noopener">docs</a>;
+  return <a href="https://example.com" target="_blank" rel="noopener"><Trans id="widget.docs" message="Docs" /></a>;
 }

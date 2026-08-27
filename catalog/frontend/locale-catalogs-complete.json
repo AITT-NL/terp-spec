@@ -1,0 +1,26 @@
+{
+  "id": "frontend/locale-catalogs-complete",
+  "surface": "frontend",
+  "title": "Every declared target locale translates every authored message",
+  "intent": "Every stable user-interface message identifier must have a non-empty translation in every declared target locale. A missing or malformed catalog, empty entries, and undocumented source-language copies fail the gate instead of silently rendering source-language text after a user switches locale.",
+  "layer": "static-portable",
+  "enforcement": [
+    {
+      "kind": "build-time",
+      "tool": "@terpjs/eslint-boundaries",
+      "ref": "terp/locale-catalogs-complete"
+    },
+    {
+      "kind": "runtime",
+      "tool": "@terpjs/react-core",
+      "ref": "LocaleProvider"
+    }
+  ],
+  "reference": "Declare sourceLocale and locale message maps in frontend/i18n.json; the boundary rule and defineAppLocales validate that declaration, while LocaleProvider refuses missing target entries at render time.",
+  "opt_out": "// terp-allow-locale-catalogs-complete: <reason>",
+  "runtime": {
+    "applicability": "required",
+    "rationale": "The locale provider owns descriptor resolution and can distinguish source fallback from a missing target entry, including dynamically assembled identifiers that a static check cannot see."
+  },
+  "corpus": true
+}

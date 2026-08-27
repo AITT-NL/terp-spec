@@ -7,6 +7,21 @@ fields and new rules also bump the minor; prose bumps the patch (see
 checked-in `VERSION` — held by `tests/test_changelog.py`. A checker certified
 against an earlier version reads this file to see exactly what changed since.
 
+## 0.28.0
+
+### Added
+
+- **`frontend/no-untranslated-ui`** — static user-facing copy anywhere in app-authored
+  frontend source must use `UiText` descriptors or `Trans`; bare JSX copy, rendered
+  expression branches, accessibility text, literal UI labels and standard toast feedback
+  are rejected.
+- **`frontend/locale-catalogs-complete`** — every authored message must be translated in
+  every declared target locale. Missing/malformed catalogs, empty or silently copied
+  translations fail the gate, and the runtime resolver refuses incomplete target-locale
+  entries as a second line of defence.
+
+86 rules: 71 backend, 15 frontend.
+
 ## 0.27.0
 
 ### Added
