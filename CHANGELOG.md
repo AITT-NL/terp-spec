@@ -7,6 +7,27 @@ fields and new rules also bump the minor; prose bumps the patch (see
 checked-in `VERSION` — held by `tests/test_changelog.py`. A checker certified
 against an earlier version reads this file to see exactly what changed since.
 
+## 0.29.0
+
+### Added
+
+- **`backend/operations_reference_catalog`** — a route's declared operation (what it
+  does for the person calling it, ADR 0102 in the reference framework) is a typed
+  catalog constant, never a bare string or a value built inline at the call site.
+  Mirrors the event bus's own no-drift rule (`backend/events_reference_catalog`):
+  the guarantee is that an operation's stated id and wording can never drift from
+  what the catalog documents.
+- **`backend/routes_declare_operation`** — every route declares the operation it
+  performs, once an app's operations catalog opts into strict coverage. The
+  coverage choice is the app's own — an app that has not opted in is unaffected —
+  but a route mounted under strict coverage with no declared operation fails the
+  gate. Both rules share one runtime enforcement seam: the same boot check resolves
+  every declared operation against the catalog by value (the no-drift half,
+  unconditional) and, only under strict coverage, refuses a route that declares
+  none (the coverage half).
+
+88 rules: 73 backend, 15 frontend.
+
 ## 0.28.0
 
 ### Added
