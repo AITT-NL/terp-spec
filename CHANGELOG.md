@@ -7,6 +7,26 @@ fields and new rules also bump the minor; prose bumps the patch (see
 checked-in `VERSION` — held by `tests/test_changelog.py`. A checker certified
 against an earlier version reads this file to see exactly what changed since.
 
+## 0.28.1
+
+### Changed
+
+- **Two rules record their detector residuals** (`corpus/RESIDUALS.json`), which is data
+  rather than a contract change: no rule requires more or less than it did.
+  `backend/no_manual_lease_columns` matches a fixed set of lease column spellings on a
+  table model, not the custody shape, so a holder/heartbeat pair under other names passes
+  clean. `backend/no_manual_ownership_checks` carries three: its build-time background-work
+  clause matches a `jobs=` list or tuple LITERAL (a declaration bound to a name is not
+  seen), it matches `OwnedMixin` as a direct base name within the same module directory
+  (an indirectly inherited or externally declared trait is not seen), and its
+  composition-time twin iterates a ModuleSpec's declared services (a spec that omits
+  `services=` is not reached).
+
+  Both were recorded because a careful reader concluded from each that the rule refused a
+  design it does not actually look at. That is what the ratchet is for: a known limit of
+  precise detection belongs in data, so a second implementation neither over-fits nor
+  over-claims, and so the limit is not rediscovered as folklore.
+
 ## 0.28.0
 
 ### Added
