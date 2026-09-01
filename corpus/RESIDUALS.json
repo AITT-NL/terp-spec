@@ -8,8 +8,6 @@
       "a holder/heartbeat pair under other column names (`worker_id` + `last_seen_at`) is not required to be recognised as a hand-rolled lease: the check matches a fixed set of column spellings on a table model, not the custody shape"
     ],
     "backend/no_manual_ownership_checks": [
-      "a jobs declaration bound to a name (`ModuleSpec(jobs=MODULE_JOBS)`) is not required to be seen as declaring background work: the build-time background-work clause matches a list or tuple LITERAL",
-      "`OwnedMixin` reached indirectly — through an intermediate base, or on a model declared in another package — is not required to be recognised as ownership by the build-time background-work clause, which matches a direct base name within the same module directory",
       "a ModuleSpec that omits `services=` is not required to be caught by the composition-time twin, which iterates the declared services"
     ],
     "backend/no_raw_outbound_http": [
