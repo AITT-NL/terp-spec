@@ -7,6 +7,36 @@ fields and new rules also bump the minor; prose bumps the patch (see
 checked-in `VERSION` — held by `tests/test_changelog.py`. A checker certified
 against an earlier version reads this file to see exactly what changed since.
 
+## 0.30.0
+
+### Changed
+
+- **`backend/no_manual_ownership_checks` requires reach, not co-location.** Two of the
+  three residuals recorded for this rule in 0.29.1 stop being permitted limits and become
+  required behaviour, each contracted by a corpus case. The reference implementation closed
+  them in terp-framework 0.14.0; this raises the bar for every implementation, so a checker
+  certified against 0.29.x can pass an app that 0.30.0 refuses.
+
+  A **jobs declaration bound to a name** (`ModuleSpec(jobs=MODULE_JOBS)`) must now be seen
+  as declaring background work. `spec.jobs` is a sequence by the time the composition-time
+  twin reads it, so a detector that matches only a list-or-tuple LITERAL passes an app that
+  then cannot start — the cheap check green and the expensive one refusing, which is the
+  worst of the two orderings.
+
+  **Reach follows a declared edge.** Modules are independent by default, so splitting a job
+  away from an unowned service severs the reach, and `requires` restores it in one line. A
+  detector keyed on the module a service is *declared in* never sees that, which made the
+  advice both refusals give — put them in different modules — also the way through the
+  gate.
+
+  Two compliant cases pin the other side of the boundary, so the raised bar cannot be met
+  by over-flagging: the same two modules with **no** declared edge must stay silent, and
+  `OwnedMixin` reached through an intermediate base is ownership, so a detector matching a
+  direct base name must not fire on an owned model.
+
+  The rule's third residual — a `ModuleSpec` that omits `services=` — is untouched and
+  stays recorded. No rule was added or removed.
+
 ## 0.29.1
 
 ### Changed
