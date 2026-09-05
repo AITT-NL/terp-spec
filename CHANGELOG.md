@@ -7,6 +7,51 @@ fields and new rules also bump the minor; prose bumps the patch (see
 checked-in `VERSION` — held by `tests/test_changelog.py`. A checker certified
 against an earlier version reads this file to see exactly what changed since.
 
+## 0.31.0
+
+### Added
+
+- **`backend/errors_use_the_typed_envelope` and `backend/no_exception_text_in_responses`
+  — the error path is the one place an application improvises a message for a client,
+  and it was the one place nothing looked.** Two rules, added together because each
+  covers a hole the other leaves open: one is about which exception is raised, the other
+  about what is put inside it.
+
+  `errors_use_the_typed_envelope` refuses the web framework's own HTTP error type in an
+  application module. A platform that promises one error envelope has to be the only
+  thing that builds it, and a module that names a status code and a message directly is
+  a second, undocumented error contract for that one response. Each instance is
+  defensible; the set of them is a shape no schema describes and no client can dispatch
+  on. Two compliant cases pin the other side of the boundary, so the rule cannot be
+  satisfied by over-flagging: naming the framework's error is not raising it (an adapter
+  that catches one and re-raises it stays silent), and raising a non-HTTP exception of
+  the language's own is not this rule's business.
+
+  `no_exception_text_in_responses` refuses a caught exception's own text in the message
+  the client receives. A driver names the table and the statement, a filesystem error
+  names an absolute path and therefore the deployment layout, a connection error names
+  an internal host. None of it is chosen, reviewed or versioned — it is a diagnostic
+  string written for an operator reading a log, forwarded verbatim to whoever made the
+  request. The rule that keeps declared fields out of a serialized response
+  (`schemas_exclude_sensitive_fields`) cannot see this, because an error path builds its
+  message on the spot rather than from a declared schema.
+
+  **The compliant path is a split, not a prohibition, and the corpus says so.** The
+  exception belongs in the log half of the envelope and the written message in the body
+  half, so a case pins the log-context spelling as compliant: a detector that refused
+  every mention of the caught exception would take the diagnosis away from the operator
+  to protect the client, which is not the trade the rule is making. A second compliant
+  case pins interpolation of a value the *caller* submitted, which is ordinary message
+  writing and would be refused by any detector that matched f-strings inside a handler.
+
+  Both are `static-portable` and `not-applicable` at runtime for the same reason, stated
+  per rule: by the time a request is being served, the distinction each rule turns on
+  — which type the author raised, and where a string came from — has been erased.
+  Two detector residuals are recorded rather than claimed.
+
+  This raises the bar: an application that passed 0.30.x can fail 0.31.0. No rule was
+  changed or removed.
+
 ## 0.30.0
 
 ### Changed
