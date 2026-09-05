@@ -52,6 +52,35 @@ against an earlier version reads this file to see exactly what changed since.
   This raises the bar: an application that passed 0.30.x can fail 0.31.0. No rule was
   changed or removed.
 
+- **`backend/no_manual_actor_stamping` narrows to writes and gates; reading a stamp is no
+  longer refused.** The rule's own prose said "only attribute access (set / compare) is
+  policed", which is a sentence that contradicts itself — attribute access is the broad
+  thing and set-or-compare is the narrow one — and the detector did the broad thing. So
+  `if row.created_by_id is None` was refused by a rule whose stated justification is
+  forgery, and a careful reader concluded from that they could not read provenance at all.
+
+  The scope is now stated instead of implied, and it follows the harm. **Assigning** or
+  deleting a stamp forges the trail. **Comparing** it against a principal is object-level
+  authorization written inline, which belongs to the ownership seam. **Reading** it does
+  neither, and the ordinary uses — a read DTO, a rendered "created by", a log line, a
+  presence test — are exactly what a provenance trail is kept for. A comparison against a
+  literal is a presence test and is not a decision; a comparison against anything else is.
+
+  Three corpus cases contract the new boundary in both directions: a violation for the
+  inline gate, and two compliant cases for the plain read and the presence test. The two
+  existing violations were already assignments, so nothing that failed for the right
+  reason starts passing.
+
+  **The two sibling rules keep the broad reading, and that asymmetry is the decision.**
+  For the managed scope and ownership columns a read is the first half of a hand-rolled
+  scope filter or a hand-rolled per-row gate, and no static check can tell it from a
+  display read. An actor stamp has no corresponding harm on the read side. Both sibling
+  entries now say so in one sentence, so the breadth is recorded rather than inferred from
+  a detector. Two residuals are recorded for the narrowed rule.
+
+  This is a contract change in the permissive direction: an application that failed 0.30.x
+  on a stamp read passes 0.31.0.
+
 ## 0.30.0
 
 ### Changed

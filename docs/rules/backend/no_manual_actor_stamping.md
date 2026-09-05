@@ -1,6 +1,6 @@
 # `backend/no_manual_actor_stamping`
 
-**Modules never set the framework-managed actor-stamp columns by hand**
+**Modules never write or gate on the framework-managed actor-stamp columns**
 
 > Generated from the catalog by `tools/generate_rule_docs.py` — do not
 > edit by hand; the parity test holds this page to
@@ -8,11 +8,11 @@
 
 ## Why this rule exists
 
-Who created and last modified a row is provenance, applied centrally: the audited write chokepoint fills created_by_id (on insert) and modified_by_id (on every write) from the request actor. A module that assigns those columns is forging or clobbering that trail — the actor must come from the authenticated request, never from caller-supplied data. As with the scope columns, a read DTO may still expose the column (an annotation is fine); only attribute access (set / compare) is policed.
+Who created and last modified a row is provenance, applied centrally: the audited write chokepoint fills created_by_id (on insert) and modified_by_id (on every write) from the request actor. Two shapes are refused, for two different reasons. Assigning or deleting those columns forges or clobbers the trail - the actor must come from the authenticated request, never from caller-supplied data, and a hand-written stamp is indistinguishable afterwards from one the platform wrote. Comparing a stamp against a principal is object-level authorization written inline, which belongs to the ownership seam, where it is applied at the write chokepoint rather than wherever someone remembered it. Reading a stamp is NOT refused. A read cannot forge a trail, and the ordinary uses are legitimate: exposing provenance on a read DTO, rendering it, logging it, or asking whether a row has been stamped at all - a comparison against a literal is a presence test, not a decision. A rule justified by forgery that also refused a plain read would be refusing the thing the trail exists to make visible. The two sibling rules over the managed scope and ownership columns stay broader on purpose, and the asymmetry is the decision rather than an inconsistency: for those a read is the first half of a hand-rolled gate or scope filter and no static check can tell it from a display read, while an actor stamp has no corresponding harm on the read side.
 
 ## What to do instead
 
-ActorStampedMixin columns are stamped by BaseService._save (ADR 0012); assignments to created_by_id / modified_by_id in module code are refused. (reference stack; another stack ships its own realisation.)
+ActorStampedMixin columns are stamped by BaseService._save (ADR 0012). An assignment, an augmented assignment or a `del` of created_by_id / modified_by_id is refused, and so is a comparison against anything but a literal (`row.created_by_id == actor.id`, and the same expression inside a `where(...)`). `row.created_by_id is None` and a load that only reads the value are not; a read DTO exposing the column as an annotation was never attribute access at all. Gate on ownership with OwnedMixin instead of on the stamp. (reference stack; another stack ships its own realisation.)
 
 ## If you really need an exception
 

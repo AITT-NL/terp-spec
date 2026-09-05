@@ -8,7 +8,7 @@
 
 ## Why this rule exists
 
-Soft-delete and tenant scoping are applied centrally: the composed base read query filters out soft-deleted rows and applies every registered row predicate (e.g. the tenant filter), and the audited delete chokepoint stamps the deletion. A module that references deleted_at / tenant_id — to filter, set, or compare — is re-implementing that scope predicate by hand, which can leak or destroy scoped rows. The composed scoped read is the only path; expose the column in a read DTO if you must surface it, but never filter or assign it in module code.
+Soft-delete and tenant scoping are applied centrally: the composed base read query filters out soft-deleted rows and applies every registered row predicate (e.g. the tenant filter), and the audited delete chokepoint stamps the deletion. A module that references deleted_at / tenant_id — to filter, set, or compare — is re-implementing that scope predicate by hand, which can leak or destroy scoped rows. The composed scoped read is the only path; expose the column in a read DTO if you must surface it, but never filter or assign it in module code. Unlike the actor-stamp rule, a plain read of these columns is refused too, and deliberately: `if row.deleted_at is None` inside module code IS the hand-rolled scope predicate this rule exists to replace, and no static check can tell it from a read that only surfaces the value.
 
 ## What to do instead
 
