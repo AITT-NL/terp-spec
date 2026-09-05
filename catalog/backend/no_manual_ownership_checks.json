@@ -2,7 +2,7 @@
   "id": "backend/no_manual_ownership_checks",
   "surface": "backend",
   "title": "Modules preserve structural row ownership and never reimplement it by hand",
-  "intent": "Object-level authorization belongs to the platform's write boundary: user-owned rows retain their ownership declaration across request and background workflows, and a worker identity never becomes a blanket cross-owner authority. Application code must not compare, filter or assign the managed owner column, nor remove ownership merely to let unattended maintenance mutate every user's rows. Cross-owner maintenance requires a separately reviewed authority mechanism whose scope is explicit; ordinary background work remains subject to the same row ownership as interactive writes.",
+  "intent": "Object-level authorization belongs to the platform's write boundary: user-owned rows retain their ownership declaration across request and background workflows, and a worker identity never becomes a blanket cross-owner authority. Application code must not compare, filter or assign the managed owner column, nor remove ownership merely to let unattended maintenance mutate every user's rows. Cross-owner maintenance requires a separately reviewed authority mechanism whose scope is explicit; ordinary background work remains subject to the same row ownership as interactive writes. Unlike the actor-stamp rule, a plain read of the owner column is refused too, and deliberately: a read is the first half of a hand-rolled per-row gate, and no static check can tell it from a read that only displays who owns the row.",
   "layer": "static-bespoke",
   "enforcement": [
     {
