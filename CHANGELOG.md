@@ -7,6 +7,48 @@ fields and new rules also bump the minor; prose bumps the patch (see
 checked-in `VERSION` — held by `tests/test_changelog.py`. A checker certified
 against an earlier version reads this file to see exactly what changed since.
 
+## 0.32.0
+
+### Added
+
+- **`backend/modules_ship_tests` — the canonical module shape was five production files,
+  and a module could satisfy every structural rule in this Standard while shipping no
+  tests at all.** That is not a corner an application cuts by accident. A scaffolder that
+  emits the canonical shape emits an *untested* module by default, so untested was the
+  shape the platform handed out, and the gate agreed with it. `no_empty_tests` sharpens
+  the point rather than covering it: the Standard had an opinion about whether a test that
+  exists can fail, and none about whether one exists.
+
+  The rule requires every wired module — the same "ships a manifest or a mounted router"
+  signal `canonical_module_shape` uses — to have at least one test the project attributes
+  to it. **Two layouts satisfy it, and the asymmetry is deliberate.** A per-module
+  `tests/<module>/` package is the canonical form and what a scaffolder should emit,
+  because a module accumulates test files and a directory holds them without anyone
+  inventing a naming convention. A flat `tests/test_<module>_*.py` is *recognised* rather
+  than prescribed: refusing it would fail applications whose modules are in fact tested,
+  whose only way through would be an opt-out marker claiming they are not — and a rule
+  satisfiable only by a false statement is worse than one that accepts the same true claim
+  written two ways. The separator is required, so a module named as a prefix of another is
+  not credited with its sibling's tests.
+
+  Tests belong to the project's `tests/` tree rather than the module directory, because a
+  test that drives the composed application has to live where the application fixtures
+  are. A reference checker resolves that tree beside the scanned root, and accepts one
+  inside it so a corpus case can express the rule at all — a case is copied *into* the
+  root and cannot create a true sibling of it.
+
+  Additive: an application that already tests its modules in either shape passes
+  unchanged. One that does not gets a finding naming both shapes, and a governed opt-out
+  if the answer is genuinely "not yet". The rule asks only that tests exist and are
+  attributable; whether they are any good remains `no_empty_tests` and the application's
+  own coverage gate. Six corpus cases contract the boundary, including the two that a
+  looser check would get wrong: a `tests/<module>/` directory holding no test, and one
+  module credited with another's file.
+
+  The frontend surface has no test rule and does not gain one here. Its rules are lint
+  rules, and a linter cannot assert that a file is *absent*; that needs a project-level
+  check the surface does not yet have.
+
 ## 0.31.0
 
 ### Added
