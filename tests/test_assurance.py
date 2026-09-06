@@ -21,7 +21,7 @@ _SPEC = spec_dir()
 
 #: The normative lane vocabulary with its requirement mapping (the README table).
 REQUIRED_LANES = ("terp-standard", "appsec-baseline", "dependency-audit")
-RECOMMENDED_LANES = ("a11y", "blackbox-conformance")
+RECOMMENDED_LANES = ("a11y", "blackbox-conformance", "test-adequacy")
 
 
 def _schema() -> dict:
@@ -43,6 +43,7 @@ def _sample() -> dict:
             {"id": "dependency-audit", "status": "passed", "checks": ["dependency-audit-python", "dependency-audit-npm"]},
             {"id": "a11y", "status": "not-run", "checks": []},
             {"id": "blackbox-conformance", "status": "failed", "checks": ["conformance"]},
+            {"id": "test-adequacy", "status": "not-run", "checks": []},
         ],
     }
 

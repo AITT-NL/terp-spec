@@ -11,6 +11,25 @@ against an earlier version reads this file to see exactly what changed since.
 
 ### Added
 
+- **`test-adequacy` joins the assurance lane vocabulary (RECOMMENDED) — the five existing
+  lanes can all pass over a suite that asserts nothing.** Every one of them runs checks and
+  reports verdicts; not one asks whether the suite *could have failed*. The catalog reaches
+  the syntactic form of that gap and, by construction, cannot reach the rest:
+  `no_empty_tests` refuses an empty body, a bare `pass`, a constant assertion, and is blind
+  to a test whose assertion is trivially satisfied by the path it exercises. A boundary test
+  goes vacuous the moment the boundary it was named for moves, and stays green while it does.
+
+  Only a deliberate change to the code under test settles it, and that is a different *kind*
+  of enforcement from the build-time/runtime pair every catalog rule declares — hence a lane
+  rather than a rule. **Coverage does not evidence this lane**: it reports which lines ran,
+  not whether anything would have noticed them changing.
+
+  RECOMMENDED, following `a11y`: a lane no toolchain realises yet is emitted `not-run` with
+  no composing checks, never dropped and never counted as passed. Making it required would
+  turn every existing `ok` false overnight and say nothing true about those releases. As with
+  every vocabulary addition, an emitter must now report the lane — omitting one hides it —
+  so a toolchain pinned to this version emits `test-adequacy: not-run` until it realises it.
+
 - **`backend/modules_ship_tests` — the canonical module shape was five production files,
   and a module could satisfy every structural rule in this Standard while shipping no
   tests at all.** That is not a corner an application cuts by accident. A scaffolder that

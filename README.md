@@ -289,6 +289,23 @@ requirement level is deliberately not a field of the document:
 | `dependency-audit` | **required** | Dependency trees were audited against known-vulnerability databases (the reference realisation: `pip-audit` and `npm audit`). |
 | `a11y` | recommended | Automated accessibility checks over the running app (e.g. axe). |
 | `blackbox-conformance` | recommended | The black-box behavioural conformance suite over the running workbench. |
+| `test-adequacy` | recommended | The test suite was shown able to *fail*: a deliberate change to the code under test is caught by it (the reference realisation: diff-scoped mutation testing). Coverage does not evidence this lane — it reports which lines ran, not whether anything would have noticed them changing. |
+
+`test-adequacy` is the lane that asks a question none of the others do:
+**could this suite have failed?** Every other lane runs checks and reports their
+verdicts; all five can be green over a suite that asserts nothing meaningful.
+The catalog reaches the *syntactic* form of that — `no_empty_tests` refuses an
+empty body, a bare `pass`, a constant assertion — and by construction cannot
+reach the semantic form, a test whose assertion is trivially satisfied by the
+path it exercises. A boundary test goes vacuous the moment the boundary it was
+named for moves, and stays green while it does.
+
+Only a deliberate change to the code under test settles it, which is why this is
+a lane and not a rule: it is a different *kind* of enforcement from the
+build-time/runtime pair every catalog rule declares. **Coverage is not this
+lane.** Coverage reports which lines ran; adequacy asks whether anything would
+have noticed them changing, and a line can be covered by a test that would pass
+however it behaved.
 
 The claim (`ok`) is true exactly when every **required** lane passed;
 recommended lanes inform the reader but never carry the claim. Every lane of
