@@ -68,7 +68,51 @@ against an earlier version reads this file to see exactly what changed since.
   rules, and a linter cannot assert that a file is *absent*; that needs a project-level
   check the surface does not yet have.
 
-## 0.31.0
+- **Three rules for a per-module role, which is a tier a person holds inside one module and
+  nowhere else.** The Standard already required every module to declare a coarse access
+  policy. A module may now additionally accept a *role of its own*, so an administrator can
+  raise one person's tier inside it without raising it everywhere — and that opt-in brings
+  three failure modes the existing rules do not reach.
+
+  **`backend/grantable_modules_are_named`** — a module that accepts a role of its own says
+  what to call it. The screen offering the choice renders one strip per such module, headed
+  by the declared name, and that name is the only text about the module a reader ever sees
+  there; headed by an identifier instead, the strip asks someone to hand out authority over
+  something the interface has not named. Required, and the platform enforces the same
+  pairing when the declaration is constructed — the build-time half adds a file and a line
+  before the application is imported, which is the difference between a fixable message and
+  a traceback out of composition.
+
+  **`backend/platform_modules_refuse_module_roles`** — a module that can hand authority out
+  never accepts a role of its own. This is the escalation guard, and the reason it exists is
+  that the failure looks small: whoever holds an administrator tier *inside* the module that
+  administers grants can grant themselves anything, everywhere, while the tier that allowed
+  it reads as narrowly scoped. Such a module declares outright that it is never per-module
+  assignable, and declares why, so the refusal is legible to whoever reads the access
+  surface rather than an absence they have to notice. Deliberately syntactic: holding the
+  service is the trigger, with no attempt to decide whether a call site only reads, because
+  a read is the first half of a write and nothing static can tell a module that lists grants
+  from one about to create one. Build-time only, and the rationale is recorded: the running
+  system does refuse to *assign* a tier in a module declared platform-only, but nothing at
+  runtime can know that a module administers authority in the first place — that is a
+  judgement about what the source does.
+
+  **`backend/module_role_writes_go_through_the_capability`** — the assignment table is
+  reached through its service, never directly. The service is where the audit entry is
+  emitted and where an assignment is refused when the declarations cannot support it: a
+  module that administers authority, a module that never opted in, a tier the application's
+  ladder does not declare. A row written around it is not a more permissive assignment; it
+  is one that can never take effect, and whoever wrote it will believe the person is
+  authorized until the moment they are not. A plain *read* is refused too, on the same
+  footing as hand-rolled row ownership and for the same reason — a read is the first half of
+  a per-module gate written by hand — and what a subject holds already has an answer that
+  carries its provenance with it.
+
+  All three are `static-bespoke`: they name platform types, so they are not portable to a
+  second stack the way a shape rule is. Six corpus cases contract them, and the pair for the
+  escalation guard puts the service and the declaration in *different files of the same
+  module*, which is the shape a real one has — a check that looked only at the manifest
+  would be blind to every application that keeps its service where it belongs.
 
 ### Added
 
