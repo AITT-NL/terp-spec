@@ -114,6 +114,8 @@ against an earlier version reads this file to see exactly what changed since.
   module*, which is the shape a real one has — a check that looked only at the manifest
   would be blind to every application that keeps its service where it belongs.
 
+## 0.31.0
+
 ### Added
 
 - **`backend/errors_use_the_typed_envelope` and `backend/no_exception_text_in_responses`
