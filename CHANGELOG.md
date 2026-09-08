@@ -11,6 +11,28 @@ against an earlier version reads this file to see exactly what changed since.
 
 ### Added
 
+- **`frontend/no-raw-clipboard` — the browser API whose type says it is always there, and
+  is not.** The DOM lib types `navigator.clipboard` as always present; it is absent outside
+  a secure context, so on a plain-http origin that is not localhost
+  `navigator.clipboard.writeText(...)` is a property access on `undefined`. It throws a
+  **synchronous** `TypeError` before any promise exists, so a `.catch` on the call never
+  runs and neither does a `try` around an `await` that was never reached — and the type
+  checker reports nothing, because as far as the type is concerned the property is there.
+  The whole class is therefore invisible to review, to a type check and to a test that
+  runs on localhost; the observable outcome is a control that does nothing and says
+  nothing, found by a person clicking it in a deployment served over http.
+
+  That is what makes it a rule rather than a lesson: every app reaching for the API
+  directly rediscovers it, and a seam that feature-detects and reports a refusal is a
+  thing a stack can ship once. The rule refuses any *access*, not merely a call —
+  `const c = navigator.clipboard` is the same throw one line earlier — along with the
+  `window.`/`globalThis.` prefixed, computed (`navigator["clipboard"]`) and destructuring
+  (`const { clipboard } = navigator`) spellings, each of which binds the same `undefined`
+  under a different name. `runtime.applicability` is `not-applicable` and the rationale is
+  the sharp part: a runtime control would have to observe the very `TypeError` it exists
+  to prevent, and could not tell an app calling the API directly from a seam's own feature
+  detection, which reads the identical property.
+
 - **The rule pages publish each rule's detector residuals, and the exception-text rule
   records the channel it never sees.** `corpus/RESIDUALS.json` has always held the forms a
   precise, low-false-positive checker is not required to catch, so two implementations
