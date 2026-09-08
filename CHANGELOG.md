@@ -25,6 +25,51 @@ against an earlier version reads this file to see exactly what changed since.
 
 ### Added
 
+- **`frontend/no-raw-clipboard` — the browser API whose type says it is always there, and
+  is not.** The DOM lib types `navigator.clipboard` as always present; it is absent outside
+  a secure context, so on a plain-http origin that is not localhost
+  `navigator.clipboard.writeText(...)` is a property access on `undefined`. It throws a
+  **synchronous** `TypeError` before any promise exists, so a `.catch` on the call never
+  runs and neither does a `try` around an `await` that was never reached — and the type
+  checker reports nothing, because as far as the type is concerned the property is there.
+  The whole class is therefore invisible to review, to a type check and to a test that
+  runs on localhost; the observable outcome is a control that does nothing and says
+  nothing, found by a person clicking it in a deployment served over http.
+
+  That is what makes it a rule rather than a lesson: every app reaching for the API
+  directly rediscovers it, and a seam that feature-detects and reports a refusal is a
+  thing a stack can ship once. The rule refuses any *access*, not merely a call —
+  `const c = navigator.clipboard` is the same throw one line earlier — along with the
+  `window.`/`globalThis.` prefixed, computed (`navigator["clipboard"]`) and destructuring
+  (`const { clipboard } = navigator`) spellings, each of which binds the same `undefined`
+  under a different name. `runtime.applicability` is `not-applicable` and the rationale is
+  the sharp part: a runtime control would have to observe the very `TypeError` it exists
+  to prevent, and could not tell an app calling the API directly from a seam's own feature
+  detection, which reads the identical property.
+
+- **The rule pages publish each rule's detector residuals, and the exception-text rule
+  records the channel it never sees.** `corpus/RESIDUALS.json` has always held the forms a
+  precise, low-false-positive checker is not required to catch, so two implementations
+  agree on where detection ends instead of each guessing — but it held them for *checker
+  authors*. Someone reading `docs/rules/<surface>/<rule>.md` saw what the rule requires
+  and nothing about where it stops, which left the one artifact stating a boundary in the
+  one place a non-technical reader never goes. Every page for a rule with residuals now
+  carries a **"What the check is not required to catch"** section generated from that same
+  data, and says outright that a residual is a limit of the *check* rather than permission
+  to write the form: the rule still governs it, and review is the control there.
+
+- **`backend/no_exception_text_in_responses` gains the residual for text that is persisted
+  rather than raised.** Its two recorded limits were both raise-site dataflow — an error
+  bound to a local and raised on a later statement, and a helper that takes the caught
+  exception and returns a message string — and both stay inside one request. The form
+  neither covers is exception text a handler *stores*: `row.failure_reason = str(exc)` on
+  a column a read DTO later exposes, reaching a client through an ordinary successful read,
+  separated from the raise site by a database write and a subsequent request. Nothing
+  static connects those two, so the Standard was silent about a channel carrying precisely
+  what the rule exists to keep out of a response — a driver's text naming a host, a table
+  or a path. Recorded rather than claimed, which is the ratchet's whole discipline: closing
+  it means adding the corpus case that contracts it, not a quiet widening.
+
 - **`backend/no_manual_actor_stamping` names the fourth shape, which is uniqueness.** The
   entry classified three - assignment forges the trail, comparison against a principal is
   inline object-level authorization, a read is neither - and an author who wants "one

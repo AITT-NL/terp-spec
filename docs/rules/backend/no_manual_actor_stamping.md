@@ -26,6 +26,21 @@ in your app's escape-hatch budget:
 An unjustified marker is itself a violation, and marker counts must
 exactly match the checked-in budget (which can only shrink).
 
+## What the check is not required to catch
+
+A check precise enough to have no false positives has limits. The spec
+records this rule's limits as data (`corpus/RESIDUALS.json`) so two
+independent checkers agree on where detection ends instead of each
+guessing:
+
+- a stamp written through the attribute API (`setattr(row, "created_by_id", ...)`) is not required to be seen as an assignment
+- a comparison expressed as a method call on the column (`.in_(...)`, `.is_(...)`) rather than as an operator is not required to be seen as a comparison
+
+**These are not exemptions.** The rule governs those forms exactly as it
+governs any other — a checker is simply not required to find them, so
+review is the control there. The list only shrinks: closing one means
+adding the corpus case that contracts it.
+
 ## Enforcement
 
 - Checked while the app runs? Yes — the framework also enforces this while the app runs (fail closed).

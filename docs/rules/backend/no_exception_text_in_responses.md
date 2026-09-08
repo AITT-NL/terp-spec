@@ -26,6 +26,22 @@ in your app's escape-hatch budget:
 An unjustified marker is itself a violation, and marker counts must
 exactly match the checked-in budget (which can only shrink).
 
+## What the check is not required to catch
+
+A check precise enough to have no false positives has limits. The spec
+records this rule's limits as data (`corpus/RESIDUALS.json`) so two
+independent checkers agree on where detection ends instead of each
+guessing:
+
+- an error built into a local name and raised on a later statement (`err = ValidationFailedError(str(exc))` then `raise err`) is not required to be connected to the handler that bound the exception
+- a helper called from the handler that takes the caught exception and returns a message string is not required to be followed across the call
+- exception text a handler persists instead of raising (`row.failure_reason = str(exc)`, on a column a read DTO later exposes) is not required to be followed to the response that eventually serves it: a write and a subsequent request separate the two, so no static check connects them
+
+**These are not exemptions.** The rule governs those forms exactly as it
+governs any other — a checker is simply not required to find them, so
+review is the control there. The list only shrinks: closing one means
+adding the corpus case that contracts it.
+
 ## Enforcement
 
 - Checked while the app runs? No — this is a property of the written source only; the build-time check is the control, by recorded decision.
