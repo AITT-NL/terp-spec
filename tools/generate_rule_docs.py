@@ -19,6 +19,7 @@ import pathlib
 _ROOT = pathlib.Path(__file__).resolve().parents[1]
 _CATALOG = _ROOT / "catalog"
 _DOCS = _ROOT / "docs" / "rules"
+_RESIDUALS = _ROOT / "corpus" / "RESIDUALS.json"
 
 _RUNTIME_LABEL = {
     "required": "Yes — the framework also enforces this while the app runs (fail closed).",
@@ -27,8 +28,16 @@ _RUNTIME_LABEL = {
 }
 
 
-def render(entry: dict) -> str:
-    """The Markdown page for one catalog entry (deterministic)."""
+def render(entry: dict, residuals: list[str] | None = None) -> str:
+    """The Markdown page for one catalog entry (deterministic).
+
+    *residuals* is the rule's entry in ``corpus/RESIDUALS.json``. The spec has always
+    held those as data, for checker authors; a person reading the rule could not see
+    them, so the one place stating where a rule's detection ends was the one place a
+    non-technical reader does not go. Publishing them here is what makes the boundary
+    a statement rather than an omission — and the section says plainly that a residual
+    is a limit of the *check*, not permission to write the form.
+    """
     surface, name = entry["id"].split("/", 1)
     lines = [
         f"# `{entry['id']}`",
@@ -74,6 +83,24 @@ def render(entry: dict) -> str:
             "so it cannot be waived by that mechanism.",
             "",
         ]
+    if residuals:
+        lines += [
+            "## What the check is not required to catch",
+            "",
+            "A check precise enough to have no false positives has limits. The spec",
+            "records this rule's as data (`corpus/RESIDUALS.json`) so two independent",
+            "checkers agree on where detection ends instead of each guessing:",
+            "",
+        ]
+        lines += [f"- {residual}" for residual in residuals]
+        lines += [
+            "",
+            "**These are not exemptions.** The rule governs those forms exactly as it",
+            "governs any other — a checker is simply not required to find them, so",
+            "review is the control there. The list only shrinks: closing one means",
+            "adding the corpus case that contracts it.",
+            "",
+        ]
     lines += [
         "## Enforcement",
         "",
@@ -89,11 +116,14 @@ def render(entry: dict) -> str:
 
 def generate() -> dict[pathlib.Path, str]:
     """Every page the catalog implies, as {absolute path: content}."""
+    residuals = json.loads(_RESIDUALS.read_text(encoding="utf-8"))["residuals"]
     pages: dict[pathlib.Path, str] = {}
     for surface in ("backend", "frontend"):
         for path in sorted((_CATALOG / surface).glob("*.json")):
             entry = json.loads(path.read_text(encoding="utf-8"))
-            pages[_DOCS / surface / f"{path.stem}.md"] = render(entry)
+            pages[_DOCS / surface / f"{path.stem}.md"] = render(
+                entry, residuals.get(entry["id"])
+            )
     return pages
 
 

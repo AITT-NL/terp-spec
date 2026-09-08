@@ -11,6 +11,29 @@ against an earlier version reads this file to see exactly what changed since.
 
 ### Added
 
+- **The rule pages publish each rule's detector residuals, and the exception-text rule
+  records the channel it never sees.** `corpus/RESIDUALS.json` has always held the forms a
+  precise, low-false-positive checker is not required to catch, so two implementations
+  agree on where detection ends instead of each guessing — but it held them for *checker
+  authors*. Someone reading `docs/rules/<surface>/<rule>.md` saw what the rule requires
+  and nothing about where it stops, which left the one artifact stating a boundary in the
+  one place a non-technical reader never goes. Every page for a rule with residuals now
+  carries a **"What the check is not required to catch"** section generated from that same
+  data, and says outright that a residual is a limit of the *check* rather than permission
+  to write the form: the rule still governs it, and review is the control there.
+
+- **`backend/no_exception_text_in_responses` gains the residual for text that is persisted
+  rather than raised.** Its two recorded limits were both raise-site dataflow — an error
+  bound to a local and raised on a later statement, and a helper that takes the caught
+  exception and returns a message string — and both stay inside one request. The form
+  neither covers is exception text a handler *stores*: `row.failure_reason = str(exc)` on
+  a column a read DTO later exposes, reaching a client through an ordinary successful read,
+  separated from the raise site by a database write and a subsequent request. Nothing
+  static connects those two, so the Standard was silent about a channel carrying precisely
+  what the rule exists to keep out of a response — a driver's text naming a host, a table
+  or a path. Recorded rather than claimed, which is the ratchet's whole discipline: closing
+  it means adding the corpus case that contracts it, not a quiet widening.
+
 - **`test-adequacy` joins the assurance lane vocabulary (RECOMMENDED) — the five existing
   lanes can all pass over a suite that asserts nothing.** Every one of them runs checks and
   reports verdicts; not one asks whether the suite *could have failed*. The catalog reaches

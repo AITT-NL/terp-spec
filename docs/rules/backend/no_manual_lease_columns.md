@@ -26,6 +26,19 @@ in your app's escape-hatch budget:
 An unjustified marker is itself a violation, and marker counts must
 exactly match the checked-in budget (which can only shrink).
 
+## What the check is not required to catch
+
+A check precise enough to have no false positives has limits. The spec
+records this rule's as data (`corpus/RESIDUALS.json`) so two independent
+checkers agree on where detection ends instead of each guessing:
+
+- a holder/heartbeat pair under other column names (`worker_id` + `last_seen_at`) is not required to be recognised as a hand-rolled lease: the check matches a fixed set of column spellings on a table model, not the custody shape
+
+**These are not exemptions.** The rule governs those forms exactly as it
+governs any other — a checker is simply not required to find them, so
+review is the control there. The list only shrinks: closing one means
+adding the corpus case that contracts it.
+
 ## Enforcement
 
 - Checked while the app runs? No — this is a property of the written source only; the build-time check is the control, by recorded decision.

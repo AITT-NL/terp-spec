@@ -9,7 +9,8 @@
     ],
     "backend/no_exception_text_in_responses": [
       "an error built into a local name and raised on a later statement (`err = ValidationFailedError(str(exc))` then `raise err`) is not required to be connected to the handler that bound the exception",
-      "a helper called from the handler that takes the caught exception and returns a message string is not required to be followed across the call"
+      "a helper called from the handler that takes the caught exception and returns a message string is not required to be followed across the call",
+      "exception text a handler persists instead of raising (`row.failure_reason = str(exc)`, on a column a read DTO later exposes) is not required to be followed to the response that eventually serves it: a write and a subsequent request separate the two, so no static check connects them"
     ],
     "backend/no_manual_actor_stamping": [
       "a stamp written through the attribute API (`setattr(row, \"created_by_id\", ...)`) is not required to be seen as an assignment",
