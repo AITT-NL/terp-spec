@@ -29,8 +29,9 @@ exactly match the checked-in budget (which can only shrink).
 ## What the check is not required to catch
 
 A check precise enough to have no false positives has limits. The spec
-records this rule's as data (`corpus/RESIDUALS.json`) so two independent
-checkers agree on where detection ends instead of each guessing:
+records this rule's limits as data (`corpus/RESIDUALS.json`) so two
+independent checkers agree on where detection ends instead of each
+guessing:
 
 - an error built into a local name and raised on a later statement (`err = ValidationFailedError(str(exc))` then `raise err`) is not required to be connected to the handler that bound the exception
 - a helper called from the handler that takes the caught exception and returns a message string is not required to be followed across the call

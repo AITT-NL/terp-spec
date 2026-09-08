@@ -29,8 +29,9 @@ exactly match the checked-in budget (which can only shrink).
 ## What the check is not required to catch
 
 A check precise enough to have no false positives has limits. The spec
-records this rule's as data (`corpus/RESIDUALS.json`) so two independent
-checkers agree on where detection ends instead of each guessing:
+records this rule's limits as data (`corpus/RESIDUALS.json`) so two
+independent checkers agree on where detection ends instead of each
+guessing:
 
 - a computed sink (`el["innerHTML"] = ...`) is not required to be recognised
 

@@ -29,8 +29,9 @@ exactly match the checked-in budget (which can only shrink).
 ## What the check is not required to catch
 
 A check precise enough to have no false positives has limits. The spec
-records this rule's as data (`corpus/RESIDUALS.json`) so two independent
-checkers agree on where detection ends instead of each guessing:
+records this rule's limits as data (`corpus/RESIDUALS.json`) so two
+independent checkers agree on where detection ends instead of each
+guessing:
 
 - a holder/heartbeat pair under other column names (`worker_id` + `last_seen_at`) is not required to be recognised as a hand-rolled lease: the check matches a fixed set of column spellings on a table model, not the custody shape
 
