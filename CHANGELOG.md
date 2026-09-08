@@ -7,6 +7,46 @@ fields and new rules also bump the minor; prose bumps the patch (see
 checked-in `VERSION` — held by `tests/test_changelog.py`. A checker certified
 against an earlier version reads this file to see exactly what changed since.
 
+## 0.33.0
+
+### Changed
+
+- **`frontend/no-untranslated-ui` does not reach a comparison operand.** The rule's
+  subject is text that is rendered, and an operand of a comparison is not: the expression
+  evaluates to a boolean, so the literal in `status === "paused"` is a state token being
+  tested and reaches no screen in any locale. The reference implementation walked both
+  sides of every binary and logical expression, so the ordinary React status guard could
+  not be written without hoisting the comparison into a variable above the JSX - done
+  eighteen times in one feature slice before anyone asked whether the rule meant it. It
+  did not: this is the entry stating a boundary the intent already implied, and a
+  `compliant-02` case contracting it. The left operand of `&&` is the test and is likewise
+  out of scope; `||`, `??` and string concatenation can render either side and stay in
+  scope on both. **A checker that reports a comparison operand no longer conforms.**
+
+### Added
+
+- **`backend/no_manual_actor_stamping` names the fourth shape, which is uniqueness.** The
+  entry classified three - assignment forges the trail, comparison against a principal is
+  inline object-level authorization, a read is neither - and an author who wants "one
+  decision per reviewer per record" has none of them. That is uniqueness keyed on the
+  actor: it forges nothing and decides nothing about who may act on a row, it asks whether
+  a SECOND row may exist, and the ownership seam the entry redirects to has nothing to say
+  about that. Reaching for the query form and being refused reads as the requirement being
+  unavailable, and one was removed from a governance table on exactly that reading.
+
+  It is available. The entry now names the shape that expresses it - a
+  `UniqueConstraint("record_id", "created_by_id")` in `__table_args__`, contracted by a
+  new `compliant-05` case - and says why the query form stays refused: no static check can
+  tell a uniqueness probe from an inline authorization filter, because they are the same
+  expression. So the refusal pushes an author toward the constraint, which is also the
+  race-free implementation where a check-then-insert is not, since two concurrent requests
+  both pass the probe. Nothing about the rule changes; what changes is that its scope is
+  discoverable without trying both.
+
+  Neither entry adds a rule. Both are the legibility half ADR 0122 redirects effort to:
+  the catalog's breadth is frozen and explaining an existing refusal is the work that
+  remains.
+
 ## 0.32.0
 
 ### Added
