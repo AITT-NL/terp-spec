@@ -25,32 +25,6 @@ against an earlier version reads this file to see exactly what changed since.
 
 ### Added
 
-- **`backend/no_manual_actor_stamping` names the fourth shape, which is uniqueness.** The
-  entry classified three - assignment forges the trail, comparison against a principal is
-  inline object-level authorization, a read is neither - and an author who wants "one
-  decision per reviewer per record" has none of them. That is uniqueness keyed on the
-  actor: it forges nothing and decides nothing about who may act on a row, it asks whether
-  a SECOND row may exist, and the ownership seam the entry redirects to has nothing to say
-  about that. Reaching for the query form and being refused reads as the requirement being
-  unavailable, and one was removed from a governance table on exactly that reading.
-
-  It is available. The entry now names the shape that expresses it - a
-  `UniqueConstraint("record_id", "created_by_id")` in `__table_args__`, contracted by a
-  new `compliant-05` case - and says why the query form stays refused: no static check can
-  tell a uniqueness probe from an inline authorization filter, because they are the same
-  expression. So the refusal pushes an author toward the constraint, which is also the
-  race-free implementation where a check-then-insert is not, since two concurrent requests
-  both pass the probe. Nothing about the rule changes; what changes is that its scope is
-  discoverable without trying both.
-
-  Neither entry adds a rule. Both are the legibility half ADR 0122 redirects effort to:
-  the catalog's breadth is frozen and explaining an existing refusal is the work that
-  remains.
-
-## 0.32.0
-
-### Added
-
 - **`frontend/no-raw-clipboard` — the browser API whose type says it is always there, and
   is not.** The DOM lib types `navigator.clipboard` as always present; it is absent outside
   a secure context, so on a plain-http origin that is not localhost
@@ -95,6 +69,32 @@ against an earlier version reads this file to see exactly what changed since.
   what the rule exists to keep out of a response — a driver's text naming a host, a table
   or a path. Recorded rather than claimed, which is the ratchet's whole discipline: closing
   it means adding the corpus case that contracts it, not a quiet widening.
+
+- **`backend/no_manual_actor_stamping` names the fourth shape, which is uniqueness.** The
+  entry classified three - assignment forges the trail, comparison against a principal is
+  inline object-level authorization, a read is neither - and an author who wants "one
+  decision per reviewer per record" has none of them. That is uniqueness keyed on the
+  actor: it forges nothing and decides nothing about who may act on a row, it asks whether
+  a SECOND row may exist, and the ownership seam the entry redirects to has nothing to say
+  about that. Reaching for the query form and being refused reads as the requirement being
+  unavailable, and one was removed from a governance table on exactly that reading.
+
+  It is available. The entry now names the shape that expresses it - a
+  `UniqueConstraint("record_id", "created_by_id")` in `__table_args__`, contracted by a
+  new `compliant-05` case - and says why the query form stays refused: no static check can
+  tell a uniqueness probe from an inline authorization filter, because they are the same
+  expression. So the refusal pushes an author toward the constraint, which is also the
+  race-free implementation where a check-then-insert is not, since two concurrent requests
+  both pass the probe. Nothing about the rule changes; what changes is that its scope is
+  discoverable without trying both.
+
+  Neither entry adds a rule. Both are the legibility half ADR 0122 redirects effort to:
+  the catalog's breadth is frozen and explaining an existing refusal is the work that
+  remains.
+
+## 0.32.0
+
+### Added
 
 - **`test-adequacy` joins the assurance lane vocabulary (RECOMMENDED) — the five existing
   lanes can all pass over a suite that asserts nothing.** Every one of them runs checks and
