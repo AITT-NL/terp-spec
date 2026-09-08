@@ -29,4 +29,4 @@ exactly match the checked-in budget (which can only shrink).
 ## Enforcement
 
 - Checked while the app runs? No — this is a property of the written source only; the build-time check is the control, by recorded decision.
-- `build-time`: `@terpjs/eslint-boundaries` — `BOUNDARY_SPEC restricted syntax (navigator.clipboard access)`
+- `build-time`: `@terpjs/eslint-boundaries` — `BOUNDARY_SPEC.restrictRawClipboard`

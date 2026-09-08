@@ -8,7 +8,7 @@
     {
       "kind": "build-time",
       "tool": "@terpjs/eslint-boundaries",
-      "ref": "BOUNDARY_SPEC restricted syntax (navigator.clipboard access)",
+      "ref": "BOUNDARY_SPEC.restrictRawClipboard",
       "reported_as": "no-restricted-syntax"
     }
   ],
