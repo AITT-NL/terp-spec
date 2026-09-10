@@ -7,6 +7,70 @@ fields and new rules also bump the minor; prose bumps the patch (see
 checked-in `VERSION` — held by `tests/test_changelog.py`. A checker certified
 against an earlier version reads this file to see exactly what changed since.
 
+## 0.34.0
+
+### Added
+
+- **`backend/references_declare_delete_behaviour`** — a stored reference declares what
+  a delete of its target does, and the standard does not say which action that should
+  be.
+
+  A foreign key has a referential action whether or not anyone chose one: SQL supplies
+  `NO ACTION` when nobody does, so the action you get by not choosing is
+  indistinguishable in the source from the action you chose. Neither a reader nor a
+  reviewer can tell a deliberate "the database takes no action here, the owning service
+  handles this" from an oversight. That is the whole gap, and it is a legibility gap
+  rather than a behavioural one, which is why the fix is a declaration.
+
+  The evidence for admitting the rule at all (the catalog's breadth is otherwise frozen)
+  is in the reference implementation itself: the generated application template ships a
+  model-versus-database drift check that runs against SQLite, and a foreign key's
+  referential options are compared only when the backend reflects them — which SQLite
+  does not. Every generated application has therefore been running a green drift check
+  that proves nothing about referential behaviour. The reference stack's own single
+  foreign key was also undeclared.
+
+  That no *default* would be correct is a separate claim, and it is the one place this
+  entry rests on an outside observation: across a large application on the same ORM and
+  migration tooling (not built on the reference stack), the three actions appear in
+  comparable volume — roughly 40% delete-with-parent, 30% refuse-the-delete, 28%
+  blank-the-pointer over some four hundred declarations.
+
+  So the rule enforces that an action was **named**, never which one. Every SQL action
+  is accepted, the explicit form of the default included — and the reference
+  implementation makes that form emit no clause, so adopting the declaration on an
+  existing schema costs no migration.
+
+  The entry carries a second condition, and it is the one worth reading twice: an action
+  that **cannot fire** is not a declaration but a belief. Where the platform turns a
+  delete into a lifecycle stamp rather than a row removal (a soft-delete trait), no
+  `DELETE` statement ever reaches the constraint, so delete-with-parent,
+  blank-the-pointer and point-at-the-default are all dead code against such a target —
+  blank-the-pointer worst, because the referencing rows keep a live, non-null pointer to
+  a row that row-scoping now hides from every read, and the reference reads as broken
+  rather than absent. The dividing line is deliberately not "passive versus active":
+  refuse-the-delete and explicit-no-action are accepted because they only ever described
+  the hard-delete path nothing in-band can reach, so they promise nothing that fails to
+  happen. Against such a target, declare one of those as the backstop and perform the
+  lifecycle cascade in the owning service.
+
+  `runtime.applicability` is **`deferred`**, with the reason recorded rather than
+  implied. A running system can observe an undeclared action from its own mapper
+  metadata, and the reference implementation ships that audit as a callable helper; what
+  it does not do is run it unconditionally at boot, because the shared model registry is
+  process-global and accumulates every table any test declares, so one ad-hoc fixture
+  with a bare foreign key would fail an unrelated later test. The named seam is a boot
+  check scoped to the application's own declared packages. Note also that the build-time
+  half is strictly more capable in one respect no runtime check can match: only the
+  source distinguishes a deliberately declared no-action from an undeclared one, because
+  both compile to the same schema.
+
+  Ten corpus cases: six violations (the ORM's shorthand with no action, a hand-built
+  column, a table-level constraint, and all three unreachable actions against a
+  soft-deletable target) and four compliant (an action that can fire, the full action vocabulary
+  including the explicit default, the two non-helper spellings that also made the
+  decision, and the two honest actions against a soft-deletable target).
+
 ## 0.33.0
 
 ### Changed
