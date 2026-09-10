@@ -70,6 +70,33 @@ against an earlier version reads this file to see exactly what changed since.
   soft-deletable target) and four compliant (an action that can fire, the full action vocabulary
   including the explicit default, the two non-helper spellings that also made the
   decision, and the two honest actions against a soft-deletable target).
+- **`frontend/no-raw-random-uuid`** — minting a UUID goes through the stack's seam, for
+  the same reason `no-raw-clipboard` exists and with the same shape of defect.
+
+  `crypto.randomUUID` is declared unconditionally by the DOM lib and exists only in a
+  secure context, so on a plain-http origin that is not localhost the call is a call on
+  `undefined` and throws synchronously. Nothing in the type system reports it. Neither
+  does a test run, and that is the part worth stating: localhost *is* a secure context, so
+  the class is invisible to the type checker, to review and to CI simultaneously, and
+  appears for the first time in a deployment.
+
+  It is a rule rather than a lesson because a conformant stack routes applications into
+  it. An idempotency contract keyed on a **client-generated** request key means an app
+  adding retry-safety reaches for exactly this method, and a stack whose default
+  deployment topology publishes plain http puts that app in an insecure context by
+  default. Those two defaults compose into a defect neither one looks like on its own.
+
+  The entry is about the defect, not about identifiers. A conformant seam feature-detects
+  and falls back to a source of cryptographic randomness that is **not**
+  secure-context-gated — never to a weaker one. A value standing in for an idempotency key
+  or a record id is one a collision corrupts, so silently reducing its entropy to keep a
+  call site quiet is a worse outcome than the throw, and the entry says so. For the same
+  reason the refusal stops at `randomUUID`: `getRandomValues` is not gated, is not this
+  defect, and is what a compliant seam is built on.
+
+  Five corpus cases: three violations (the direct call, the destructured binding, the
+  `globalThis`-prefixed spelling) and two compliant (the seam, and `getRandomValues`,
+  which must stay legal or the rule is a word filter).
 
 ## 0.33.0
 
