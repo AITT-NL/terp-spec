@@ -7,6 +7,36 @@ fields and new rules also bump the minor; prose bumps the patch (see
 checked-in `VERSION` — held by `tests/test_changelog.py`. A checker certified
 against an earlier version reads this file to see exactly what changed since.
 
+## 0.35.0
+
+### Added
+
+- **`secret-scanning`** joins the assurance-profile lane vocabulary, as a **required**
+  lane. It asks whether the repository was scanned for committed credentials, *including
+  its history*.
+
+  The standard already required an `appsec-baseline`, and a conformant toolchain's
+  realisation of it — a static analyser over the source — reads like it covers this. It
+  does not, and the gap is not a detail of which analyser: a source rule can only see
+  the working tree. A credential that was committed and then removed is gone from the
+  tree and still in the history, still fetched by every clone, still valid until someone
+  rotates it. That is the common shape of the incident, and no lane of the vocabulary
+  answered for it.
+
+  The catalog's own `backend/no_hardcoded_credentials` is the tree-level half and stays
+  exactly as it is. This lane is the half a rule cannot be, which is why it is a lane:
+  the evidence comes from a tool that reads the object graph rather than the source, and
+  no `enforcement` entry in a catalog schema can describe that.
+
+  Required rather than recommended, on the same footing as `dependency-audit`. A
+  recommended lane informs the reader; a leaked credential is not a thing a release
+  should be able to inform its way past.
+
+  Toolchains that do not yet realise it report it `not-run`, as the schema has always
+  required of an unrealised lane — never dropped, and never counted as passed. The
+  claim (`ok`) is then false until the lane is implemented, which is the intended
+  pressure and the reason this is a minor bump rather than a patch.
+
 ## 0.34.0
 
 ### Added
