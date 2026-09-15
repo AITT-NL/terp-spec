@@ -29,11 +29,12 @@ against an earlier version reads this file to see exactly what changed since.
 
   The rule reads `upgrade()` and only `add_column`. `create_table` is out of scope — a
   table created there holds no rows — and so is a column added to a table the same
-  `upgrade()` creates; both stay clean without a marker. Both spellings are covered, the
-  direct call and a `batch_alter_table` block, and a table name that is not a string
-  literal is read as one that may hold rows, because the populated table is the case the
-  rule exists for. The remedy is a `server_default`, or expand/contract across two
-  releases where no literal default is right.
+  `upgrade()` creates; both stay clean without a marker. Every spelling of the statement
+  is covered — the direct call, a `batch_alter_table` block, and the keyword forms
+  (`column=`, `table_name=`) — because a rule a keyword can switch off is not a control.
+  A table name that is not a string literal is read as one that may hold rows, since the
+  populated table is the case the rule exists for. The remedy is a `server_default`, or
+  expand/contract across two releases where no literal default is right.
 
 ## 0.34.0
 
