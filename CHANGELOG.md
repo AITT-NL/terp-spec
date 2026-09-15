@@ -7,6 +7,34 @@ fields and new rules also bump the minor; prose bumps the patch (see
 checked-in `VERSION` — held by `tests/test_changelog.py`. A checker certified
 against an earlier version reads this file to see exactly what changed since.
 
+## 0.35.0
+
+### Added
+
+- **`backend/not_null_columns_are_backfilled`** — a `NOT NULL` column added to an
+  existing table must back-fill the rows it meets.
+
+  Autogenerate writes `add_column(sa.Column('rank', sa.Integer(), nullable=False))` for
+  a new non-nullable field, and it is the one line of a generated revision whose
+  correctness the generator cannot judge. The statement succeeds against an empty
+  database and fails against one that holds rows, because every row already there needs
+  a value the statement never supplies.
+
+  What makes it a rule rather than a paragraph is where the failure lands. A migration
+  test upgrades a *fresh* scratch database, which is exactly the database the statement
+  is correct against, so the revision passes the suite, passes review, and then fails on
+  the first environment that has data. Nothing between the author and production is
+  positioned to notice, and the generated header's "please adjust!" is the one
+  instruction in the file no gate can read.
+
+  The rule reads `upgrade()` and only `add_column`. `create_table` is out of scope — a
+  table created there holds no rows — and so is a column added to a table the same
+  `upgrade()` creates; both stay clean without a marker. Both spellings are covered, the
+  direct call and a `batch_alter_table` block, and a table name that is not a string
+  literal is read as one that may hold rows, because the populated table is the case the
+  rule exists for. The remedy is a `server_default`, or expand/contract across two
+  releases where no literal default is right.
+
 ## 0.34.0
 
 ### Added
