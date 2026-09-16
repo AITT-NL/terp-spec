@@ -287,13 +287,14 @@ requirement level is deliberately not a field of the document:
 | `terp-standard` | **required** | The standard's own enforcement surfaces ran and passed: the architecture gate and the frontend boundary lint, publishing their evaluated-rule inventories (check reports). |
 | `appsec-baseline` | **required** | The delegated generic AppSec baseline passed (the reference realisation: `ruff` with the flake8-bandit `S` rules). |
 | `dependency-audit` | **required** | Dependency trees were audited against known-vulnerability databases (the reference realisation: `pip-audit` and `npm audit`). |
+| `secret-scanning` | **required** | The repository was scanned for committed credentials, **including its history** (the reference realisation: `gitleaks detect`). A source rule can only see the working tree, so this is the only lane that answers for a secret that was committed and then removed — which is still a leak, and is the common shape. |
 | `a11y` | recommended | Automated accessibility checks over the running app (e.g. axe). |
 | `blackbox-conformance` | recommended | The black-box behavioural conformance suite over the running workbench. |
 | `test-adequacy` | recommended | The test suite was shown able to *fail*: a deliberate change to the code under test is caught by it (the reference realisation: diff-scoped mutation testing). Coverage does not evidence this lane — it reports which lines ran, not whether anything would have noticed them changing. |
 
 `test-adequacy` is the lane that asks a question none of the others do:
 **could this suite have failed?** Every other lane runs checks and reports their
-verdicts; all five can be green over a suite that asserts nothing meaningful.
+verdicts; all six can be green over a suite that asserts nothing meaningful.
 The catalog reaches the *syntactic* form of that — `no_empty_tests` refuses an
 empty body, a bare `pass`, a constant assertion — and by construction cannot
 reach the semantic form, a test whose assertion is trivially satisfied by the

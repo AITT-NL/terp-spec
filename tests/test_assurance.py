@@ -20,7 +20,12 @@ from test_standard import _validate
 _SPEC = spec_dir()
 
 #: The normative lane vocabulary with its requirement mapping (the README table).
-REQUIRED_LANES = ("terp-standard", "appsec-baseline", "dependency-audit")
+REQUIRED_LANES = (
+    "terp-standard",
+    "appsec-baseline",
+    "dependency-audit",
+    "secret-scanning",
+)
 RECOMMENDED_LANES = ("a11y", "blackbox-conformance", "test-adequacy")
 
 
