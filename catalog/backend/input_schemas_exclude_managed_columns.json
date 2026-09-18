@@ -13,7 +13,7 @@
     {
       "kind": "runtime",
       "tool": "terp.core",
-      "ref": "_without_managed_columns"
+      "ref": "BaseService"
     }
   ],
   "reference": "BaseService.create/update strip the managed set via _without_managed_columns; build_crud_router create/update schemas are scanned too.",

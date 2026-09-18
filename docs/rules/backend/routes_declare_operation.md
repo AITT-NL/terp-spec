@@ -30,4 +30,4 @@ exactly match the checked-in budget (which can only shrink).
 
 - Checked while the app runs? Yes — the framework also enforces this while the app runs (fail closed).
 - `build-time`: `terp.arch` — `check_routes_declare_operation`
-- `runtime`: `terp.core` — `_validate_declared_operations`
+- `runtime`: `terp.core` — `validate_declared_operations`

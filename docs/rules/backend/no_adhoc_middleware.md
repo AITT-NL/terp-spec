@@ -30,4 +30,4 @@ exactly match the checked-in budget (which can only shrink).
 
 - Checked while the app runs? Yes — the framework also enforces this while the app runs (fail closed).
 - `build-time`: `terp.arch` — `check_no_adhoc_middleware`
-- `runtime`: `terp.core` — `_freeze_app_middleware_registration`
+- `runtime`: `terp.core` — `freeze_app_middleware_registration`

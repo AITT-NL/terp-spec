@@ -45,4 +45,4 @@ adding the corpus case that contracts it.
 - Checked while the app runs? Yes — the framework also enforces this while the app runs (fail closed).
 - `build-time`: `terp.arch` — `check_no_manual_ownership_checks`
 - `runtime`: `terp.core` — `apply_object_authz`
-- `runtime`: `terp.core` — `_validate_background_jobs_preserve_ownership`
+- `runtime`: `terp.core` — `validate_background_jobs_preserve_ownership`

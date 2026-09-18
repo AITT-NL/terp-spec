@@ -11,6 +11,26 @@ against an earlier version reads this file to see exactly what changed since.
 
 ### Changed
 
+- **A `runtime` enforcement ref may no longer name a private symbol**, and the sixteen
+  that did are renamed. `_freeze_app_route_registration`,
+  `_validate_declared_operations`, `_validate_policy_write_tiers` and ten more now cite
+  the public spelling the reference implementation has adopted; the two that are methods
+  on a public class (`_save`, `_without_managed_columns`) cite `BaseService`, which is
+  the nameable, stable seam — the method is not, and renaming it would be a real API
+  decision rather than a spelling fix.
+
+  Two things were wrong at once while those names stood. Outwards, a private name is
+  unusable by any second implementation: it is the reference implementation saying "this
+  may be renamed without notice" about the very symbol this catalog cites as the control,
+  and stack-neutrality is the property this repository exists to make checkable. Inwards,
+  it made a refactor the reference implementation's own design explicitly permits —
+  renaming a private validator — a breaking change to a released standard, repairable
+  only by cutting a spec release. The two repositories were holding each other still and
+  neither had said so.
+
+  `test_no_runtime_ref_names_a_private_symbol` makes the class of drift impossible rather
+  than merely fixed. A class name stays legal, because it is sometimes the honest answer.
+
 - **`backend/no_hardcoded_credentials` decides on the value, not only on the name.**
   The rule matched a credential-shaped identifier assigned to a non-empty string
   literal, with no view of what the string held. Three shapes therefore read as leaks

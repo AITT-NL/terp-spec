@@ -13,7 +13,7 @@
     {
       "kind": "runtime",
       "tool": "terp.core",
-      "ref": "_save"
+      "ref": "BaseService"
     }
   ],
   "reference": "ActorStampedMixin columns are stamped by BaseService._save (ADR 0012). An assignment, an augmented assignment or a `del` of created_by_id / modified_by_id is refused, and so is a comparison against anything but a literal (`row.created_by_id == actor.id`, and the same expression inside a `where(...)`). `row.created_by_id is None` and a load that only reads the value are not; a read DTO exposing the column as an annotation was never attribute access at all. Gate on ownership with OwnedMixin instead of on the stamp. Per-actor uniqueness - one decision per reviewer per record - is expressed as a table constraint, `UniqueConstraint(\"record_id\", \"created_by_id\")` in `__table_args__`, and is deliberately not policed: the column is named as a string, the database enforces it, and it is race-free where a check-then-insert probe is not, because two concurrent requests both pass the probe and both insert. The equivalent query stays refused because no static check can tell a uniqueness probe from an inline authorization filter - they are the same expression - so admitting it would reopen the shape this rule exists to close. The refusal therefore pushes an author toward the stronger implementation, which is the part that was never written down.",

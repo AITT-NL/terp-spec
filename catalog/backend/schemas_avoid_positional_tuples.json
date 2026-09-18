@@ -13,7 +13,7 @@
     {
       "kind": "runtime",
       "tool": "terp.core",
-      "ref": "_reject_positional_tuple_schemas"
+      "ref": "reject_positional_tuple_schemas"
     }
   ],
   "runtime": {

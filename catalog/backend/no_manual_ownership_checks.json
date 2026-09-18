@@ -18,7 +18,7 @@
     {
       "kind": "runtime",
       "tool": "terp.core",
-      "ref": "_validate_background_jobs_preserve_ownership"
+      "ref": "validate_background_jobs_preserve_ownership"
     }
   ],
   "reference": "OwnedMixin declares ownership; BaseService stamps owner_id and apply_object_authz gates writes. create_app refuses a job-bearing ModuleSpec whose declared service model omits OwnedMixin. A custom object-authz predicate can be registered.",

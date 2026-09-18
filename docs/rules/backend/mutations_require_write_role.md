@@ -31,4 +31,4 @@ exactly match the checked-in budget (which can only shrink).
 - Checked while the app runs? Yes — the framework also enforces this while the app runs (fail closed).
 - `build-time`: `terp.arch` — `check_mutations_require_write_role`
 - `runtime`: `terp.core` — `build_guard`
-- `runtime`: `terp.core` — `_validate_policy_write_tiers`
+- `runtime`: `terp.core` — `validate_policy_write_tiers`
