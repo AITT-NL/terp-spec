@@ -10,7 +10,7 @@
 
 A deep import into a platform package's internals couples the app to files that are free to move; the package root is the published, stable surface. The refused path segments are declared in restricted-surface.json (deepImportPathSegments).
 
-## What to do instead
+## How the reference stack realises this
 
 @terpjs/*/src/* and @terpjs/*/dist/* imports are refused; import from the @terpjs/* package root. (reference stack; another stack ships its own realisation.)
 

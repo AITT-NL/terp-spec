@@ -10,7 +10,7 @@
 
 The one opt-out is a justified inline marker naming the rule; an unjustified marker is itself an error, and marker counts must exactly match the app's checked-in escape-hatch budget so opt-outs stay visible and can only shrink.
 
-## What to do instead
+## How the reference stack realises this
 
 // terp-allow-<rule>: <reason> markers reconciled against the app's checked-in escape-hatch-budget.json (ADR 0059). The rule carries no opt_out: governance cannot be waived by the mechanism it governs. (reference stack; another stack ships its own realisation.)
 

@@ -10,7 +10,7 @@
 
 A timestamp captured without a timezone silently assumes the process's local zone, so it cannot be stored, compared, or ordered correctly once more than one zone is involved — a classic source of off-by-hours bugs. Every timestamp the app produces must carry an explicit timezone (UTC), so the moment it names is unambiguous.
 
-## What to do instead
+## How the reference stack realises this
 
 datetime.utcnow() (deprecated, naive) and a bare datetime.now() (no tz) are refused; datetime.now(UTC) is the compliant, timezone-aware path. (reference stack; another stack ships its own realisation.)
 

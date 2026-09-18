@@ -10,7 +10,7 @@
 
 Structured logging plus secret/PII redaction is installed once, centrally, at composition. A module that re-points the global logging configuration itself can silently bypass the central redaction filter.
 
-## What to do instead
+## How the reference stack realises this
 
 configure_logging (called by create_app) installs the redacting handlers; logging.basicConfig / dictConfig / fileConfig calls in app modules are refused. (reference stack; another stack ships its own realisation.)
 

@@ -10,7 +10,7 @@
 
 Every row carries an integer concurrency token that the persistence layer increments on each update and matches against the value the caller loaded, so two writers racing on the same row cannot silently clobber each other. Writing that token by hand does not fail — it overwrites the loaded value with the caller's own, so the concurrency check ends up comparing the row against itself and a lost update slips through undetected. Application code must never assign the token; the persistence layer owns it end to end.
 
-## What to do instead
+## How the reference stack realises this
 
 db_obj.version = data.version, row.version += 1, and setattr(db_obj, "version", ...) are refused; the update seam bumps and checks the token, so application code leaves it untouched. (reference stack; another stack ships its own realisation.)
 

@@ -10,7 +10,7 @@
 
 Printing straight to standard output bypasses log levels, structure, and routing, so the message escapes the platform's logging pipeline and cannot be filtered, correlated, or shipped to a sink. Every diagnostic must go through the structured logger so it carries a level and is captured.
 
-## What to do instead
+## How the reference stack realises this
 
 A call to the print() builtin is refused; obtain a logger and call it at the appropriate level. (reference stack; another stack ships its own realisation.)
 

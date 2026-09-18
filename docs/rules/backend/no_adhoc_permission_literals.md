@@ -10,7 +10,7 @@
 
 An authority named as a bare string is invisible to the control plane: it cannot be resolved against the app's declared registry, so a typo or a stale name silently grants nothing (or the wrong thing) instead of failing the build. Citing typed authority objects keeps every permission reference greppable and verifiable against the registry, and lets the runtime normalization chokepoint refuse anything unregistered.
 
-## What to do instead
+## How the reference stack realises this
 
 Role / Permission objects from the control-plane registry; requirement_from raises TypeError on a bare string. (reference stack; another stack ships its own realisation.)
 

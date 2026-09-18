@@ -10,7 +10,7 @@
 
 Raw fetch / XMLHttpRequest / WebSocket / EventSource (and navigator.sendBeacon) bypass the app's single audited, typed egress path. One client means one place for auth, errors, and contract types. The refused globals and member calls are declared in restricted-surface.json (restrictedGlobals, restrictedMemberCalls).
 
-## What to do instead
+## How the reference stack realises this
 
 useTerpClient() + unwrap from @terpjs/react-core for request/response; useRealtimeChannel() from @terpjs/react-core for typed SSE/WebSocket subscriptions (one-use ticket minted through the generated client). (reference stack; another stack ships its own realisation.)
 

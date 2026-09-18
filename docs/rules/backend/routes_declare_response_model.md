@@ -10,7 +10,7 @@
 
 A route with neither a declared response type nor a no-body status code can serialize a bare stored object out of the boundary — whatever the handler happens to return, including columns that were never meant to leave the app. Declaring the response type makes the boundary shape explicit and reviewable; both decorator routes and imperative route registration are checked.
 
-## What to do instead
+## How the reference stack realises this
 
 response_model= on @router.<verb>(...) decorators and router.add_api_route(...); a no-body status_code (204/205/304) is the accepted alternative. (reference stack; another stack ships its own realisation.)
 

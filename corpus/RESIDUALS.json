@@ -5,6 +5,7 @@
       "an error constructed under an alias (`from fastapi import HTTPException as ApiError`) is not required to be resolved back to the framework's HTTP error"
     ],
     "backend/no_dynamic_sql": [
+      "SQL built as a string and handed to a raw DB-API cursor (`cursor.execute(f\"SELECT ... FROM {table}\")`) is not required to be caught: the check matches the reference stack's `text(...)` construct, and a package that does not model the schema it talks to never writes one. The shape is not ungoverned — the reference stack delegates it to a stock analyzer's SQL-string-construction rule, in the platform repository and in every generated project as a blocking step — but that lane is outside the catalog, so the limit is recorded here rather than implied",
       "an alias-renamed symbol import (`from sqlalchemy import text as sql_text`) is not required to be resolved to `text`"
     ],
     "backend/no_exception_text_in_responses": [

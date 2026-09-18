@@ -10,7 +10,7 @@
 
 A raw-SQL construct built dynamically — through interpolation, concatenation, format calls, or a variable — is not statically reviewable and is easy to turn into SQL injection. Keep SQL as a literal and pass data through bound parameters / the query builder's typed expressions instead. As a security rule this also scans test and migration files inside a module — they are importable code, so they are application surface too.
 
-## What to do instead
+## How the reference stack realises this
 
 text(...) / sqlalchemy.text(...) with an f-string, concatenation, .format, % formatting, or a variable is refused; SQLAlchemy bound parameters / ORM expressions are the compliant path. (reference stack; another stack ships its own realisation.)
 
@@ -33,6 +33,7 @@ records this rule's limits as data (`corpus/RESIDUALS.json`) so two
 independent checkers agree on where detection ends instead of each
 guessing:
 
+- SQL built as a string and handed to a raw DB-API cursor (`cursor.execute(f"SELECT ... FROM {table}")`) is not required to be caught: the check matches the reference stack's `text(...)` construct, and a package that does not model the schema it talks to never writes one. The shape is not ungoverned — the reference stack delegates it to a stock analyzer's SQL-string-construction rule, in the platform repository and in every generated project as a blocking step — but that lane is outside the catalog, so the limit is recorded here rather than implied
 - an alias-renamed symbol import (`from sqlalchemy import text as sql_text`) is not required to be resolved to `text`
 
 **These are not exemptions.** The rule governs those forms exactly as it

@@ -10,7 +10,7 @@
 
 The runtime write guard covers the request session's own persistence methods, but the bound engine / connection the session exposes can issue data-modification statements directly, bypassing the audited chokepoint. A module must never reach for the session's underlying bind or connection; persist through the model's service so every write is audited. The escape is caught at the reach itself, and raw session / engine construction is separately banned by no_raw_session_construction — so an unrelated connect call on a domain object (a websocket / cache / search client) is deliberately not flagged.
 
-## What to do instead
+## How the reference stack realises this
 
 session.get_bind() / session.connection() calls are refused (ADR 0015, F3); BaseService is the audited write path, and WriteGuardedSession gates session.connection() at runtime. (reference stack; another stack ships its own realisation.)
 

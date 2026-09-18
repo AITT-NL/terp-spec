@@ -10,7 +10,7 @@
 
 Dropping a table or column, changing a column's type, and executing raw destructive statements in an upgrade can destroy data or make rollback unsafe — whether spelled directly, on a batch block, through an alias, or smuggled into a raw statement. Each destructive operation is a violation; a reviewed one is justified through the standard governed escape hatch — a justified marker on (or immediately above) the operation, counted against the app's budget ratchet — so every accepted risk is explicit, reviewable, greppable, and ratcheted like any other opt-out.
 
-## What to do instead
+## How the reference stack realises this
 
 drop_table / drop_column / type-changing alter_column and execute(...) of DROP TABLE / DROP COLUMN / TRUNCATE / DELETE FROM / ALTER TABLE ... DROP in upgrade() are flagged per operation; the standard # arch-allow-no-destructive-migrations marker (budgeted) justifies a reviewed one. The pre-0.6.0 file-level terp-allow-destructive-migration waiver is retired. (reference stack; another stack ships its own realisation.)
 

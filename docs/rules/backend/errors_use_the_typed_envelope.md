@@ -10,7 +10,7 @@
 
 A platform that promises one error envelope has to be the only thing that builds it. When a module raises the web framework's own HTTP error type it names a status code and a message directly, and the envelope the platform assembles for every other failure - a stable machine-readable code, a consistent body shape, a single place where messages are worded and localized - is bypassed for that one response. The client then sees two error formats from one API and cannot tell which it is holding, so it either parses both or handles neither. The damage is cumulative rather than dramatic: each improvised status/message pair is defensible on its own, and together they are an undocumented second contract that no schema describes and no test covers. Raising the platform's typed error instead keeps the status, the code and the body in one place, where they can be changed once.
 
-## What to do instead
+## How the reference stack realises this
 
 Application modules raise a terp.core.errors.AppError subclass (NotFoundError, ConflictError, PermissionDeniedError, ValidationFailedError, ...); `raise HTTPException(...)` - FastAPI's or Starlette's - is refused. A route that must attach a response header the envelope does not carry (a WWW-Authenticate challenge, say) takes the opt-out marker with that reason. (reference stack; another stack ships its own realisation.)
 

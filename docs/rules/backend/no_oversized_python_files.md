@@ -10,7 +10,7 @@
 
 A file that keeps growing stops being reviewable: it hides more than one responsibility, is harder to reason about in one sitting, and is exactly what an automated author tends to produce when it appends to an existing file instead of factoring the work into a new one. Capping the line count of every hand-authored source file forces the cohesive-file discipline the rest of the layout assumes — a responsibility that outgrows its file is split into its own file, not piled onto the current one. Generated and machine-owned trees (dependency caches, database migration history, the test suite) are out of scope: their size is not an authoring decision the cap should second-guess.
 
-## What to do instead
+## How the reference stack realises this
 
 Every scanned *.py file must stay at or under 500 physical lines; generated/vendored caches, the migration history and the test tree are excluded from the scan. Split a file that grows past the cap into smaller, cohesive modules (extract helpers or sub-services into their own files). (reference stack; another stack ships its own realisation.)
 

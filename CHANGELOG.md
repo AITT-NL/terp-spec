@@ -7,6 +7,79 @@ fields and new rules also bump the minor; prose bumps the patch (see
 checked-in `VERSION` — held by `tests/test_changelog.py`. A checker certified
 against an earlier version reads this file to see exactly what changed since.
 
+## 0.36.0
+
+### Changed
+
+- **Five rules' compliant sets now contract PRECISION, not only detection.** The corpus
+  contract asserts that a rule has a violation case and a compliant case — never what is
+  in either. So a rule whose compliant set was one minimal pair contracted detection and
+  said nothing about false positives: a checker that matched the bare token certified.
+  Measured across the catalog, 61 of 98 rules shipped exactly one compliant case, running
+  1 to 31 lines with a median of 6.
+
+  Where an entry states an exclusion in its own prose, the compliant set is the only thing
+  that can hold a second implementation to it. These five stated one and nothing exercised
+  it:
+
+  - `no_todo_fixme` — "matching ignores identical text inside strings or docstrings". The
+    new case puts all four markers in string constants and docstrings.
+  - `no_oversized_python_files` — "generated/vendored caches, the migration history and the
+    test tree are excluded from the scan". Three over-cap files, one in each excluded
+    location.
+  - `no_print` — the subject is one builtin, so `printer.print(...)`, `report.print(...)`
+    and the word in prose must not fire.
+  - `no_star_imports` — the subject is one import *form*, so the form quoted in a string
+    and in a comment must not fire.
+  - `no_eval_or_exec` — the subject is two builtins, so `interpreter.eval(...)`, a function
+    named `evaluate`, and an `executor=` keyword must not fire.
+
+  Each is one file packing several near-misses, the shape
+  `not_null_columns_are_backfilled/compliant-02` already used. Verified against the
+  reference implementation's own checker rather than asserted: the framework's corpus
+  suite goes from 286 to 291 cases with all five green, so they contract real precision
+  instead of describing it.
+
+  `README.md`'s general claim that "the compliant cases pin the near-misses that must not
+  fire" is qualified to the families its own parenthetical enumerates, and says what the
+  contract actually asserts.
+
+- **The generated rule pages stop publishing a matcher description as advice.**
+  `tools/generate_rule_docs.py` rendered `reference` under **"What to do instead"**, and
+  across the 89 entries that carry the field roughly half say what the compliant code looks
+  like while roughly half say what the check flags and what it deliberately ignores —
+  several say both. Under a remediation heading, every entry of the second kind read as
+  instruction: `no_todo_fixme`'s page told the reader to "instead" do what is in fact a
+  description of the matcher.
+
+  The heading is now **"How the reference stack realises this"**, which is true of both
+  kinds, and the schema's own one-liner says so. Deliberately one field rather than a split
+  into `remediation` and `detection`: no consumer distinguishes them — the finding
+  envelope's `fix_hint` is sourced from the reference stack's guide topic, not from here —
+  so a split would be 89 judgement calls in service of a distinction nothing reads.
+
+- **`alembic_downgrades_not_empty` stops claiming reversibility is unprovable.** Its
+  `runtime.rationale` ended "the reversibility guarantee exists only in source", which is
+  false: it is provable at build time on a scratch database by rehearsing the rollback. The
+  classification is unchanged and still correct — a forward deploy never executes
+  `downgrade`, so there is no fail-closed control a running system could carry — but the
+  reason is now about the runtime rather than about the guarantee, and the rationale says
+  what the earlier sentence got wrong.
+
+  A second build-time enforcement entry records the executed rehearsal the reference stack
+  now ships beside the source check.
+
+### Added
+
+- **`backend/no_dynamic_sql` records the DB-API cursor shape as a residual.** The check
+  matches the reference stack's `text(...)` construct, and a package that does not model
+  the schema it talks to never writes one — it drives a raw cursor, where
+  `cursor.execute(f"...")` is invisible to this rule however the statement was built. The
+  shape is not ungoverned: the reference stack delegates it to a stock analyzer's
+  SQL-string-construction rule, blocking in the platform repository and in every generated
+  project. But that lane sits outside the catalog, so the limit belongs in the place this
+  standard records limits rather than being implied by a rule title.
+
 ## 0.35.0
 
 ### Added

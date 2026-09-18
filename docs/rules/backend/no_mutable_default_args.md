@@ -10,7 +10,7 @@
 
 A default argument value is evaluated once when the function is defined and then shared by every call that omits it, so a mutable default (a list, dict, or set) accumulates state across calls — a classic aliasing bug that leaks data between otherwise independent invocations. Default to a sentinel and build the container inside the body.
 
-## What to do instead
+## How the reference stack realises this
 
 A list, dict, or set literal used as a parameter default (positional or keyword-only) is refused; default to None and construct the container in the body when the argument is omitted. (reference stack; another stack ships its own realisation.)
 

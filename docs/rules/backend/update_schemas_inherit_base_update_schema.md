@@ -10,7 +10,7 @@
 
 Optimistic concurrency only protects a row when the client echoes the version it loaded and the update path checks it before writing. That guarantee hinges on the update request contract demanding the token as a required field: an update contract that omits it lets a client send a blind write, so the check has nothing to compare and a concurrent edit is silently overwritten (a lost update). Every update request contract must inherit the shared concurrency-bearing base that makes the token a required field, rather than an ordinary contract that leaves it out. The token is not redeclared on the contract — it is a managed field that arrives by inheritance.
 
-## What to do instead
+## How the reference stack realises this
 
 class NoteUpdate(BaseSchema) is refused; class NoteUpdate(BaseUpdateSchema) (directly or transitively) is compliant, as is a class wired as build_crud_router(update_schema=...). BaseUpdateSchema supplies the required version field; BaseService.update checks it. (reference stack; another stack ships its own realisation.)
 

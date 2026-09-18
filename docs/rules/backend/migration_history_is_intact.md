@@ -10,7 +10,7 @@
 
 A revision whose parent is missing, or a second revision claiming to start the history, means an already-authored migration was deleted or replaced rather than built upon. Every database that applied the removed revision then becomes unupgradable, and no schema-drift check can see it: a database rebuilt from the rewritten history is perfectly consistent with the models, so the build stays green while every provisioned environment is stranded. New schema changes are added on top of the existing chain.
 
-## What to do instead
+## How the reference stack realises this
 
 Within each non-empty migrations/versions directory, exactly one revision must declare no parent; every other revision's declared parent (one id, or each id of a merge revision's tuple) must name a revision defined in that same directory, and every revision must be reachable from that first revision (no cycles or disconnected chains). (reference stack; another stack ships its own realisation.)
 

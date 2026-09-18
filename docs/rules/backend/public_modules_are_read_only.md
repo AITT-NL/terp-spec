@@ -10,7 +10,7 @@
 
 A public policy drops authentication for the whole module, so a mutating route under it is an unauthenticated write — almost always an accident, and the broken-access-control footgun the deny-by-default posture exists to prevent. A genuinely public write (a sign-up / contact form / webhook receiver) is rare and deliberate, so it stays available through the governed escape hatch: a justified opt-out marker ratcheted by the escape-hatch budget, making the unauthenticated write visible and budgeted rather than silent. Gate the writes behind a policy with a write role, or justify the public write explicitly. The runtime half is the boot refusal of a public module that exposes a mutating route unless its policy opts in explicitly with a reason — each layer carries its own justified opt-out.
 
-## What to do instead
+## How the reference stack realises this
 
 Policy.public(reason=...) declares the public module; create_app -> _validate_public_modules_read_only refuses public writes unless the policy opts in via Policy.public_write(reason=...). (reference stack; another stack ships its own realisation.)
 

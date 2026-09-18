@@ -10,7 +10,7 @@
 
 Background work carries the same no-drift guarantee as the event bus: every job a module enqueues or declares is a typed definition from the control-plane catalog. The rule forbids a bare string (or an inline, ad hoc definition) wherever a job is named — the job argument of an enqueue call and the jobs list of the module manifest — so a job name can never drift in outside the catalog. The runtime half is the enqueue chokepoint, which rejects a job not registered in the active catalog.
 
-## What to do instead
+## How the reference stack realises this
 
 JobDefinition constants from the control-plane catalog, cited in enqueue(job=...) / ModuleSpec(jobs=[...]); the runtime half is terp.core.enqueue. (reference stack; another stack ships its own realisation.)
 

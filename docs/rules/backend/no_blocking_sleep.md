@@ -10,7 +10,7 @@
 
 A synchronous sleep parks the thread that is serving the request or running the job, so the whole worker sits idle and the pool starves under load. Waiting must yield the thread — poll with an awaitable, schedule a delayed job, or let the runtime back off — never freeze it.
 
-## What to do instead
+## How the reference stack realises this
 
 A call to the standard library's time.sleep() is refused; use a non-blocking wait or a scheduled job. (reference stack; another stack ships its own realisation.)
 

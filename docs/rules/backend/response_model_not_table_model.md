@@ -10,7 +10,7 @@
 
 routes_declare_response_model proves a response type is declared; this rule proves it is not the persisted table itself. A declared response type set to a table model — directly or wrapped in a page envelope or collection — serializes the stored row, so a column such as a password hash leaks straight through the boundary. Return a read DTO listing exactly the safe fields instead.
 
-## What to do instead
+## How the reference stack realises this
 
 response_model set to a table=True model, directly or wrapped in Page[...] / list[...] (the Page[User] footgun), is refused; return a *Read schema on terp.core.BaseSchema. (reference stack; another stack ships its own realisation.)
 

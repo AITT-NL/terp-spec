@@ -10,7 +10,7 @@
 
 Routes serialize a response DTO out of the boundary, so a field whose name reads like a secret — a password, a password hash, or a *secret / *api_key / *token suffix — would leak the credential to every caller. A response DTO is a schema in the response role: a read/response base schema or any class wired as a route's declared response type (so an input DTO mistakenly reused as a response is caught), excluding the inputs that are only ever request bodies (a client supplies a password) and table models (a table may store the hash). Plain helper classes are not policed. This guards the gap response_model_not_table_model leaves: a hand-rolled read DTO that copies the stored hash. (Version counters are integers, not secrets.)
 
-## What to do instead
+## How the reference stack realises this
 
 BaseSchema / BaseUpdateSchema models and response_model= classes are scanned for password / hashed_password / *secret / *api_key / *token field names; request-body-only inputs and table=True models are excluded. (reference stack; another stack ships its own realisation.)
 

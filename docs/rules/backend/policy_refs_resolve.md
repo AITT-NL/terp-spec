@@ -10,7 +10,7 @@
 
 The build-time half of control-plane registry resolution: boot validation already refuses an undeclared authority at runtime; this rule catches the same drift at the gate, before the app ever boots. Any reference that traces to the app's authority registry — via a module alias or a name imported from the registry — must name something the registry actually declares. References the scan cannot trace to the registry (kernel default roles, locally built objects) are left to the runtime check, so the rule stays precise, never heuristic.
 
-## What to do instead
+## How the reference stack realises this
 
 control_plane/permissions.py is the registry; aliased references like perms.BILLING_READ must resolve there, kernel defaults like Roles.EDITOR are left to ControlPlane.validation_errors at boot. (reference stack; another stack ships its own realisation.)
 

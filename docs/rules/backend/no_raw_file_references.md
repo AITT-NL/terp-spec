@@ -10,7 +10,7 @@
 
 A stored pointer to a file object carries authorization semantics: the files capability serves delegated reads only through a declared reference, failing closed on an undeclared column. A bare id-typed file-pointer column on a table model is an undeclared reference: nothing ties the file's access to the referencing row, which is the classic object-level (BOLA) drift. Declare the column with the files capability's reference type so the pointer is greppable, verified at runtime, and served through the module's own already-authorized row — never hand-rolled. A non-table schema (a read DTO exposing the pointer) is fine and not policed; only the persisted column is.
 
-## What to do instead
+## How the reference stack realises this
 
 FileRef(...) from terp-cap-files declares the column; FileService.load_for fail-closes on an undeclared *file_id column (ADR 0057). (reference stack; another stack ships its own realisation.)
 

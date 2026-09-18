@@ -10,7 +10,7 @@
 
 Autogenerate emits `add_column(sa.Column(..., nullable=False))` for a new non-nullable field, and it is the one line of a generated revision whose correctness the generator cannot judge: the statement succeeds against an empty database and fails against one that holds rows, because every row already there needs a value the statement never supplies. The failure therefore lands as far from its cause as a schema change can — a migration test upgrades a fresh scratch database, where the statement is correct, so the revision passes the suite and passes review before failing on the first environment that has data. A `server_default` settles it: the database fills the existing rows as it adds the column, and new rows still take the model-side default. Where no literal default is right, the expand/contract shape applies instead — add the column nullable, back-fill it, tighten it in a later revision.
 
-## What to do instead
+## How the reference stack realises this
 
 In upgrade(), an add_column(...) whose inline Column declares nullable=False and no server_default is flagged, on the direct call and inside a batch_alter_table block alike. create_table is out of scope (a table created here holds no rows), and so is a column added to a table the same upgrade() creates. A table name that is not a string literal is read as one that may hold rows. The standard # arch-allow-not-null-columns-are-backfilled marker (budgeted) justifies a reviewed case. (reference stack; another stack ships its own realisation.)
 

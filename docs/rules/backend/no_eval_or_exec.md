@@ -10,7 +10,7 @@
 
 Turning a runtime string into executed code is a code-injection hole: any value an attacker can influence on its way into the evaluator becomes arbitrary code the process runs. There is no safe in-app use — parse the data into a structure, dispatch on a lookup table, or import a real module instead of evaluating text.
 
-## What to do instead
+## How the reference stack realises this
 
 Calls to the eval() and exec() builtins are refused. The scan covers the whole importable tree — including tests and migrations — because any Python that runs is in scope. (reference stack; another stack ships its own realisation.)
 

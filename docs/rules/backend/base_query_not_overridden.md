@@ -10,7 +10,7 @@
 
 The base read query composes the non-droppable row scope (soft-delete plus every registered capability predicate, e.g. tenancy) with the service's declared business filters. Overriding that composition point — the old, footgun-y seam — can silently drop soft-delete or tenant scoping the moment the override forgets to delegate up the chain, leaking soft-deleted or cross-tenant rows. Add static read conditions through the declared filter seam (it returns conditions, not a query, so scope cannot be dropped); a per-call filter belongs in a bespoke read built on the scoped base query.
 
-## What to do instead
+## How the reference stack realises this
 
 BaseService.base_query composes the scope; add filters via business_filters(), or build bespoke reads on base_query().where(...) (ADR 0017). (reference stack; another stack ships its own realisation.)
 

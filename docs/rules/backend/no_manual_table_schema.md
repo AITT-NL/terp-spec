@@ -10,7 +10,7 @@
 
 The physical schema layout is a deployment decision: under the flat layout every table lives in the default schema, and under the per-module layout the migration runtime routes each package's tables into its own database schema — in both layouts the model metadata stays schema-free. A hand-written schema placement pins one table to a fixed schema, silently escaping the managed layout (and breaking lightweight dev/test databases that parse a schema prefix differently).
 
-## What to do instead
+## How the reference stack realises this
 
 DB_SCHEMA_LAYOUT (flat / per-module via search_path, ADR 0070) owns placement; __table_args__ = {"schema": ...} is refused. (reference stack; another stack ships its own realisation.)
 

@@ -10,7 +10,7 @@
 
 Composition binds the authentication and session seams once. Rebinding the app's dependency-override map in app code (e.g. replacing the principal provider) silently disables authentication or swaps the database session outside every guard. Overrides are a TEST-ONLY seam; application code has no legitimate use.
 
-## What to do instead
+## How the reference stack realises this
 
 app.dependency_overrides on the create_app-composed app is the refused surface; composition binds the seams (create_app(principal_provider=...)) before the freeze. (reference stack; another stack ships its own realisation.)
 

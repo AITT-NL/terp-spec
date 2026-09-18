@@ -10,7 +10,7 @@
 
 Terp modules are uniform on purpose: the table lives in models, the DTOs in schemas, the logic in service, the routes in router, and the manifest declares the module — so the shape is predictable to discover and the other rules (response models, input caps, audited writes, the declared policy) have the surface they scan. A directory is treated as a module once it ships a manifest or a mounted router; it must then carry all of the canonical parts, and the rule names each missing one. Requiring the manifest is deliberate: a directory that ships a router with no manifest would otherwise be invisible to this rule and to modules_declare_policy (which only scans manifests), so it could mount a router with no declared policy unnoticed. A directory with neither signal (a partial or a shared-asset / helper directory) is left alone.
 
-## What to do instead
+## How the reference stack realises this
 
 modules/<name>/ carries models.py, schemas.py, service.py, router.py and module.py (the ModuleSpec manifest). (reference stack; another stack ships its own realisation.)
 

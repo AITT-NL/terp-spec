@@ -10,7 +10,7 @@
 
 Per-module roles refine the role ladder; they must not offer a way around it. A module that can create a grant or a per-module assignment holds the authority that confers every other authority, so a per-module administrator there could grant themselves anything, everywhere — while the rung that allowed it looks like a narrow one, scoped to a single module. Such a module declares outright that it is never per-module assignable, and declares why, so the refusal is legible to whoever reads the access surface rather than being an absence they have to notice. The check is deliberately syntactic: holding the service is the trigger, with no attempt to decide whether a particular call site only reads, because a read is the first half of a write and nothing static can tell a module that lists grants from one about to create one.
 
-## What to do instead
+## How the reference stack realises this
 
 ModuleAccess.platform_only(reason=...) on the ModuleSpec of any module holding AccessService or ModuleRoleService; the platform's own users / groups / access / audit capabilities each declare it. (reference stack; another stack ships its own realisation.)
 

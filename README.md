@@ -360,12 +360,21 @@ on every `compliant-*` case — nothing more. The violation cases include the
 evasion shapes the rules are expected to see through (qualified/attribute
 calls, multiline constructs, values routed through a local variable or
 `.format()`/`%` building, aliased and parenthesized imports, computed
-`window["fetch"]`-style member access for the egress family), and the
-compliant cases pin the near-misses that must **not** fire (adjacent-literal
-SQL that merely looks concatenated, credential-shaped names with dynamic
-values, `*_mock`/`socketserver`-style name cousins, member calls like
-`repo.fetch(...)` / `interpreter.eval(...)` on local objects, forbidden syntax
-quoted inside comments and strings).
+`window["fetch"]`-style member access for the egress family), and for the
+families enumerated here the compliant cases pin the near-misses that must
+**not** fire (adjacent-literal SQL that merely looks concatenated,
+credential-shaped names with dynamic values, `*_mock`/`socketserver`-style name
+cousins, member calls like `repo.fetch(...)` / `interpreter.eval(...)` on local
+objects, forbidden syntax quoted inside comments and strings).
+
+That qualification is deliberate, and it is the honest reading of the corpus:
+the contract asserts only that a rule HAS a violation case and a compliant case,
+never what is in either. So a rule whose compliant set is one minimal pair
+contracts detection and says nothing about precision — a checker that matched
+the bare token would certify. Where an entry states an exclusion in its own
+prose, the compliant set is the only thing that can hold a second implementation
+to it, which is why the rules whose exclusions were previously unexercised now
+carry a `compliant-02` that packs them into one file.
 
 Some statically-erased or renamed forms are **deliberately outside** the
 contract — known limits of precise, low-false-positive detection, kept out of

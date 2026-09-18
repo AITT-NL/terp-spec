@@ -10,7 +10,7 @@
 
 A URL path segment that names a resource id (spelled id or ending in _id) identifies a specific row, and the platform issues UUID identifiers. Typing that path parameter as a UUID rejects a malformed identifier at the request boundary, before it reaches the data layer, instead of letting an untyped or wrongly-typed value through. Only path parameters are in scope; query and body parameters are unaffected.
 
-## What to do instead
+## How the reference stack realises this
 
 A handler parameter that also appears in the route decorator's URL template and is named id or ends in _id must be annotated uuid.UUID (a uuid.UUID attribute or a bare UUID name); a missing or non-UUID annotation is flagged at the handler. (reference stack; another stack ships its own realisation.)
 

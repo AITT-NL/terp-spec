@@ -74,7 +74,7 @@
     },
     "reference": {
       "type": "string",
-      "description": "Reference-implementation metadata: the compliant realisation the reference stack offers (component / helper names). Not normative — the title and intent state the stack-neutral invariant; another stack ships its own realisation.",
+      "description": "Reference-implementation metadata: how the reference stack realises this rule — the compliant shape it offers (component / helper names), what its check flags, or what that check deliberately leaves alone. Not normative — the title and intent state the stack-neutral invariant; another stack ships its own realisation, and may recognise a different set of forms. Deliberately one field rather than separate remediation and detection ones: entries carry both kinds of sentence, no consumer distinguishes them (the finding envelope sources fix_hint from the stack's guide topic, not from here), and the generated rule page renders it under a heading true of both.",
       "minLength": 1
     },
     "opt_out": {

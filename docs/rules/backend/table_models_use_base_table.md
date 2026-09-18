@@ -10,7 +10,7 @@
 
 A table model that skips the platform base table bypasses the framework's managed identity, timestamps, and optimistic-concurrency version — a model living outside the control-plane contract, which every chokepoint (the service layer, audit, concurrency) presupposes.
 
-## What to do instead
+## How the reference stack realises this
 
 BaseTable supplies the UUID id, created_at/updated_at and the OCC version; a bare SQLModel table=True model is refused. (reference stack; another stack ships its own realisation.)
 

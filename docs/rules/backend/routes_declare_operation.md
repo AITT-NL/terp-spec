@@ -10,7 +10,7 @@
 
 A route's method and path say how to call it; nothing about them says what it does for the person calling it. Under this app's chosen coverage level, a route that declares no operation leaves that question permanently unanswered for anyone reading the permission surface rather than the source.
 
-## What to do instead
+## How the reference stack realises this
 
 the operation(...) route-level marker, or for a canonical CRUD factory its *_operation= keywords, checked once the app's operations catalog opts into strict coverage. (reference stack; another stack ships its own realisation.)
 

@@ -10,7 +10,7 @@
 
 Background work (a scheduled sync, an export, a webhook) goes through the typed enqueue chokepoint and the context-binding kernel runner, so the engine that actually runs it stays a composition-root choice wired into an opt-in adapter capability, never an import baked into domain code. The rule forbids importing broker / scheduler engines (and a raw thread- or process-execution construct, or a bare import that can reach one) anywhere in an app module; an explicit synchronization primitive is a correctness tool, not background execution, and stays allowed. The constructive counterpart is the jobs seam itself: every job runs through the enqueue chokepoint and the active queue, so an adapter swap never touches a call site. An adapter capability legitimately imports its engine under a budgeted opt-out marker.
 
-## What to do instead
+## How the reference stack realises this
 
 terp.core.enqueue + the active JobQueue are the sanctioned seam; Celery / Azure Service Bus / Redis / APScheduler imports and threading/multiprocessing execution constructs (Thread, Process, pools) are refused, while primitives like RLock stay allowed. (reference stack; another stack ships its own realisation.)
 

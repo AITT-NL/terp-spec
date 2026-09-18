@@ -10,7 +10,7 @@
 
 A raw <a href="/..."> forces a full reload and skips the role-aware route guard; in-app navigation uses the stack's router-integrated link. External https:// anchors stay allowed.
 
-## What to do instead
+## How the reference stack realises this
 
 Link from @terpjs/react-core (router-integrated, role-aware). (reference stack; another stack ships its own realisation.)
 

@@ -10,7 +10,7 @@
 
 The public surface is the platform's contract: it is documented, versioned, and stable. An internal namespace is free to move or change shape at any release, and it exposes seams (raw session plumbing, guard internals) whose direct use bypasses the framework's controls — so a module that reaches into it is coupled to undocumented internals and can silently sidestep the secure defaults.
 
-## What to do instead
+## How the reference stack realises this
 
 Import from the terp.core public surface; terp.core._internal imports are refused. (reference stack; another stack ships its own realisation.)
 

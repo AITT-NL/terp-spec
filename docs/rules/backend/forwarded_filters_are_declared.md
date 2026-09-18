@@ -10,7 +10,7 @@
 
 An endpoint that narrows a read forwards its optional query parameters unchanged, so a filter name that matches no declaration carries no value on any request that omits that parameter. The narrowing appears to be applied while the read stays unnarrowed, and no test that omits the parameter can observe the difference. Each forwarded filter name must correspond to a filter the read layer declares, so a name that no declaration backs is rejected on the source rather than on the one request that happens to supply a value for it.
 
-## What to do instead
+## How the reference stack realises this
 
 A literal filter name forwarded from an endpoint that matches no declared filter is flagged at that name, and the message lists the declared names so a misspelling is visible against its intended target. Names that are not statically knowable — a filter mapping built elsewhere, or a computed name — are not judged, because a guess there would reject correct code. (reference stack; another stack ships its own realisation.)
 
