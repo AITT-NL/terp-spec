@@ -91,6 +91,52 @@ def test_the_downloaded_scanner_is_checksum_verified() -> None:
     assert "GITLEAKS_SHA256" in ci and "sha256sum -c -" in ci, (
         "the gitleaks download must be verified against a pinned SHA256 before it runs"
     )
+def test_the_secret_scan_is_narrowed_only_where_a_match_cannot_be_real() -> None:
+    """`corpus/` is the one tree whose files must carry credential-shaped literals.
+
+    A violation sample for ``backend/no_hardcoded_credentials`` that holds no
+    credential-shaped literal is a broken sample — the checker it exists to contract
+    would have nothing to flag. So the scan finds four there today and would find one
+    more with every sample added, and a per-line baseline would grow an entry each
+    time until appending to it is the reflex rather than the exception.
+
+    Scoping is only defensible while it stays that narrow, so this asserts the shape
+    of the narrowing rather than merely that a config file exists: the default
+    ruleset stays on, every allowed path is under ``corpus/``, and nothing is allowed
+    by *value* or by commit — a value-shaped allowance is not confined to a
+    directory, so it would hide the same literal anywhere in the repository.
+    """
+    config = _ROOT / ".gitleaks.toml"
+    assert config.is_file(), (
+        "corpus samples carry credential-shaped literals by construction; "
+        ".gitleaks.toml is where that is recorded, scoped and reviewable"
+    )
+    text = config.read_text(encoding="utf-8")
+
+    assert re.search(r"useDefault\s*=\s*true", text), (
+        "a .gitleaks.toml without `[extend] useDefault = true` REPLACES the default "
+        "ruleset rather than extending it — the scan would then check almost nothing, "
+        "which on the terminal reads exactly like a clean scan"
+    )
+
+    blocks = re.findall(r"paths\s*=\s*\[(.*?)\]", text, re.S)
+    assert blocks, "the allowlist declares no paths; delete the file instead"
+    quoted = re.findall(r"'''(.*?)'''|\"(.*?)\"", "\n".join(blocks), re.S)
+    patterns = [first or second for first, second in quoted]
+    assert patterns, f"no path patterns parsed out of {blocks!r}"
+    for pattern in patterns:
+        assert pattern.startswith("^corpus/"), (
+            f"{pattern!r} takes the secret scan off a tree outside `corpus/`. Only "
+            "corpus samples are invented by construction; anywhere else a match may be "
+            "a real credential, and the answer to one of those is to rotate it"
+        )
+
+    for widening in ("regexes", "stopwords", "commits"):
+        assert not re.search(rf"^\s*{widening}\s*=", text, re.M), (
+            f"`{widening}` allows a match by value or by commit rather than by path, so "
+            "it would hide the same literal anywhere in the repository — including a "
+            "real credential committed outside `corpus/`"
+        )
 
 
 # --------------------------------------------------------------------------- #

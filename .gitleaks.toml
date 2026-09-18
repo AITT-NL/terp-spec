@@ -1,0 +1,23 @@
+# gitleaks configuration for terp-spec.
+#
+# The default ruleset is kept in full — this file only records where a match
+# cannot be a real credential, and why.
+[extend]
+useDefault = true
+
+# `corpus/` is a catalogue of *invented* samples. A violation sample for
+# `backend/no_hardcoded_credentials` has to carry a credential-shaped literal,
+# because a checker that does not flag it is the failure the sample exists to
+# catch. Scanning that tree for credentials is a guaranteed false positive, and
+# a per-line baseline would grow a new entry for every sample added — which is
+# how a leak detector turns into a formality nobody reads.
+#
+# Everything outside `corpus/` is still scanned, including `catalog/`, `tools/`,
+# `tests/` and every workflow. `test_supply_chain.py` holds this allowlist to
+# `corpus/` alone, so widening it fails the build rather than passing quietly.
+#
+# AGENTS.md already forbids the thing this could hide — a corpus sample copied
+# from real code. Invent the sample; never paste one.
+[[allowlists]]
+description = "corpus samples are invented by construction (AGENTS.md)"
+paths = ['''^corpus/''']
