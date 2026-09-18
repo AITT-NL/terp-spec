@@ -71,10 +71,26 @@ against an earlier version reads this file to see exactly what changed since.
   whatever name it is bound to — so a real key pasted inside any of these shapes is
   still caught, by the other half of the rule.
 
-  `corpus/backend/no_hardcoded_credentials/compliant-04` contracts the exempt shapes and
-  `violation-06` contracts the near misses: each line there wears one of the exempt
-  shapes and holds a credential anyway, so a checker reading only the name gets every
-  one of them wrong in one direction or the other.
+  The fifth and last exemption is the one that has to be stated most carefully, because
+  it was first written wrong. A literal carrying a substitution slot is a wire format —
+  but only under a `_FORMAT` / `_TEMPLATE` / `_PATTERN` name. Deciding it on the VALUE
+  alone exempts any secret that happens to contain a brace pair or a %-slot, and
+  generated passwords and pasted service-account JSON contain one as readily as a
+  template does: `DB_PASSWORD = "aB3{xY9}qZ"` went silently clean, and the
+  literal-format scan does not cover it either, because that only knows AKIA, ghp_,
+  github_pat_ and PEM headers.
+
+  The header grammar likewise admits the registered single words (`Authorization`,
+  `Authentication`, `Cookie`, `Origin`, `Referer`) beside the hyphenated form.
+  Hyphen-only refused `Authorization` — the header an app wiring a client actually
+  names — so most of the markers this change invites apps to retire could not be
+  retired, which is the whole cost it addresses. A password does not happen to equal a
+  registered header name.
+
+  `corpus/backend/no_hardcoded_credentials/compliant-04` contracts the exempt shapes,
+  `violation-06` the near misses — each line wears an exempt shape and holds a
+  credential anyway — and `violation-07` the value-only trap specifically, so no
+  implementation can repeat it.
 
 ## 0.35.0
 
