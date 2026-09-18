@@ -7,6 +7,55 @@ fields and new rules also bump the minor; prose bumps the patch (see
 checked-in `VERSION` — held by `tests/test_changelog.py`. A checker certified
 against an earlier version reads this file to see exactly what changed since.
 
+## 0.36.0
+
+### Changed
+
+- **`backend/no_hardcoded_credentials` decides on the value, not only on the name.**
+  The rule matched a credential-shaped identifier assigned to a non-empty string
+  literal, with no view of what the string held. Three shapes therefore read as leaks
+  and are not:
+
+  - `TOKEN_ENV = "SOME_API_TOKEN"` — the NAME of a credential, not one;
+  - `TOKEN_PATH = "/api/v1/auth/token"` — a URL path;
+  - `AUTH_TOKEN_FORMAT = "Bearer {token}"` — a wire format, whose secret part is
+    precisely the part that is not there.
+
+  The cost is not noise. An app's escape-hatch budget is the only friction metric this
+  standard defines and its only ratchet, and a rule whose markers are usually nothing
+  teaches a reviewer to give the one that is something the same glance. That is how a
+  fail-closed control becomes decoration — the failure this rule exists to prevent, one
+  level up.
+
+  So four shapes are now exempt, and every one of them is a statement about the VALUE.
+  The name list is untouched: narrowing it would lose real findings.
+
+  1. An enum member whose literal is its own name (unchanged; it was already exempt).
+  2. A name the module itself uses as an environment key — `os.environ[TOKEN_ENV]`,
+     `os.getenv(...)`, `os.environ.get(...)`. This is the strongest evidence available
+     without leaving the file, because it is the module saying in code what the string
+     is.
+  3. A `_ENV` / `_PATH` / `_HEADER` name whose value matches the grammar that suffix
+     implies. Each grammar has to **refuse a password** to qualify, which is a sharper
+     bar than "looks plausible": `hunter2` is a valid identifier, a valid header name
+     and a valid environment variable name once upper-cased. So the conventions do the
+     discriminating — an environment variable's name is multi-word, a header's name is
+     hyphenated, a path starts at a root — and each pattern requires that separator.
+     `TOKEN_ENV = "HUNTER2"` is still a finding.
+  4. A `_FIELD` / `_COLUMN` / `_PARAM` / `_REFERENCE` name whose value spells the name
+     itself (`CLIENT_SECRET_FIELD = "client_secret"`). No grammar can serve here,
+     because a field name and a password are the same shape; only the equality is
+     evidence. This is the enum exemption generalised.
+
+  None of them weakens the literal-format scan, which reads every string in the tree
+  whatever name it is bound to — so a real key pasted inside any of these shapes is
+  still caught, by the other half of the rule.
+
+  `corpus/backend/no_hardcoded_credentials/compliant-04` contracts the exempt shapes and
+  `violation-06` contracts the near misses: each line there wears one of the exempt
+  shapes and holds a credential anyway, so a checker reading only the name gets every
+  one of them wrong in one direction or the other.
+
 ## 0.35.0
 
 ### Added
