@@ -139,6 +139,73 @@ def test_the_secret_scan_is_narrowed_only_where_a_match_cannot_be_real() -> None
         )
 
 
+def _steps_by_job(text: str) -> list[tuple[str, list[str]]]:
+    """Job blocks and the step ids each declares, at this file's string level.
+
+    A job starts at two-space indent inside the top-level ``jobs:`` mapping; every
+    ``id:`` below it until the next such line belongs to that job.
+    """
+    found: list[tuple[str, list[str]]] = []
+    inside = False
+    job: str | None = None
+    ids: list[str] = []
+    for line in text.splitlines():
+        if re.match(r"^jobs:\s*$", line):
+            inside = True
+            continue
+        if not inside:
+            continue
+        if re.match(r"^\S", line):  # left the jobs mapping again
+            break
+        start = re.match(r"^  ([A-Za-z_][A-Za-z0-9_-]*):\s*$", line)
+        if start:
+            if job is not None:
+                found.append((job, ids))
+            job, ids = start.group(1), []
+            continue
+        declared = re.match(r"^\s+id:\s*(\S+)", line)
+        if declared and job is not None:
+            ids.append(declared.group(1))
+    if job is not None:
+        found.append((job, ids))
+    return found
+
+
+def test_the_jobs_and_their_steps_are_discovered() -> None:
+    """Discovery that quietly found nothing would make the assertion below pass."""
+    release = _steps_by_job((_WORKFLOWS / "release.yml").read_text(encoding="utf-8"))
+    names = {job for job, _ in release}
+    assert {"verify", "certify-against-reference", "publish-pypi"} <= names, names
+    assert any(ids for _, ids in release), "no step ids parsed out of release.yml"
+
+
+def test_no_job_declares_one_step_id_twice() -> None:
+    """A duplicate step id is a workflow GitHub refuses to START, not one that fails.
+
+    It is the worst-shaped failure a publishing pipeline can carry. There is no
+    job, so there is no log and no failing step to read; the run is named after
+    the FILE PATH rather than the workflow, because the `name:` key was never
+    reached. Nothing in this suite, and nothing zizmor checks, looks at it —
+    zizmor parses the file happily, since the YAML is valid and only the Actions
+    schema is not.
+
+    And `release.yml` runs on `push: tags: ["v*"]` alone, so the first run that
+    would have surfaced it is the release itself: the tag is already pushed, and
+    the fix is a new tag. This assertion exists because that shipped — the second
+    `id: reference` went in beside an existing one while the certification
+    checkout was being pinned, and every run of the publishing workflow failed at
+    startup from that commit until it was noticed.
+    """
+    for path in _workflows():
+        for job, ids in _steps_by_job(path.read_text(encoding="utf-8")):
+            repeated = sorted({one for one in ids if ids.count(one) > 1})
+            assert not repeated, (
+                f"{path.name} job `{job}` declares {repeated} more than once. GitHub "
+                "rejects the workflow before it starts, so this never appears as a "
+                "failing step — give the later step its own id"
+            )
+
+
 # --------------------------------------------------------------------------- #
 # The pinned reference (the certification seam)                                #
 # --------------------------------------------------------------------------- #

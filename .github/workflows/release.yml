@@ -96,7 +96,9 @@ jobs:
           persist-credentials: false
           path: spec
       - name: Read the pinned reference commit
-        id: reference
+        # NOT `id: reference` — the step below already owns that id in this job,
+        # and a duplicate step id is a workflow GitHub refuses to start at all.
+        id: pinned_reference
         run: |
           sha="$(tr -d '[:space:]' < spec/REFERENCE_SHA)"
           case "$sha" in
@@ -118,7 +120,7 @@ jobs:
           # reviewed act, the way the workbench pins the framework it targets;
           # reference-drift.yml watches the default branch on its own schedule,
           # so drift surfaces as its own red build instead of inside every PR.
-          ref: ${{ steps.reference.outputs.sha }}
+          ref: ${{ steps.pinned_reference.outputs.sha }}
           path: framework
       - name: Record the certified reference commit
         id: reference
