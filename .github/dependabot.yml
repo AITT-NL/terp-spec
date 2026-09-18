@@ -1,0 +1,43 @@
+# Keeps this repository's dependency surfaces current, so a CVE the audits
+# report arrives with its fix PR instead of only a red check.
+#
+# The standard itself is plain JSON and a dependency-free accessor, so what is
+# actually exposed here is the RELEASE PIPELINE: two workflows that publish to
+# PyPI and npm from an `environment: release` job holding `id-token: write`.
+# Every `uses:` in them is SHA-pinned, which stops a moved tag from changing
+# what runs — and freezes the pin at whatever was current the day it was
+# written. The two go together: pinning without an updater trades a live
+# supply-chain risk for a stale one.
+#
+# Grouped weekly for the reason the reference implementation groups: very few
+# people review these, and one PR per action buries the one that matters.
+#
+# The pins deliberately sit one or more majors behind the reference
+# implementation (it runs checkout v7, setup-node v7, setup-uv v10). Those
+# majors arrive here as reviewable dependabot PRs rather than inside a
+# hardening change nobody could run CI against.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]
+
+  - package-ecosystem: pip
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      python-deps:
+        patterns: ["*"]
+
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      npm-deps:
+        patterns: ["*"]

@@ -1,0 +1,97 @@
+name: reference-drift
+
+# The other half of pinning the reference (REFERENCE_SHA, ADR 0082).
+#
+# `ci.yml` certifies the standard against a PINNED commit of the reference
+# implementation, so a spec pull request's verdict depends only on what the
+# pull request changed. That pinning has a cost it must pay somewhere: nothing
+# would then notice the reference moving until the next deliberate bump, and
+# the gap between "the standard as released" and "the implementation as built"
+# is exactly what the certification model exists to close.
+#
+# So this job runs the same certification against the reference's DEFAULT
+# BRANCH, on a schedule and on demand. When the two disagree the failure is
+# here, named, on its own build -- rather than inside an unrelated pull request
+# where it reads as that author's problem. The remedy is either a fix or a
+# REFERENCE_SHA bump, and both are deliberate.
+
+on:
+  schedule:
+    # Daily, well away from the hour: the reference releases often, and a
+    # drift this job reports a day late is still a day earlier than a bump.
+    - cron: "17 5 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: reference-drift
+  cancel-in-progress: true
+
+jobs:
+  certify-against-default-branch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+          path: spec
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+          repository: AITT-NL/terp-framework
+          # Unpinned ON PURPOSE, and the only place in this repository that is:
+          # watching the default branch is this job's whole reason to exist.
+          path: framework
+
+      - name: Report the drift this run is measuring
+        run: |
+          pinned="$(tr -d '[:space:]' < spec/REFERENCE_SHA)"
+          head="$(git -C framework rev-parse HEAD)"
+          {
+            echo "Pinned reference: \`${pinned}\`"
+            echo ""
+            echo "Default branch:   \`${head}\`"
+            if [ "$pinned" = "$head" ]; then
+              echo ""
+              echo "No drift: the pin is the default branch."
+            else
+              behind="$(git -C framework rev-list --count "${pinned}..${head}" 2>/dev/null || echo "?")"
+              echo ""
+              echo "The pin is ${behind} commit(s) behind. If this run is green, the"
+              echo "bump is safe; if it is red, the standard and the reference have"
+              echo "diverged and the fix belongs in one of them."
+            fi
+          } | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5.4.2
+        with:
+          enable-cache: true
+      - name: Set up Python
+        run: uv python install 3.13
+      - name: Python certification (catalog parity + backend corpus)
+        working-directory: framework
+        run: |
+          # Same substitution ci.yml runs, and for the same reason: the pinned
+          # release may already name the unpublished version this branch is
+          # heading towards, which would make `uv sync` unresolvable.
+          sed -i '/"terp-spec==/d' pyproject.toml
+          uv sync
+          uv pip install -e ../spec
+          uv run --no-sync pytest tests/architecture/test_spec_catalog.py tests/architecture/test_spec_corpus.py -q
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: "22"
+      - name: Frontend certification (ESLint adapter corpus + surface + findings)
+        working-directory: framework
+        run: |
+          npm pkg delete devDependencies.@terpjs/spec \
+            --workspace @terpjs/eslint-boundaries
+          npm install --no-audit --no-fund
+          rm -rf node_modules/@terpjs/spec
+          mkdir -p node_modules/@terpjs
+          ln -s "$GITHUB_WORKSPACE/spec" node_modules/@terpjs/spec
+          npx vitest run packages/frontend/eslint-boundaries
