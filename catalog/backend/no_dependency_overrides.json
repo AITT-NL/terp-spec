@@ -13,7 +13,7 @@
     {
       "kind": "runtime",
       "tool": "terp.core",
-      "ref": "_freeze_dependency_overrides"
+      "ref": "freeze_dependency_overrides"
     }
   ],
   "reference": "app.dependency_overrides on the create_app-composed app is the refused surface; composition binds the seams (create_app(principal_provider=...)) before the freeze.",

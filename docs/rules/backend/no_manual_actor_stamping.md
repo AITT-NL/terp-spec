@@ -45,4 +45,4 @@ adding the corpus case that contracts it.
 
 - Checked while the app runs? Yes — the framework also enforces this while the app runs (fail closed).
 - `build-time`: `terp.arch` — `check_no_manual_actor_stamping`
-- `runtime`: `terp.core` — `_save`
+- `runtime`: `terp.core` — `BaseService`

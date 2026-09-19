@@ -13,7 +13,7 @@
     {
       "kind": "runtime",
       "tool": "terp.core",
-      "ref": "_validate_router_response_models"
+      "ref": "validate_router_response_models"
     }
   ],
   "reference": "response_model set to a table=True model, directly or wrapped in Page[...] / list[...] (the Page[User] footgun), is refused; return a *Read schema on terp.core.BaseSchema.",

@@ -11,6 +11,11 @@ name: ci
 # runs the framework's parity + corpus certification against it, so a catalog
 # or corpus change is proven against the reference implementation BEFORE it
 # can be released.
+#
+# The reference it certifies against is PINNED, in REFERENCE_SHA. Bumping it is
+# a reviewed act; `reference-drift.yml` watches the reference's default branch
+# on its own schedule, so drift is its own red build rather than a red build on
+# every unrelated spec pull request.
 
 on:
   push:
@@ -29,8 +34,10 @@ jobs:
   standard:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
         with:
           python-version: "3.12"
       - name: Install
@@ -38,27 +45,84 @@ jobs:
       - name: Test (the spec is self-consistent)
         run: python -m pytest
 
+  # The standard declares the secure-by-default bar, and this repository holds
+  # OIDC publishing rights to two registries that feed the reference
+  # implementation's gate -- and therefore every consumer's. Three checks, the
+  # same set and the same posture the reference implementation runs on itself.
+  supply-chain:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+          # gitleaks scans every commit, not just the tip.
+          fetch-depth: 0
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5.4.2
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install 3.13
+
+      - name: zizmor — GitHub Actions workflow hygiene
+        env:
+          # Online mode adds the audits that need the API (known-vulnerable
+          # actions). Both publish jobs here hold `id-token: write` for PyPI and
+          # npm, so an action in this pipeline is a third party running code
+          # with that reach.
+          GH_TOKEN: ${{ github.token }}
+        run: uv run --group lint zizmor .github/workflows
+
+      - name: gitleaks — secrets anywhere in the git history
+        env:
+          GITLEAKS_VERSION: "8.30.1"
+          GITLEAKS_SHA256: "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb"
+        run: |
+          curl -sSfL -o gitleaks.tgz "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          echo "${GITLEAKS_SHA256}  gitleaks.tgz" | sha256sum -c -
+          tar -xzf gitleaks.tgz gitleaks
+          ./gitleaks detect --source . --redact --no-banner
+
   certify-against-reference:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
+          persist-credentials: false
           path: spec
-      # The reference implementation. Tracks its default branch deliberately:
-      # a spec change must certify against what the framework IS, and a
-      # framework change that breaks parity should surface here, not at
-      # release time. (A private framework checkout would need a repo-scoped
-      # token on this step.)
-      - uses: actions/checkout@v4
+      - name: Read the pinned reference commit
+        id: reference
+        run: |
+          sha="$(tr -d '[:space:]' < spec/REFERENCE_SHA)"
+          case "$sha" in
+            [0-9a-f]*) [ "${#sha}" -eq 40 ] || { echo "REFERENCE_SHA is not a full commit sha"; exit 1; } ;;
+            *) echo "REFERENCE_SHA is not a full commit sha"; exit 1 ;;
+          esac
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
+          persist-credentials: false
           repository: AITT-NL/terp-framework
+          # Pinned, deliberately. An unpinned cross-repo checkout takes whatever
+          # the reference's default branch happened to be at that minute, which
+          # compounds twice: a spec pull request's green-ness depends on a
+          # repository nobody in it touched, so the reference going red for any
+          # reason blocks all spec work and reads as a spec problem -- and the
+          # commit a release certifies against is unrecorded, so the
+          # certification claim cannot be reproduced. Bumping REFERENCE_SHA is a
+          # reviewed act, the way the workbench pins the framework it targets;
+          # reference-drift.yml watches the default branch on its own schedule,
+          # so drift surfaces as its own red build instead of inside every PR.
+          ref: ${{ steps.reference.outputs.sha }}
           path: framework
       - name: Record the certified reference commit
         run: |
           sha="$(git -C framework rev-parse HEAD)"
           echo "Certifying against terp-framework@${sha}" | tee -a "$GITHUB_STEP_SUMMARY"
       - name: Install uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5.4.2
         with:
           enable-cache: true
       - name: Set up Python
@@ -76,7 +140,7 @@ jobs:
           # same seam the framework's pin bump will move, exercised early.
           uv pip install -e ../spec
           uv run --no-sync pytest tests/architecture/test_spec_catalog.py tests/architecture/test_spec_corpus.py -q
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: "22"
       - name: Frontend certification (ESLint adapter corpus + surface + findings)

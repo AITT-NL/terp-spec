@@ -13,14 +13,14 @@
     {
       "kind": "runtime",
       "tool": "terp.core",
-      "ref": "_validate_routes_declare_response_model"
+      "ref": "validate_routes_declare_response_model"
     }
   ],
   "reference": "response_model= on @router.<verb>(...) decorators and router.add_api_route(...); a no-body status_code (204/205/304) is the accepted alternative.",
   "opt_out": "# arch-allow-routes-declare-response-model: <reason>",
   "runtime": {
     "applicability": "required",
-    "rationale": "At boot, the route scan on the composition seam (the same seam as _validate_router_response_models) walks every composed route \u2014 decorator, imperative add_api_route, and nested included routers alike \u2014 and raises a BootError naming this rule and the route when a content route declares no response_model. No-body 204/205/304 statuses and Response-subclass-annotated non-content routes stay exempt, so the control refuses exactly the routes that would serialize a bare object out of the boundary."
+    "rationale": "At boot, the route scan on the composition seam (the same seam as _validate_router_response_models) walks every composed route — decorator, imperative add_api_route, and nested included routers alike — and raises a BootError naming this rule and the route when a content route declares no response_model. No-body 204/205/304 statuses and Response-subclass-annotated non-content routes stay exempt, so the control refuses exactly the routes that would serialize a bare object out of the boundary."
   },
   "guide_topic": "module",
   "corpus": true

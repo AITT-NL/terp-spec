@@ -722,3 +722,45 @@ def test_expected_findings_manifests_are_coherent() -> None:
                 f"{manifest}: an expected finding pins the violating line — without it "
                 "the manifest adds nothing over the loose contract"
             )
+
+
+# --------------------------------------------------------------------------- #
+# A normative ref names something a second implementation may rely on           #
+# --------------------------------------------------------------------------- #
+def test_no_runtime_ref_names_a_private_symbol() -> None:
+    """A `runtime` enforcement ref is a normative name, so it may not be private.
+
+    Two things were wrong at once while sixteen of these carried a leading underscore.
+
+    Outwards: a private name is unusable by any second implementation — it is the
+    reference implementation saying "this may be renamed without notice" about the very
+    symbol this catalog cites as the control. Stack-neutrality is the property this
+    repository exists to make checkable, and a name nobody else may depend on cannot
+    carry it.
+
+    Inwards: it made a refactor the reference implementation's own design explicitly
+    permits — renaming a private validator — into a breaking change to a released
+    standard, repairable only by cutting a spec release. The two repositories were
+    holding each other still, and neither had said so.
+
+    A class name is fine, and is sometimes the honest answer: where the control is a
+    method on a public class, the class is the nameable, stable seam and the method is
+    not.
+    """
+    offenders = []
+    for path in sorted(_CATALOG.rglob("*.json")):
+        if path.name in {"PENDING.json", "RESIDUALS.json"}:
+            continue
+        entry = json.loads(path.read_text(encoding="utf-8"))
+        for enforcement in entry.get("enforcement", []):
+            if enforcement.get("kind") != "runtime":
+                continue
+            ref = enforcement.get("ref", "")
+            if ref.startswith("_") or "._" in ref:
+                offenders.append(f"{entry['id']} -> {ref}")
+    assert offenders == [], (
+        "these rules cite a private symbol as their runtime enforcement ref: "
+        f"{offenders} — a normative name must be one a second implementation may rely "
+        "on, and one the reference implementation may not rename without notice. "
+        "Promote the symbol, or name the public class that carries it."
+    )

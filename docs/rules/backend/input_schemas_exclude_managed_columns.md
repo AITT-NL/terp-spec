@@ -30,4 +30,4 @@ exactly match the checked-in budget (which can only shrink).
 
 - Checked while the app runs? Yes — the framework also enforces this while the app runs (fail closed).
 - `build-time`: `terp.arch` — `check_input_schemas_exclude_managed_columns`
-- `runtime`: `terp.core` — `_without_managed_columns`
+- `runtime`: `terp.core` — `BaseService`

@@ -13,7 +13,7 @@
     {
       "kind": "runtime",
       "tool": "terp.core",
-      "ref": "_validate_public_modules_read_only"
+      "ref": "validate_public_modules_read_only"
     }
   ],
   "runtime": {

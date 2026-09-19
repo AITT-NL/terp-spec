@@ -69,6 +69,87 @@ against an earlier version reads this file to see exactly what changed since.
   A second build-time enforcement entry records the executed rehearsal the reference stack
   now ships beside the source check.
 
+- **A `runtime` enforcement ref may no longer name a private symbol**, and the sixteen
+  that did are renamed. `_freeze_app_route_registration`,
+  `_validate_declared_operations`, `_validate_policy_write_tiers` and ten more now cite
+  the public spelling the reference implementation has adopted; the two that are methods
+  on a public class (`_save`, `_without_managed_columns`) cite `BaseService`, which is
+  the nameable, stable seam — the method is not, and renaming it would be a real API
+  decision rather than a spelling fix.
+
+  Two things were wrong at once while those names stood. Outwards, a private name is
+  unusable by any second implementation: it is the reference implementation saying "this
+  may be renamed without notice" about the very symbol this catalog cites as the control,
+  and stack-neutrality is the property this repository exists to make checkable. Inwards,
+  it made a refactor the reference implementation's own design explicitly permits —
+  renaming a private validator — a breaking change to a released standard, repairable
+  only by cutting a spec release. The two repositories were holding each other still and
+  neither had said so.
+
+  `test_no_runtime_ref_names_a_private_symbol` makes the class of drift impossible rather
+  than merely fixed. A class name stays legal, because it is sometimes the honest answer.
+
+- **`backend/no_hardcoded_credentials` decides on the value, not only on the name.**
+  The rule matched a credential-shaped identifier assigned to a non-empty string
+  literal, with no view of what the string held. Three shapes therefore read as leaks
+  and are not:
+
+  - `TOKEN_ENV = "SOME_API_TOKEN"` — the NAME of a credential, not one;
+  - `TOKEN_PATH = "/api/v1/auth/token"` — a URL path;
+  - `AUTH_TOKEN_FORMAT = "Bearer {token}"` — a wire format, whose secret part is
+    precisely the part that is not there.
+
+  The cost is not noise. An app's escape-hatch budget is the only friction metric this
+  standard defines and its only ratchet, and a rule whose markers are usually nothing
+  teaches a reviewer to give the one that is something the same glance. That is how a
+  fail-closed control becomes decoration — the failure this rule exists to prevent, one
+  level up.
+
+  So four shapes are now exempt, and every one of them is a statement about the VALUE.
+  The name list is untouched: narrowing it would lose real findings.
+
+  1. An enum member whose literal is its own name (unchanged; it was already exempt).
+  2. A name the module itself uses as an environment key — `os.environ[TOKEN_ENV]`,
+     `os.getenv(...)`, `os.environ.get(...)`. This is the strongest evidence available
+     without leaving the file, because it is the module saying in code what the string
+     is.
+  3. A `_ENV` / `_PATH` / `_HEADER` name whose value matches the grammar that suffix
+     implies. Each grammar has to **refuse a password** to qualify, which is a sharper
+     bar than "looks plausible": `hunter2` is a valid identifier, a valid header name
+     and a valid environment variable name once upper-cased. So the conventions do the
+     discriminating — an environment variable's name is multi-word, a header's name is
+     hyphenated, a path starts at a root — and each pattern requires that separator.
+     `TOKEN_ENV = "HUNTER2"` is still a finding.
+  4. A `_FIELD` / `_COLUMN` / `_PARAM` / `_REFERENCE` name whose value spells the name
+     itself (`CLIENT_SECRET_FIELD = "client_secret"`). No grammar can serve here,
+     because a field name and a password are the same shape; only the equality is
+     evidence. This is the enum exemption generalised.
+
+  None of them weakens the literal-format scan, which reads every string in the tree
+  whatever name it is bound to — so a real key pasted inside any of these shapes is
+  still caught, by the other half of the rule.
+
+  The fifth and last exemption is the one that has to be stated most carefully, because
+  it was first written wrong. A literal carrying a substitution slot is a wire format —
+  but only under a `_FORMAT` / `_TEMPLATE` / `_PATTERN` name. Deciding it on the VALUE
+  alone exempts any secret that happens to contain a brace pair or a %-slot, and
+  generated passwords and pasted service-account JSON contain one as readily as a
+  template does: `DB_PASSWORD = "aB3{xY9}qZ"` went silently clean, and the
+  literal-format scan does not cover it either, because that only knows AKIA, ghp_,
+  github_pat_ and PEM headers.
+
+  The header grammar likewise admits the registered single words (`Authorization`,
+  `Authentication`, `Cookie`, `Origin`, `Referer`) beside the hyphenated form.
+  Hyphen-only refused `Authorization` — the header an app wiring a client actually
+  names — so most of the markers this change invites apps to retire could not be
+  retired, which is the whole cost it addresses. A password does not happen to equal a
+  registered header name.
+
+  `corpus/backend/no_hardcoded_credentials/compliant-04` contracts the exempt shapes,
+  `violation-06` the near misses — each line wears an exempt shape and holds a
+  credential anyway — and `violation-07` the value-only trap specifically, so no
+  implementation can repeat it.
+
 ### Added
 
 - **`backend/no_dynamic_sql` records the DB-API cursor shape as a residual.** The check

@@ -30,4 +30,4 @@ exactly match the checked-in budget (which can only shrink).
 
 - Checked while the app runs? Yes — the framework also enforces this while the app runs (fail closed).
 - `build-time`: `terp.arch` — `check_schemas_avoid_positional_tuples`
-- `runtime`: `terp.core` — `_reject_positional_tuple_schemas`
+- `runtime`: `terp.core` — `reject_positional_tuple_schemas`
