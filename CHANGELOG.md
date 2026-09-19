@@ -9,6 +9,51 @@ against an earlier version reads this file to see exactly what changed since.
 
 ## 0.36.0
 
+### Added
+
+- **`backend/no_dynamic_sql` records the DB-API cursor shape as a residual.** The check
+  matches the reference stack's `text(...)` construct, and a package that does not model
+  the schema it talks to never writes one — it drives a raw cursor, where
+  `cursor.execute(f"...")` is invisible to this rule however the statement was built. The
+  shape is not ungoverned: the reference stack delegates it to a stock analyzer's
+  SQL-string-construction rule, blocking in the platform repository and in every generated
+  project. But that lane sits outside the catalog, so the limit belongs in the place this
+  standard records limits rather than being implied by a rule title.
+
+- **`backend/permission_gated_reads_disclose`** — a read gated by a **named permission**
+  must record that the data was disclosed.
+
+  An audit trail emitted from the write chokepoint is unbypassable and, for exactly that
+  reason, mutation-only: it answers *who changed what* and never *who looked*. For the
+  data an application guards most closely — a credential reference, a salary, a case
+  file, a customer list — reading is the whole of the harm, and a principal holding the
+  grant can enumerate every row and leave nothing behind.
+
+  Not every read warrants a record: one per read of everything buries the entry somebody
+  will eventually need. The discriminator is already written in the source by the author.
+  A route carrying a named-permission requirement is one where a role tier was judged
+  unable to express the decision — *any editor may read here* was not good enough — which
+  is the application saying this data is sensitive. That marker is the one the rule reads,
+  so it needs no new field on a permission or a policy.
+
+  Scoped to **safe methods**: a mutating route behind the same grant is already recorded
+  by the write chokepoint, and a second record would blur what a disclosure means. The
+  record must be written **before** the data is returned, so it is the precondition of the
+  disclosure rather than a report on it, and a failing trail fails the request instead of
+  quietly losing the entry.
+
+  `runtime.applicability` is **deferred**, with its rationale and tracking recorded. A
+  running system can observe the invariant and refuse fail-closed at response time, but it
+  cannot write the record the rule asks for: the authorization layer knows the principal,
+  the module and the requirement, and not *what* was disclosed. A control that emitted
+  automatically would satisfy the rule while recording "somebody read this endpoint" in
+  place of "somebody read this row".
+
+  Ships with corpus: two violations (the requirement on the route registration, and the
+  same requirement declared in the endpoint signature — the form a checker reading only
+  registration keywords reports as gated by its tier alone) and two compliant cases (a
+  read that discloses, and a write behind the same grant that correctly reports nothing).
+
 ### Changed
 
 - **Five rules' compliant sets now contract PRECISION, not only detection.** The corpus
@@ -149,17 +194,6 @@ against an earlier version reads this file to see exactly what changed since.
   `violation-06` the near misses — each line wears an exempt shape and holds a
   credential anyway — and `violation-07` the value-only trap specifically, so no
   implementation can repeat it.
-
-### Added
-
-- **`backend/no_dynamic_sql` records the DB-API cursor shape as a residual.** The check
-  matches the reference stack's `text(...)` construct, and a package that does not model
-  the schema it talks to never writes one — it drives a raw cursor, where
-  `cursor.execute(f"...")` is invisible to this rule however the statement was built. The
-  shape is not ungoverned: the reference stack delegates it to a stock analyzer's
-  SQL-string-construction rule, blocking in the platform repository and in every generated
-  project. But that lane sits outside the catalog, so the limit belongs in the place this
-  standard records limits rather than being implied by a rule title.
 
 ## 0.35.0
 
