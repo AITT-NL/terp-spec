@@ -10,7 +10,7 @@
 
 Composition mounts every module router behind the deny-by-default policy guard. Surface registered on the composed app itself — a mount, an included router, a directly added route, a verb decorator on the composed app, or a lifecycle hook — is served or executed WITHOUT that guard and is invisible to the module permission model. Modules declare one flat router in their manifest; composition mounts it.
 
-## What to do instead
+## How the reference stack realises this
 
 app.mount / app.include_router / app.add_route / verb decorators / app.on_event / app.add_event_handler on the create_app-produced app are refused; modules declare one router on their ModuleSpec. (reference stack; another stack ships its own realisation.)
 

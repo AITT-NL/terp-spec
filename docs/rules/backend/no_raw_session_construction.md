@@ -10,7 +10,7 @@
 
 The injected request session is where the framework's runtime controls live — the write guard, row scoping, and the audit hooks all ride on the session the framework hands out. A hand-constructed session or engine sits outside every one of those chokepoints by definition: its reads are unscoped, its writes are unaudited and unguarded, and it silently forks the app onto a second connection lifecycle.
 
-## What to do instead
+## How the reference stack realises this
 
 SessionDep injects the guarded request session; Session(...) / create_engine / sessionmaker construction in app code is refused. (reference stack; another stack ships its own realisation.)
 

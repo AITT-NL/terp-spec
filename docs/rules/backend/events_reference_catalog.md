@@ -10,7 +10,7 @@
 
 The event bus carries the same no-drift guarantee as the permission model: every event a module emits or subscribes to is a typed definition from the control-plane catalog. The rule forbids a bare string (or an inline, ad hoc definition) wherever an event is named — the event argument of an emit call, the argument of a subscribe decorator, the emits / subscribes lists of the module manifest, and the lifecycle event map — so an event name can never drift in outside the catalog.
 
-## What to do instead
+## How the reference stack realises this
 
 EventDefinition constants from the control-plane catalog, cited in emit(...) / subscribe(...) / ModuleSpec(emits=..., subscribes=...) / LifecycleEventMap(...); the runtime half is terp.core.emit. (reference stack; another stack ships its own realisation.)
 

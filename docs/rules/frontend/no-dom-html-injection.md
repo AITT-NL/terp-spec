@@ -10,7 +10,7 @@
 
 dangerouslySetInnerHTML, innerHTML/outerHTML assignment, insertAdjacentHTML and document.write inject markup that bypasses the framework's output escaping — the canonical XSS sink. Rich text renders through the stack's sanctioned rich-text component instead.
 
-## What to do instead
+## How the reference stack realises this
 
 The Markdown component from @terpjs/react-core for rich text. (reference stack; another stack ships its own realisation.)
 

@@ -10,7 +10,7 @@
 
 A module may opt into per-module roles, which lets an administrator give one person a higher tier inside that module and nowhere else. The screen that offers the choice renders one strip per such module, headed by the declared label — and that label is the only text about the module a reader ever sees there. Headed by an identifier instead, the strip asks someone to hand out authority over something the interface has not named. The declaration is required at the point of opting in rather than defaulted from the module's own name, because a name chosen to be imported is rarely a name chosen to be read.
 
-## What to do instead
+## How the reference stack realises this
 
 modules/<name>/module.py declares ModuleSpec(access=ModuleAccess(label=..., assignable=True)); ModuleAccess enforces the pairing as a constructor invariant. (reference stack; another stack ships its own realisation.)
 

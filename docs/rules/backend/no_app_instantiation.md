@@ -10,7 +10,7 @@
 
 The framework's composer owns app composition (deny-by-default guards, the control plane, the error envelope). A hand-built application object is an application assembled outside the framework — it acquires none of those controls.
 
-## What to do instead
+## How the reference stack realises this
 
 terp.core.create_app composes the app; a bare FastAPI() constructor call is refused. (reference stack; another stack ships its own realisation.)
 

@@ -10,7 +10,7 @@
 
 Every stable user-interface message identifier must have a non-empty translation in every declared target locale. A missing or malformed catalog, empty entries, and undocumented source-language copies fail the gate instead of silently rendering source-language text after a user switches locale.
 
-## What to do instead
+## How the reference stack realises this
 
 Declare sourceLocale and locale message maps in frontend/i18n.json; the boundary rule and defineAppLocales validate that declaration, while LocaleProvider refuses missing target entries at render time. (reference stack; another stack ships its own realisation.)
 

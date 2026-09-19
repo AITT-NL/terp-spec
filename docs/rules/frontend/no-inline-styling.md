@@ -10,7 +10,7 @@
 
 A style or className attribute is a side channel into hand-authored CSS that drifts per screen; styling flows from the app's design tokens and sanctioned layout primitives only. The refused attributes are declared in restricted-surface.json (restrictedAttributes).
 
-## What to do instead
+## How the reference stack realises this
 
 Layout via Stack, DetailList and the page archetypes from @terpjs/react-core; theming via the app's token source. (reference stack; another stack ships its own realisation.)
 

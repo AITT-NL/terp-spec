@@ -10,7 +10,7 @@
 
 Cross-cutting HTTP security (headers, CORS, rate-limit, body-size, request-id) is declared once as central security configuration and installed at composition. A module that registers middleware itself — by call, decorator, or subclassing — is assembling a security posture outside that single control plane.
 
-## What to do instead
+## How the reference stack realises this
 
 SecurityConfig declared once and installed by create_app; add_middleware(...), the @app.middleware("http") decorator, and BaseHTTPMiddleware subclasses are refused in app modules. On the composed app both registration spellings raise BootError at runtime; create_app's middleware parameter is the one sanctioned composition seam. (reference stack; another stack ships its own realisation.)
 

@@ -10,7 +10,7 @@
 
 A soft-deleted row stays in the table, so it keeps occupying every full-table unique index: the "deleted" value (an email, a slug, a code) can never be used again, surfacing as an inexplicable conflict long after the delete. Scope uniqueness to the live rows with a partial unique index that excludes soft-deleted rows — which this rule accepts — or deactivate instead of deleting.
 
-## What to do instead
+## How the reference stack realises this
 
 A partial unique index in __table_args__ (unique=True with postgresql_where / sqlite_where on deleted_at IS NULL) is the accepted shape; the identity user table keeps email unique by deactivating instead of deleting. (reference stack; another stack ships its own realisation.)
 

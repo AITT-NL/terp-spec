@@ -10,7 +10,7 @@
 
 Static user-facing text anywhere in app-authored frontend source must use the translation seam. Bare visible copy, accessibility labels, component text properties, labels stored in data, and standard toast feedback are otherwise absent from every translation catalog and silently remain in the source language. The subject is text that is rendered. An operand of a comparison is not: the expression evaluates to a boolean, so the literal in `status === "paused"` is a state token being tested and reaches no screen in any locale. The same holds for the left operand of `&&`, which is the test rather than what renders. Operators that can render either side - `||`, `??` and string concatenation - are in scope on both.
 
-## What to do instead
+## How the reference stack realises this
 
 Use UiText descriptors and Trans from @terpjs/react-core throughout app-authored frontend source. A status guard needs no hoisting: `{status === "paused" && <Trans .../>}` is compliant as written, and so is a comparison against a literal anywhere else. (reference stack; another stack ships its own realisation.)
 

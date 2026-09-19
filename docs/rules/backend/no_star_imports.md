@@ -10,7 +10,7 @@
 
 A wildcard import pulls an unknown, changeable set of names into a namespace, so the module's real dependency surface is invisible and one upstream rename can silently shadow a local name. Naming each import keeps the dependency graph legible to readers and to the boundary checks that police it.
 
-## What to do instead
+## How the reference stack realises this
 
 A 'from <module> import *' statement is refused; list the specific names the module uses instead. (reference stack; another stack ships its own realisation.)
 

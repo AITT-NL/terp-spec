@@ -10,7 +10,7 @@
 
 The framework standardises on one session type everywhere — the injected request session, the service layer, the write guard, and the migrations all speak the same type, re-exported from one canonical source. Importing the session type from the underlying ORM library instead quietly forks the app onto a second session type, so the rule names the one canonical import. (Constructing a session is separately banned by no_raw_session_construction — this only fixes the spelling.)
 
-## What to do instead
+## How the reference stack realises this
 
 from sqlmodel import Session is canonical (SQLModel re-exports SQLAlchemy's); imports from sqlalchemy / sqlalchemy.orm are refused. (reference stack; another stack ships its own realisation.)
 

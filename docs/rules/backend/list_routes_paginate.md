@@ -10,7 +10,7 @@
 
 Pagination is a mandatory cross-cutting control: a route whose declared response type is a bare collection serializes an unbounded result — a resource-exhaustion and over-exposure footgun on a large table, and a page-envelope guarantee that was previously only a convention. Wrap the read DTO in the framework's capped page envelope so every list is bounded and uniformly shaped. A single-object response is unaffected; both decorator routes and imperative route registration are checked.
 
-## What to do instead
+## How the reference stack realises this
 
 response_model=Page[ReadDTO] returned via Page.of(...) with PaginationDep (ADR 0006, Tier A); bare list[...] / Sequence[...] response models are refused. (reference stack; another stack ships its own realisation.)
 

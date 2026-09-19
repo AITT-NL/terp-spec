@@ -10,7 +10,7 @@
 
 A TODO, FIXME, HACK, or XXX comment marks unfinished work that ships anyway and is almost never revisited, so the gap it names silently becomes permanent. Finish the behaviour or delete the dead branch — do not leave a note promising a fix that will not come.
 
-## What to do instead
+## How the reference stack realises this
 
 The markers TODO, FIXME, HACK, and XXX are refused when they appear in a real comment token; matching ignores identical text inside strings or docstrings. (reference stack; another stack ships its own realisation.)
 

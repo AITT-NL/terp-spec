@@ -10,7 +10,7 @@
 
 This makes tenant isolation structural on the write side: reads of a tenant-scoped model are already filtered centrally by the registered tenant scope predicate, but the tenant-scoped service base is what stamps the tenant on create — so a plain service (which would insert an unstamped, never-visible row) is rejected at build time.
 
-## What to do instead
+## How the reference stack realises this
 
 A TenantScopedMixin model's service extends TenantScopedService (stamps tenant_id on create, ADR 0017); a plain BaseService is refused. (reference stack; another stack ships its own realisation.)
 

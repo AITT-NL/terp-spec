@@ -10,7 +10,7 @@
 
 Row order without an explicit ordering clause is undefined, so paging a query by a numeric offset over an unordered result can silently skip or repeat rows between pages. A query that skips a number of rows must also declare a deterministic ordering so the page sequence is stable and every row is seen exactly once.
 
-## What to do instead
+## How the reference stack realises this
 
 A function that calls .offset(...) but no .order_by(...) is flagged at the offset call; add an explicit ordering, or page through the framework's ordered pagination helper. (reference stack; another stack ships its own realisation.)
 

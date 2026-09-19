@@ -10,7 +10,7 @@
 
 The budget is a checked-in per-app object mapping each opt-out marker to its count. Actual usage must equal it exactly: a marker that rose needs a justified budget bump in the same change; one that dropped must be lowered to lock in the win; an unbudgeted marker must be added with a justified count. This keeps every secure-by-default opt-out visible, greppable, and governed.
 
-## What to do instead
+## How the reference stack realises this
 
 # arch-allow-<rule>: <reason> markers reconciled against the app's checked-in escape-hatch budget JSON (design §8). The rule carries no opt_out: governance cannot be waived by the mechanism it governs. (reference stack; another stack ships its own realisation.)
 

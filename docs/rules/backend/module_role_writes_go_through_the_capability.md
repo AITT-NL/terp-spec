@@ -10,7 +10,7 @@
 
 An assignment is a row saying a subject holds a tier inside a module, and the service that writes it is where two things happen: the audit entry is emitted, and the assignment is refused when the declarations cannot support it — a module that administers the platform's own authority, a module that never opted in, a tier the application's ladder does not declare. A row written around that service is not a more permissive assignment; it is one that can never take effect, and whoever wrote it will believe the person is authorized until the moment they are not. A plain read of the table is refused on the same footing as hand-rolled row ownership: a read is the first half of a per-module gate written by hand, and no static check can tell it from a read that only displays a tier. What a subject holds already has an answer that carries its provenance with it.
 
-## What to do instead
+## How the reference stack realises this
 
 ModuleRoleService.assign / revoke / highest_rank, the access capability's own routes, or the operator command; never the ModuleRole model directly. (reference stack; another stack ships its own realisation.)
 

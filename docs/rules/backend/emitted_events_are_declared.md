@@ -10,7 +10,7 @@
 
 The manifest's emits list is the module's published contract: it is what the control plane validates, what an operator reads to know what a module produces, and what another team subscribes against. An emit the manifest never declared makes that contract quietly untrue — the event really does go out, so nothing fails, while the document everyone reasons from says it cannot happen. The rule compares every event constant an emit call or lifecycle event map names inside a module package against that module's declared emits.
 
-## What to do instead
+## How the reference stack realises this
 
 ModuleSpec(emits=[...]) in modules/<name>/module.py, compared against emit(event=...) and LifecycleEventMap(created=/updated=/deleted=...) references in the same module package. (reference stack; another stack ships its own realisation.)
 

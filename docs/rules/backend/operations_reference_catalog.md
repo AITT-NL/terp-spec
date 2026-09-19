@@ -10,7 +10,7 @@
 
 A route can say what it does for the person calling it, but only by citing a typed definition from one shared catalog -- never a string literal or a value built inline at the call site. Without this, a route's stated purpose could drift from what the catalog documents, or two routes could describe the same action in two different words with no way to tell they were ever meant to agree.
 
-## What to do instead
+## How the reference stack realises this
 
 OperationDefinition constants from the control-plane operations catalog, cited via the operation(...) route-level marker and the *_operation= keywords a canonical CRUD factory accepts. (reference stack; another stack ships its own realisation.)
 

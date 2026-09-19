@@ -10,7 +10,7 @@
 
 Audit is auto-emitted from the single audited write chokepoint of the model's service, inside the write's transaction. A module that calls the session's persistence methods itself — or smuggles a write through a session-executed data-modification statement — bypasses that chokepoint and would persist a mutation with no audit trail. The receiver is recognised by the conventional session names and by any parameter annotated with the session type (so renaming the variable does not evade the rule). Routing every write through the service keeps the trail structural — a method call on the model's service is fine; a raw session write is not.
 
-## What to do instead
+## How the reference stack realises this
 
 BaseService.create/update/delete (_save/_remove) is the audited chokepoint; session.add/delete/merge/commit/flush, bulk_* helpers, and DML via session.execute/exec are refused, on conventional names and Session/SessionDep-annotated parameters alike. (reference stack; another stack ships its own realisation.)
 

@@ -54,8 +54,18 @@ def render(entry: dict, residuals: list[str] | None = None) -> str:
         "",
     ]
     if entry.get("reference"):
+        # NOT "What to do instead". The `reference` field is reference-implementation
+        # metadata, and across the catalog it carries two different kinds of sentence:
+        # roughly half say what the compliant code looks like (remediation) and roughly
+        # half say what the check flags and what it deliberately ignores (detection).
+        # Published under a remediation heading, every entry of the second kind reads as
+        # advice — `no_todo_fixme`'s page told the reader to "instead" do what is in fact
+        # a description of the matcher. One heading that is true of both is a better
+        # answer than a field split nothing downstream distinguishes: the finding
+        # envelope's `fix_hint` is sourced from the reference stack's guide topic, not
+        # from here.
         lines += [
-            "## What to do instead",
+            "## How the reference stack realises this",
             "",
             f"{entry['reference']} (reference stack; another stack ships its own realisation.)",
             "",

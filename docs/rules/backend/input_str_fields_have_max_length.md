@@ -10,7 +10,7 @@
 
 A field is client-supplied when it lives on a table model, on a *Create / *Update schema, or on any class used as a request body (a route handler's body parameter, or a generated CRUD router's create/update schema) — so an input DTO named off-convention (LoginRequest, UserProvision) is capped too, not only the *Create / *Update ones. Plain strings, optional strings, and sequence containers of strings all count; an uncapped one is an unbounded-input (DoS / abuse) hole.
 
-## What to do instead
+## How the reference stack realises this
 
 str / str | None / list[str] fields declare max_length; build_crud_router create/update schemas are scanned too. (reference stack; another stack ships its own realisation.)
 

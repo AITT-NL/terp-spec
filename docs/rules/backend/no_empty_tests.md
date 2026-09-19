@@ -10,7 +10,7 @@
 
 A test whose body is empty, is only a docstring or a bare pass, or asserts a constant that can never fail, passes unconditionally — it exercises nothing yet reports green, giving false confidence that the behaviour it names is covered. A test must drive real behaviour and assert a real result.
 
-## What to do instead
+## How the reference stack realises this
 
 A test_* function with an empty body, a lone pass, or a single assertion of a constant truthy value is refused. The scan covers every test_*.py file — the test tree the other source rules deliberately skip. (reference stack; another stack ships its own realisation.)
 
