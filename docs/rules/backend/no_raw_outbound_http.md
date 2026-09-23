@@ -8,11 +8,11 @@
 
 ## Why this rule exists
 
-Directly importing an HTTP client library — or the lower-level socket / protocol primitives that reach the same network — makes SSRF protection, allowlists, egress auditing, and timeout policy a per-call-site choice. Outbound traffic belongs behind a declared capability that centralizes those controls. As a security rule this also scans test and migration files inside a module — they are importable code, so they are application surface too.
+Directly importing an HTTP client library — or the lower-level socket / protocol primitives that reach the same network, the standard library's mail client among them — makes SSRF protection, allowlists, encryption and certificate checks, egress auditing, and timeout policy a per-call-site choice. Outbound traffic belongs behind a declared capability that centralizes those controls. As a security rule this also scans test and migration files inside a module — they are importable code, so they are application surface too.
 
 ## How the reference stack realises this
 
-httpx / requests / urllib.request / urllib3 / aiohttp imports and the socket / http.client escape routes are refused in app modules; outbound calls go through a declared egress capability. (reference stack; another stack ships its own realisation.)
+httpx / requests / urllib.request / urllib3 / aiohttp imports and the socket / http.client escape routes are refused in app modules, and so is smtplib; outbound HTTP goes through a declared egress capability, and outbound mail through a declared mail capability. (reference stack; another stack ships its own realisation.)
 
 ## If you really need an exception
 
