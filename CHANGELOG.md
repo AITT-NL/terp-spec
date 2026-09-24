@@ -7,6 +7,24 @@ fields and new rules also bump the minor; prose bumps the patch (see
 checked-in `VERSION` — held by `tests/test_changelog.py`. A checker certified
 against an earlier version reads this file to see exactly what changed since.
 
+## 0.37.0
+
+### Changed
+
+- **`backend/no_raw_outbound_http` refuses the standard library's mail client.** The rule
+  already covered the lower-level routes to the network — `socket`, `http.client` — and
+  not `smtplib`, so a mail sent from an application module passed with every decision
+  the rule exists to centralise left at the call site: whether the session is
+  encrypted, whether the relay's certificate and name are checked, whether a password
+  crosses the network in the clear, and how long a silent server may hold the caller.
+  The intent now names encryption and certificate checks among those decisions, and the
+  reference realisation names the capability outbound mail goes through.
+
+  A changed contract, hence the minor: a conformant checker now reports an `smtplib`
+  import. Ships with corpus: a violation (the module import and a `from` import of its
+  implicit-TLS client) and a compliant near-miss — the `email` package, which formats
+  and parses messages and opens no connection, and must not be reported.
+
 ## 0.36.0
 
 ### Added

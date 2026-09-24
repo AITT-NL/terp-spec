@@ -1,3 +1,8 @@
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/terp-logo-dark.svg" />
+  <img src="docs/assets/terp-logo.svg" alt="Terp Standard" width="264" height="106" />
+</picture>
+
 # The Terp Standard — rule catalog + violation corpus
 
 This repository is the **stack-neutral specification** of Terp's
