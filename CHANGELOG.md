@@ -7,6 +7,28 @@ fields and new rules also bump the minor; prose bumps the patch (see
 checked-in `VERSION` — held by `tests/test_changelog.py`. A checker certified
 against an earlier version reads this file to see exactly what changed since.
 
+## 0.38.0
+
+### Changed
+
+- **`frontend/locale-catalogs-complete` refuses a descriptor factory.** The rule inventories
+  descriptors where they are written, and a helper such as `(id, message) => ({ id, message })`
+  hid every call through it. The copy sat in the call's arguments, so a target locale could be
+  missing the entry and a conformant checker reported nothing. The intent now says a descriptor
+  is written where it is used, and that a function building one from its own parameters is
+  refused. A record built from data is named as outside the refusal: from a member of the
+  record, from a destructured object, or keyed into data. The reference realisation names the
+  pattern to write instead.
+
+  A changed contract, hence the minor: a conformant checker now reports the factory. Ships with
+  corpus. The violation is a factory whose English entry is missing, which a checker without the
+  refusal passes. The compliant case holds the three record shapes, which must not be reported.
+
+- **`frontend/no-untranslated-ui` states that a property that is not text is out of scope.**
+  `columns="auto"` on a layout component is a keyword, not copy, even though `columns` is text
+  where a component takes it as text. Ships with a compliant case (`Grid` and `DetailList` with
+  `columns="auto"`) that a checker reading every such attribute as copy fails.
+
 ## 0.37.0
 
 ### Changed

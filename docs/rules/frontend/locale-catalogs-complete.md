@@ -8,11 +8,11 @@
 
 ## Why this rule exists
 
-Every stable user-interface message identifier must have a non-empty translation in every declared target locale. A missing or malformed catalog, empty entries, and undocumented source-language copies fail the gate instead of silently rendering source-language text after a user switches locale.
+Every stable user-interface message identifier must have a non-empty translation in every declared target locale. A missing or malformed catalog, empty entries, and undocumented source-language copies fail the gate instead of silently rendering source-language text after a user switches locale. A descriptor is written where it is used, with its identifier and source message as literals: a function that builds one from its own parameters is refused, because every call through it carries its copy in the call's arguments, where the inventory never looks, so a missing translation would pass. A record built from data (from a member of the record, a destructured object, or a key into data) is not a descriptor factory and is not refused.
 
 ## How the reference stack realises this
 
-Declare sourceLocale and locale message maps in frontend/i18n.json; the boundary rule and defineAppLocales validate that declaration, while LocaleProvider refuses missing target entries at render time. (reference stack; another stack ships its own realisation.)
+Declare sourceLocale and locale message maps in frontend/i18n.json; the boundary rule and defineAppLocales validate that declaration, while LocaleProvider refuses missing target entries at render time. Write { id: "...", message: "..." } or Trans where the text is used; a positional helper such as (id, message) => ({ id, message }) is reported. (reference stack; another stack ships its own realisation.)
 
 ## If you really need an exception
 
