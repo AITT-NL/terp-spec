@@ -7,6 +7,64 @@ fields and new rules also bump the minor; prose bumps the patch (see
 checked-in `VERSION` — held by `tests/test_changelog.py`. A checker certified
 against an earlier version reads this file to see exactly what changed since.
 
+## 0.38.0
+
+### Changed
+
+- **`frontend/locale-catalogs-complete` refuses a descriptor factory.** The rule inventories
+  descriptors where they are written, and a helper such as `(id, message) => ({ id, message })`
+  hid every call through it. The copy sat in the call's arguments, so a target locale could be
+  missing the entry and a conformant checker reported nothing. The intent now says a descriptor
+  is written where it is used, and that a function building one from its own parameters is
+  refused. A record built from data is named as outside the refusal: from a member of the
+  record, from a destructured object, or keyed into data. The reference realisation names the
+  pattern to write instead.
+
+  A changed contract, hence the minor: a conformant checker now reports the factory. Ships with
+  corpus. The violation is a factory whose English entry is missing, which a checker without the
+  refusal passes. The compliant case holds the three record shapes, which must not be reported.
+
+- **`frontend/no-untranslated-ui` states that a property that is not text is out of scope.**
+  `columns="auto"` on a layout component is a keyword, not copy, even though `columns` is text
+  where a component takes it as text. Ships with a compliant case (`Grid` and `DetailList` with
+  `columns="auto"`) that a checker reading every such attribute as copy fails.
+
+### Added
+
+- **`frontend/no-framework-markers`** — app-authored source never writes the stack's component
+  markers. A conformant stack marks the element each of its components renders, and two of its
+  own controls trust that mark: the stylesheet selects on it, and the runtime half of
+  `layout-contract` identifies a slot's children by it. Nothing refused an app writing one. A
+  hand-written marker borrows a component's styling without composing the component, which is a
+  way around `no-inline-styling` that no attribute refusal sees, and it passes the runtime slot
+  check as the component it names. The markers are the stack's inventory, and only the stack
+  writes them.
+
+  It came up where a test locates one of the stack's own screens by its markers, which raised
+  the question of whether an app that replaces that screen should render them too. It should
+  not. The app owns the screen it replaced, so its tests locate that screen by the roles and
+  accessible names it renders, and the entry says so rather than leaving a forged marker as the
+  obvious way to keep a shared test passing.
+
+  `runtime.applicability` is `not-applicable`: a marker in the rendered page is the same
+  attribute whoever wrote it, which is exactly why a forged one passes the controls that read
+  it.
+
+  Ships with corpus. The violations are the attribute in markup, the name as the key of a
+  properties object spread into a replaced sign-in screen outside any module, an
+  attribute-setting call, and an assignment to the element's data-attribute map. The compliant
+  cases are the component composed with a test identifier on it, and DOM code writing other data
+  attributes, which a checker that matched any data-attribute write would fail. Two residuals
+  are recorded: an attribute name that is not a literal, and any route the violations do not
+  name.
+
+- **`frontend/token-styled-elements` refuses a raw `<meter>`.** The stack now ships a
+  token-styled meter (`Meter` in the reference realisation), and a raw element beside it is a
+  second way to show one bounded value, without the stack's theming, contrast pairings or
+  accessible name. `meter` joins `restrictedElements`, and the rule's prose and reference name
+  it. A changed contract: a conformant checker now reports the element. Ships with a
+  violation case.
+
 ## 0.37.0
 
 ### Changed

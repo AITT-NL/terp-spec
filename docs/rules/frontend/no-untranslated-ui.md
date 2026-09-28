@@ -8,7 +8,7 @@
 
 ## Why this rule exists
 
-Static user-facing text anywhere in app-authored frontend source must use the translation seam. Bare visible copy, accessibility labels, component text properties, labels stored in data, and standard toast feedback are otherwise absent from every translation catalog and silently remain in the source language. The subject is text that is rendered. An operand of a comparison is not: the expression evaluates to a boolean, so the literal in `status === "paused"` is a state token being tested and reaches no screen in any locale. The same holds for the left operand of `&&`, which is the test rather than what renders. Operators that can render either side - `||`, `??` and string concatenation - are in scope on both.
+Static user-facing text anywhere in app-authored frontend source must use the translation seam. Bare visible copy, accessibility labels, component text properties, labels stored in data, and standard toast feedback are otherwise absent from every translation catalog and silently remain in the source language. The subject is text that is rendered. An operand of a comparison is not: the expression evaluates to a boolean, so the literal in `status === "paused"` is a state token being tested and reaches no screen in any locale. The same holds for the left operand of `&&`, which is the test rather than what renders. Operators that can render either side - `||`, `??` and string concatenation - are in scope on both. A property that is not text is not in scope whatever its value spells: `columns="auto"` on a layout component is a keyword, and the same name is text only where the component takes it as text.
 
 ## How the reference stack realises this
 
