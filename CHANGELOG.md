@@ -7,6 +7,19 @@ fields and new rules also bump the minor; prose bumps the patch (see
 checked-in `VERSION` — held by `tests/test_changelog.py`. A checker certified
 against an earlier version reads this file to see exactly what changed since.
 
+## 0.39.0
+
+### Changed
+
+- **`backend/no_raw_outbound_http` refuses `httpx2`.** `httpx2` is `httpx` continued under a
+  new name, API for API, and the reference realisation listed `httpx` without it. A module
+  could import it and reach the network with none of the controls the rule exists for, and a
+  conformant checker would report nothing. The reference now names it beside `httpx`.
+
+  A changed contract, hence the minor: a conformant checker now reports the import. Ships with
+  corpus. The violation imports `httpx2` both ways (`import httpx2`, `from httpx2 import
+  Client`), which a checker that knows only `httpx` passes.
+
 ## 0.38.0
 
 ### Changed

@@ -11,7 +11,7 @@
       "ref": "check_no_raw_outbound_http"
     }
   ],
-  "reference": "httpx / requests / urllib.request / urllib3 / aiohttp imports and the socket / http.client escape routes are refused in app modules, and so is smtplib; outbound HTTP goes through a declared egress capability, and outbound mail through a declared mail capability.",
+  "reference": "httpx / httpx2 / requests / urllib.request / urllib3 / aiohttp imports and the socket / http.client escape routes are refused in app modules, and so is smtplib; outbound HTTP goes through a declared egress capability, and outbound mail through a declared mail capability.",
   "opt_out": "# arch-allow-no-raw-outbound-http: <reason>",
   "runtime": {
     "applicability": "not-applicable",
