@@ -29,6 +29,35 @@ against an earlier version reads this file to see exactly what changed since.
   where a component takes it as text. Ships with a compliant case (`Grid` and `DetailList` with
   `columns="auto"`) that a checker reading every such attribute as copy fails.
 
+### Added
+
+- **`frontend/no-framework-markers`** — app-authored source never writes the stack's component
+  markers. A conformant stack marks the element each of its components renders, and two of its
+  own controls trust that mark: the stylesheet selects on it, and the runtime half of
+  `layout-contract` identifies a slot's children by it. Nothing refused an app writing one. A
+  hand-written marker borrows a component's styling without composing the component, which is a
+  way around `no-inline-styling` that no attribute refusal sees, and it passes the runtime slot
+  check as the component it names. The markers are the stack's inventory, and only the stack
+  writes them.
+
+  It came up where a test locates one of the stack's own screens by its markers, which raised
+  the question of whether an app that replaces that screen should render them too. It should
+  not. The app owns the screen it replaced, so its tests locate that screen by the roles and
+  accessible names it renders, and the entry says so rather than leaving a forged marker as the
+  obvious way to keep a shared test passing.
+
+  `runtime.applicability` is `not-applicable`: a marker in the rendered page is the same
+  attribute whoever wrote it, which is exactly why a forged one passes the controls that read
+  it.
+
+  Ships with corpus. The violations are the attribute in markup, the name as the key of a
+  properties object spread into a replaced sign-in screen outside any module, an
+  attribute-setting call, and an assignment to the element's data-attribute map. The compliant
+  cases are the component composed with a test identifier on it, and DOM code writing other data
+  attributes, which a checker that matched any data-attribute write would fail. Two residuals
+  are recorded: an attribute name that is not a literal, and any route the violations do not
+  name.
+
 ## 0.37.0
 
 ### Changed
