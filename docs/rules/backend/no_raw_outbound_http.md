@@ -12,7 +12,7 @@ Directly importing an HTTP client library — or the lower-level socket / protoc
 
 ## How the reference stack realises this
 
-httpx / requests / urllib.request / urllib3 / aiohttp imports and the socket / http.client escape routes are refused in app modules, and so is smtplib; outbound HTTP goes through a declared egress capability, and outbound mail through a declared mail capability. (reference stack; another stack ships its own realisation.)
+httpx / httpx2 / requests / urllib.request / urllib3 / aiohttp imports and the socket / http.client escape routes are refused in app modules, and so is smtplib; outbound HTTP goes through a declared egress capability, and outbound mail through a declared mail capability. (reference stack; another stack ships its own realisation.)
 
 ## If you really need an exception
 
