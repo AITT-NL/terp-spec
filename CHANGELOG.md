@@ -58,6 +58,13 @@ against an earlier version reads this file to see exactly what changed since.
   are recorded: an attribute name that is not a literal, and any route the violations do not
   name.
 
+- **`frontend/token-styled-elements` refuses a raw `<meter>`.** The stack now ships a
+  token-styled meter (`Meter` in the reference realisation), and a raw element beside it is a
+  second way to show one bounded value, without the stack's theming, contrast pairings or
+  accessible name. `meter` joins `restrictedElements`, and the rule's prose and reference name
+  it. A changed contract: a conformant checker now reports the element. Ships with a
+  violation case.
+
 ## 0.37.0
 
 ### Changed

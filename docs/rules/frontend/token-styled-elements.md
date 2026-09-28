@@ -8,11 +8,11 @@
 
 ## Why this rule exists
 
-A raw <button>/<input>/<select>/<textarea>/<table>/<dialog>/<form> bypasses the app's sanctioned, token-styled primitive surface (accessible and theme-consistent by construction). The refused elements are declared in restricted-surface.json (restrictedElements); each has a sanctioned replacement in the stack's component surface, and the violation message names it.
+A raw <button>/<input>/<select>/<textarea>/<table>/<dialog>/<form>/<meter> bypasses the app's sanctioned, token-styled primitive surface (accessible and theme-consistent by construction). The refused elements are declared in restricted-surface.json (restrictedElements); each has a sanctioned replacement in the stack's component surface, and the violation message names it.
 
 ## How the reference stack realises this
 
-Button, Input, Select, Textarea, DataView, ConfirmDialog and Stack as="form" from @terpjs/react-core (BOUNDARY_SPEC.restrictedElements maps each element to its replacement). (reference stack; another stack ships its own realisation.)
+Button, Input, Select, Textarea, DataView, ConfirmDialog, Stack as="form" and Meter from @terpjs/react-core (BOUNDARY_SPEC.restrictedElements maps each element to its replacement). (reference stack; another stack ships its own realisation.)
 
 ## If you really need an exception
 
