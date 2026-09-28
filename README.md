@@ -387,17 +387,10 @@ the corpus so a second implementation neither over-fits nor under-claims.
 These residuals are recorded per rule in **`corpus/RESIDUALS.json`** — a
 machine-readable ratchet governed like `corpus/PENDING.json`: the list only
 shrinks, and closing a residual means seeding the corpus case that contracts
-it and deleting the entry, never silently. Today it records:
-
-- an alias-renamed symbol import (`from sqlalchemy import text as sql_text`)
-  is not required to be resolved to `text`;
-- dynamic import (`importlib.import_module("httpx")`) is not required to be
-  seen as an import;
-- a computed sink or global (`el["innerHTML"] = …`, `window["eval"]`) is not
-  required to be recognised for the *eval/DOM-sink* rules (the egress family
-  **does** contract the computed forms — its cases include them);
-- `Function("…")` called without `new`, and egress through receivers other
-  than `window`/`globalThis` (`self.fetch`), are not required.
+it and deleting the entry, never silently. That file is the list; it is not
+repeated here, because a copy in prose drifts from the record it copies — this
+one had, and named four families of forms while the file recorded more. Each
+entry names the rule, the form a checker is not required to catch, and why.
 
 These residuals are governed the usual way: the escape-hatch contract makes
 sanctioned exceptions visible, and the paired runtime controls (where
