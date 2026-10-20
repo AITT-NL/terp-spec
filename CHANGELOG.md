@@ -124,6 +124,47 @@ against an earlier version reads this file to see exactly what changed since.
   can grant itself one; it is normative prose and is held to the same stack-neutral check as
   `title` and `intent`.
 
+- **`workbench-declaration.schema.json`** — the stack-neutral vocabulary of the
+  `workbench.json` an app checks in to say which parts of its development loop a tool that
+  drives it relies on: the compose file, which service plays which role, the variable each
+  host port arrives through, where the API says it is ready, the variables through which the
+  source root and the framing grant reach the containers, and the commands of an app whose
+  loop is not the compose shape a tool assumes. Two readers had each written their own copy
+  of these words, with their own defaults, and they disagreed: a tool read and ran two
+  command slots (`containerLogs`, `recreate`) the gate's checker did not know, and the
+  checker held an `env` block of seam names that the tool never read, so an app that renamed
+  a seam passed its gate and then got the old name set. The words now have one owner.
+
+  It describes schemaVersion 1 as both readers read it: three states (absent, declared,
+  `{"unmanaged": true, "reason": "..."}`), open objects (a service it does not name, a role
+  nobody has heard of and a key it lacks are never refused), and nine command slots, any of
+  which means a `start` is declared. What changes for a file both readers accepted is a value
+  they used to coerce or skip in silence: a field of the wrong type, a blank command, a
+  control character, a string past its cap, a lower-case variable name. And one refusal is
+  new, because a reader puts every declared variable name into the environment of the
+  commands it runs: a `hostPortEnv` or seam named in the container toolchain's or the
+  dynamic loader's namespace (`$defs.reservedEnvironmentPrefixes`) or one the process
+  environment reads for itself, such as `PATH` or `HOME` (`$defs.reservedEnvironmentNames`),
+  is refused. The other refusals the keyword subset cannot state are named the same way: a
+  field resolved by role under a role no reader looks up (`roleResolvedFields`,
+  `knownRoles`), and a compose file named as a deployment profile
+  (`deploymentProfileMarkers`). A reader refuses a `schemaVersion` it does not know, and an
+  unreadable declaration is never read as an absent one.
+
+- **`workbench-declaration.fixtures.json`** — what every reader of the development-loop
+  declaration runs: 16 valid documents with what a reader resolves from each (the state, the
+  compose file, per known role the first entry's service and the first value of each field,
+  the seams and the command slots a reader knows), 46 invalid ones naming the field the
+  refusal is about and the values it allows, 8 of them marked as beyond the schema, and 2
+  texts that are not one JSON document.
+
+  A vocabulary, not a rule: no catalog entry realises it. Holding a file to the compose file
+  it names is the reference stack's check of its own development loop, which another stack
+  need not have in this shape; what every reader must agree on is how the file reads, and the
+  fixtures fix that. The spec suite reads every fixture with a reference reader of the `$defs`
+  lists, and lists by name the declaration vocabularies no rule realises, each of which must
+  ship its fixtures.
+
 ### Changed
 
 - **The spec suite's validator applies a keyword by the type of the instance**, as JSON Schema
@@ -134,7 +175,7 @@ against an earlier version reads this file to see exactly what changed since.
   `dependentRequired`, `if`/`then`/`else`, `number`, `exclusiveMinimum`, with `$defs` and
   `default` as annotations), each with its negative case. No existing artifact changed verdict.
 
-A changed contract (a new catalog field and two new rules), hence the minor. The reference
+A changed contract (a new catalog field, two new rules and a new vocabulary), hence the minor. The reference
 implementation does not carry either rule yet: `certify-against-reference` stays red for them
 until it does, and `REFERENCE_SHA` is not moved here.
 

@@ -11,6 +11,8 @@
     "layout-declaration.schema.json",
     "deployment-declaration.schema.json",
     "deployment-declaration.fixtures.json",
+    "workbench-declaration.schema.json",
+    "workbench-declaration.fixtures.json",
     "restricted-surface.json",
     "catalog",
     "corpus"

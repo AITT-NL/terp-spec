@@ -88,17 +88,23 @@ The artifacts:
    for the `deployment.json` an app checks in at its project root to declare its
    deployable units, and the fixtures every reader of it runs. See "Deployment
    declaration" below.
-9. **The residual ratchet** (`corpus/RESIDUALS.json`) — the statically-erased
+9. **The development-loop declaration** (`workbench-declaration.schema.json`,
+   with `workbench-declaration.fixtures.json`) — the stack-neutral vocabulary of
+   the `workbench.json` an app checks in to say which parts of its development
+   loop a tool that drives it relies on, and the fixtures every reader of it
+   runs. A vocabulary with readers and no catalog rule; see "Development-loop
+   declaration" below.
+10. **The residual ratchet** (`corpus/RESIDUALS.json`) — the statically-erased
    or renamed forms deliberately outside the corpus contract, per rule, as
    shrink-only data (see "Detector boundaries" below).
-10. **The scorecard format** (`scorecard.schema.json`) — the machine-readable
+11. **The scorecard format** (`scorecard.schema.json`) — the machine-readable
    certification summary a conformant checker emits (spec version, per-rule
    verdicts over the corpus, residuals claimed), so "certified against spec
    X.Y.Z" is a verifiable artifact instead of a claim.
-11. **The changelog** (`CHANGELOG.md`) — the change history keyed to `VERSION`
+12. **The changelog** (`CHANGELOG.md`) — the change history keyed to `VERSION`
    (the top entry must match, held by the spec suite), so a checker certified
    against an earlier version can see exactly what changed since.
-12. **The rule pages** (`docs/rules/`) — plain-language documentation generated
+13. **The rule pages** (`docs/rules/`) — plain-language documentation generated
     from the catalog (`tools/generate_rule_docs.py`; regenerate-and-compare
     parity in the spec suite, so the pages cannot drift from the data).
 
@@ -408,6 +414,56 @@ link out of the checkout, and a build context that is inside a version-control
 work tree but outside the project root — as trees a reader's own test builds on
 disk, because a wheel or a tarball carries no link and a corpus case is no work
 tree.
+
+## Development-loop declaration
+
+A tool that drives an app's development loop has to know which compose file
+describes it, which service serves the interface and which the API, through
+which variable each host port arrives, where the API says it is ready, and
+through which variables the source root and the framing grant reach the
+containers. A tool that assumes one template's names is guessing, and the guess
+fails silently the first time an app renames a variable. So the app says so, in
+`workbench.json` at its project root, in the vocabulary
+`workbench-declaration.schema.json` fixes. An app whose loop is not the compose
+shape a tool assumes names its own commands there instead.
+
+| State | The file | A reader |
+|---|---|---|
+| Undeclared | absent | assumes the conventions of the template the app came from |
+| Declared | `schemaVersion` and `services` | reads it, and refuses what it would act on wrongly |
+| Opted out | `{"unmanaged": true, "reason": "..."}` | does not interpret the loop, and shows the reason |
+
+It is a **partial** description, and unlike the deployment declaration its
+objects are open: a service it does not name, a role nobody has heard of and a
+key the vocabulary lacks (an app's own note, a key another tool invented) are
+never refused. What is refused is a value a reader would act on wrongly. Four of
+those the schema's keyword subset cannot state, so it names their lists in
+`$defs` and every reader applies them: a field resolved by role
+(`roleResolvedFields`) under a role no reader looks up (`knownRoles`); a
+variable a reader would set whose name the container toolchain or the process
+environment reads for itself (`reservedEnvironmentPrefixes`,
+`reservedEnvironmentNames`), because a reader puts every declared name into the
+environment of the commands it runs; and a compose file named as a deployment
+profile (`deploymentProfileMarkers`). The command slots are the `commands`
+block's properties, and any command declared means a `start` is declared.
+
+**An unreadable declaration is not an absent one.** A reader that meets a
+`schemaVersion` it does not know, or a file it cannot read, refuses it and says
+why; it never falls back to the conventions it would assume for an absent file,
+because an app that renamed a variable and then broke its JSON would get the old
+name set, and a stack started on a guess. The template seeds the file once and
+the app owns it afterwards, so a later version reaches an existing app only
+through an adoption step the app runs, never by an upgrade overwriting it.
+
+**A vocabulary, not a rule.** No catalog entry realises it. What the reference
+stack's own gate does with the file - hold it to the compose file it names - is a
+check of that stack's development loop, which a second stack need not have in
+this shape; what every reader must agree on is how the file itself reads, and
+`workbench-declaration.fixtures.json` fixes that: valid documents with what a
+reader resolves from them (`reads`), invalid ones with the field the refusal is
+about and the values it allows, and texts that are not one JSON document. The
+spec suite reads every fixture with a reference reader of the `$defs` lists, and
+holds the list of vocabularies no rule realises by name.
 
 ## Corpus format
 
