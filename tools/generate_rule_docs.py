@@ -87,6 +87,18 @@ def render(entry: dict, residuals: list[str] | None = None) -> str:
             "exactly match the checked-in budget (which can only shrink).",
             "",
         ]
+    elif entry.get("escape"):
+        # A rule over a declaration that cannot carry a marker (a JSON document has no
+        # comments). Its way out is a state of the declaration, and saying "add a marker"
+        # here would send a reader looking for a comment syntax the file does not have.
+        lines += [
+            "This rule's subject is a checked-in declaration that cannot carry an",
+            "inline marker, so there is no marker to add. The declaration itself",
+            "states the exception:",
+            "",
+            entry["escape"],
+            "",
+        ]
     else:
         lines += [
             "There is none. This rule governs the escape-hatch mechanism itself,",
