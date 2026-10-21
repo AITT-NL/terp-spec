@@ -44,63 +44,130 @@ def _entries(surface: str) -> dict[str, dict]:
 # --------------------------------------------------------------------------- #
 # schema validity: every entry validates against the checked-in schema.json
 # --------------------------------------------------------------------------- #
-def _validate(instance: object, schema: dict, path: str) -> list[str]:
-    """Validate *instance* against the JSON Schema subset spec/catalog/schema.json uses.
+def _same(left: object, right: object) -> bool:
+    """JSON equality, which is not Python equality: ``True`` is not ``1``.
 
-    Deliberately minimal (type / enum / pattern / minLength / minItems / required /
-    properties / additionalProperties / items) so the spec stays dependency-free;
-    an unknown constraint keyword fails loudly rather than passing silently.
+    Python says ``True == 1`` and ``1 in [True]``, so an ``enum`` or ``const`` compared with
+    ``==`` would accept a boolean where a schema version is required. JSON Schema compares
+    by JSON value, where a boolean and a number are never equal.
+    """
+    if isinstance(left, bool) or isinstance(right, bool):
+        return isinstance(left, bool) and isinstance(right, bool) and left == right
+    if isinstance(left, (int, float)) and isinstance(right, (int, float)):
+        return left == right
+    if type(left) is not type(right):
+        return False
+    if isinstance(left, list):
+        return len(left) == len(right) and all(map(_same, left, right))
+    if isinstance(left, dict):
+        return left.keys() == right.keys() and all(_same(left[k], right[k]) for k in left)
+    return left == right
+
+
+def _validate(instance: object, schema: dict, path: str) -> list[str]:
+    """Validate *instance* against the JSON Schema subset the spec's schemas use.
+
+    Deliberately minimal so the spec stays dependency-free: type / enum / const /
+    pattern / minLength / maxLength / minimum / exclusiveMinimum / minItems / maxItems
+    / uniqueItems / required / dependentRequired / properties / patternProperties /
+    additionalProperties / items / if-then-else, with ``$defs`` and ``default`` read as
+    annotations. An unknown constraint keyword fails loudly rather than passing
+    silently. Every message names the field it is about and, where the schema states
+    them, the values that field allows.
+
+    A keyword applies by the type of the INSTANCE, as JSON Schema specifies, not by
+    whether the schema also says ``type``: ``{"required": ["unmanaged"]}`` constrains an
+    object although it names no type, which is the whole of how an ``if`` reads.
     """
     _KNOWN = {
-        "$schema", "$id", "title", "description",  # annotations
-        "type", "enum", "pattern", "minLength", "minimum", "minItems",
-        "required", "properties", "additionalProperties", "items",
+        "$schema", "$id", "$defs", "title", "description", "default",  # annotations
+        "type", "enum", "const", "pattern", "minLength", "maxLength", "minimum",
+        "exclusiveMinimum", "minItems", "maxItems", "uniqueItems", "required",
+        "dependentRequired", "properties", "patternProperties", "additionalProperties",
+        "items", "if", "then", "else",
     }
     errors = [f"{path}: unknown schema keyword {key!r}" for key in schema if key not in _KNOWN]
-    if "enum" in schema and instance not in schema["enum"]:
+    if "enum" in schema and not any(_same(instance, value) for value in schema["enum"]):
         return errors + [f"{path}: {instance!r} not in {schema['enum']}"]
+    if "const" in schema and not _same(instance, schema["const"]):
+        return errors + [f"{path}: {instance!r} is not the allowed value {schema['const']!r}"]
     expected = schema.get("type")
-    supported_types = {"object", "array", "string", "integer", "boolean"}
+    supported_types = {"object", "array", "string", "integer", "number", "boolean"}
     if expected is not None and (
         not isinstance(expected, str) or expected not in supported_types
     ):
         return errors + [f"{path}: unsupported schema type {expected!r}"]
-    if expected == "object":
-        if not isinstance(instance, dict):
-            return errors + [f"{path}: expected object, got {type(instance).__name__}"]
+    is_number = isinstance(instance, (int, float)) and not isinstance(instance, bool)
+    matches = {
+        "object": isinstance(instance, dict),
+        "array": isinstance(instance, list),
+        "string": isinstance(instance, str),
+        "integer": isinstance(instance, int) and not isinstance(instance, bool),
+        "number": is_number,
+        "boolean": isinstance(instance, bool),
+    }
+    if expected is not None and not matches[expected]:
+        return errors + [f"{path}: expected {expected}, got {type(instance).__name__}"]
+    if isinstance(instance, dict):
         for field in schema.get("required", []):
             if field not in instance:
                 errors.append(f"{path}: missing required field {field!r}")
+        for field, needed in schema.get("dependentRequired", {}).items():
+            if field in instance:
+                errors.extend(
+                    f"{path}: {field!r} requires {other!r}"
+                    for other in needed
+                    if other not in instance
+                )
         properties = schema.get("properties", {})
+        patterns = schema.get("patternProperties", {})
         if schema.get("additionalProperties") is False:
+            allowed = ", ".join(sorted(properties)) or "none"
+            if patterns:
+                allowed += "; or a key matching " + " or ".join(
+                    repr(pattern) for pattern in sorted(patterns)
+                )
             errors.extend(
-                f"{path}: unexpected field {key!r}" for key in instance if key not in properties
+                f"{path}: unexpected field {key!r} (allowed: {allowed})"
+                for key in instance
+                if key not in properties
+                and not any(re.search(pattern, key) for pattern in patterns)
             )
         for key, value in instance.items():
             if key in properties:
                 errors.extend(_validate(value, properties[key], f"{path}.{key}"))
-    elif expected == "array":
-        if not isinstance(instance, list):
-            return errors + [f"{path}: expected array, got {type(instance).__name__}"]
+            for pattern, definition in patterns.items():
+                if re.search(pattern, key):
+                    errors.extend(_validate(value, definition, f"{path}.{key}"))
+    elif isinstance(instance, list):
         if len(instance) < schema.get("minItems", 0):
             errors.append(f"{path}: fewer than {schema['minItems']} items")
+        if "maxItems" in schema and len(instance) > schema["maxItems"]:
+            errors.append(f"{path}: more than {schema['maxItems']} items")
+        if schema.get("uniqueItems") is True:
+            errors.extend(
+                f"{path}[{index}]: repeats an earlier item, {item!r} - items must be unique"
+                for index, item in enumerate(instance)
+                if any(_same(item, earlier) for earlier in instance[:index])
+            )
         for index, item in enumerate(instance):
             errors.extend(_validate(item, schema.get("items", {}), f"{path}[{index}]"))
-    elif expected == "string":
-        if not isinstance(instance, str):
-            return errors + [f"{path}: expected string, got {type(instance).__name__}"]
+    elif isinstance(instance, str):
         if len(instance.strip()) < schema.get("minLength", 0):
             errors.append(f"{path}: shorter than minLength {schema['minLength']}")
+        if "maxLength" in schema and len(instance) > schema["maxLength"]:
+            errors.append(f"{path}: longer than maxLength {schema['maxLength']}")
         if "pattern" in schema and re.search(schema["pattern"], instance) is None:
             errors.append(f"{path}: {instance!r} does not match {schema['pattern']!r}")
-    elif expected == "integer":
-        if not isinstance(instance, int) or isinstance(instance, bool):
-            return errors + [f"{path}: expected integer, got {type(instance).__name__}"]
+    elif is_number:
         if instance < schema.get("minimum", instance):
             errors.append(f"{path}: below minimum {schema['minimum']}")
-    elif expected == "boolean":
-        if not isinstance(instance, bool):
-            return errors + [f"{path}: expected boolean, got {type(instance).__name__}"]
+        if "exclusiveMinimum" in schema and instance <= schema["exclusiveMinimum"]:
+            errors.append(f"{path}: must be above {schema['exclusiveMinimum']}")
+    if "if" in schema:
+        branch = "then" if not _validate(instance, schema["if"], path) else "else"
+        if branch in schema:
+            errors.extend(_validate(instance, schema[branch], path))
     return errors
 
 
@@ -191,6 +258,16 @@ _GOVERNANCE_RULES_WITHOUT_OPT_OUT = {
     "frontend/escape-hatch",
 }
 
+#: Rules whose subject is a checked-in declaration that cannot carry an inline marker -
+#: a JSON document has no comments - so their one governed way out is a state of the
+#: declaration itself, stated in the entry's `escape` field rather than as a marker
+#: spelling nobody could write. Listed by name, like the governance rules above: an
+#: entry cannot grant itself this by declaring `escape`.
+_RULES_ESCAPED_BY_THEIR_DECLARATION = {
+    "backend/deployment_declaration_is_readable",
+    "backend/deployment_declaration_tells_the_truth",
+}
+
 _OPT_OUT_TEMPLATES = {
     "backend": "# arch-allow-{name}: <reason>",
     "frontend": "// terp-allow-{name}: <reason>",
@@ -202,11 +279,27 @@ def test_opt_outs_derive_from_the_catalog_rule_name() -> None:
     snake_case rendered with dashes), so a marker can never waive a sibling
     rule that happens to share a tool-internal rule id — and the escape-hatch
     governance rules declare no opt-out at all: governance cannot be waived by
-    the mechanism it governs."""
+    the mechanism it governs.
+
+    A rule over a declaration that cannot carry a marker declares its `escape`
+    instead, never beside an opt_out: still exactly one governed way out, stated
+    where a reader of the rule looks for it rather than as a marker that could
+    never be written. No other rule may declare one."""
     for surface in ("backend", "frontend"):
         for name, entry in _entries(surface).items():
             rule_id = f"{surface}/{name}"
             opt_out = entry.get("opt_out")
+            escape = entry.get("escape")
+            if rule_id in _RULES_ESCAPED_BY_THEIR_DECLARATION:
+                assert opt_out is None and escape, (
+                    f"{rule_id}: a rule escaped by its declaration states that escape in "
+                    "`escape` and declares no opt_out marker it could never carry"
+                )
+                continue
+            assert escape is None, (
+                f"{rule_id}: only a rule listed as escaped by its declaration may declare "
+                "`escape` — every other rule's way out is its marker"
+            )
             if rule_id in _GOVERNANCE_RULES_WITHOUT_OPT_OUT:
                 assert opt_out is None, (
                     f"{rule_id}: an escape-hatch governance rule must not declare an "
@@ -630,7 +723,8 @@ _REFERENCE_LEAKAGE: list[tuple[re.Pattern[str], str]] = [
 
 
 def test_normative_prose_is_stack_neutral() -> None:
-    """``title`` and ``intent`` are the normative, stack-neutral statement of a
+    """``title`` and ``intent`` (and ``escape``, where a rule has one) are the
+    normative, stack-neutral statement of a
     rule; the reference realisation lives in ``enforcement`` / ``reference`` /
     ``opt_out`` / ``guide_topic``. Hold the prose to that split, so
     docstring-flavoured markup and framework symbols cannot drift back in.
@@ -648,7 +742,11 @@ def test_normative_prose_is_stack_neutral() -> None:
                 problems.append(
                     f"{surface}/{name}: intent merely repeats the title — say why the rule exists"
                 )
-            for field in ("title", "intent"):
+            # `escape` is normative like the title and intent: it states the way out a
+            # second stack implements, so it is held to the same split.
+            for field in ("title", "intent", "escape"):
+                if field not in entry:
+                    continue
                 text = entry[field]
                 for token in rule_names:
                     text = text.replace(token, " ")

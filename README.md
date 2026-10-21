@@ -83,17 +83,28 @@ The artifacts:
    and naming a palette are the app's to do and their values are per-stack, hence
    plain strings; the shell's vocabulary is fixed normatively, and the reference
    stack's resolver is parity-tested against it.
-8. **The residual ratchet** (`corpus/RESIDUALS.json`) — the statically-erased
+8. **The deployment declaration** (`deployment-declaration.schema.json`, with
+   `deployment-declaration.fixtures.json`) — the stack-neutral, normative schema
+   for the `deployment.json` an app checks in at its project root to declare its
+   deployable units, and the fixtures every reader of it runs. See "Deployment
+   declaration" below.
+9. **The development-loop declaration** (`workbench-declaration.schema.json`,
+   with `workbench-declaration.fixtures.json`) — the stack-neutral vocabulary of
+   the `workbench.json` an app checks in to say which parts of its development
+   loop a tool that drives it relies on, and the fixtures every reader of it
+   runs. A vocabulary with readers and no catalog rule; see "Development-loop
+   declaration" below.
+10. **The residual ratchet** (`corpus/RESIDUALS.json`) — the statically-erased
    or renamed forms deliberately outside the corpus contract, per rule, as
    shrink-only data (see "Detector boundaries" below).
-9. **The scorecard format** (`scorecard.schema.json`) — the machine-readable
+11. **The scorecard format** (`scorecard.schema.json`) — the machine-readable
    certification summary a conformant checker emits (spec version, per-rule
    verdicts over the corpus, residuals claimed), so "certified against spec
    X.Y.Z" is a verifiable artifact instead of a claim.
-10. **The changelog** (`CHANGELOG.md`) — the change history keyed to `VERSION`
+12. **The changelog** (`CHANGELOG.md`) — the change history keyed to `VERSION`
    (the top entry must match, held by the spec suite), so a checker certified
    against an earlier version can see exactly what changed since.
-11. **The rule pages** (`docs/rules/`) — plain-language documentation generated
+13. **The rule pages** (`docs/rules/`) — plain-language documentation generated
     from the catalog (`tools/generate_rule_docs.py`; regenerate-and-compare
     parity in the spec suite, so the pages cannot drift from the data).
 
@@ -158,6 +169,7 @@ The standalone suite enforces the split
 | `runtime` | **Mandatory.** The rule's runtime-applicability classification (`required` / `not-applicable` / `deferred`) plus a `rationale` (mandatory for exemptions) and, for `deferred`, a `tracking` reference naming where the deferral is tracked — see “Runtime applicability” below. |
 | `restricted_surface` | Frontend prohibition rules only: the `restricted-surface.json` keys the rule realises — the structural citation the spec suite resolves (every key must be claimed by some rule; a prose mention in `intent` must agree with the field). |
 | `opt_out` | The *reference realisation* of the abstract escape-hatch contract (see below). |
+| `escape` | **Normative**, in place of `opt_out`, only for a rule whose subject is a checked-in declaration that cannot carry an inline marker: the declared state that is its one governed way out (see below). |
 | `reference` | Optional reference-implementation metadata: the compliant realisation the reference stack offers (component / helper names). **Not normative** — the `title` and `intent` state the stack-neutral invariant; another stack ships its own realisation. |
 | `guide_topic` | Reference-implementation metadata (backend only): the `terp guide` topic teaching the compliant pattern. Not normative for other stacks. |
 | `corpus` | Whether `corpus/<id>/` cases exist yet (the parity test holds this flag to the directory truth; a covered rule needs at least one `violation-*` **and** one `compliant-*` case). |
@@ -218,6 +230,15 @@ holds the derivation. The escape-hatch **governance rules themselves** (the
 budget ratchet, the ungoverned-marker condition) carry no `opt_out`:
 governance cannot be waived by the mechanism it governs. Another stack
 implements the same contract with its own comment syntax.
+
+A rule whose subject is a checked-in declaration that **cannot carry a marker**
+— a JSON document has no comments — has no marker spelling to record, and a
+recorded one would send a reader looking for a syntax the file does not have.
+Its one governed way out is a *state of the declaration itself*, stated
+stack-neutrally in the entry's `escape` field in place of `opt_out` (the
+deployment declaration's two rules: opting the whole file out with a reason a
+tool then reports). Such a rule is listed by name in the spec suite, as the
+governance rules are, so no entry can grant itself an escape by declaring one.
 
 The `<reason>` is free text, and MAY carry structured metadata tokens so a
 long-lived exception stays visible and auditable rather than eternal:
@@ -321,6 +342,129 @@ as passed. Each realised lane names the verification-check ids whose verdicts
 compose it, so a consumer can trace the claim into the toolchain's own
 verification envelope.
 
+## Deployment declaration
+
+A tool that deploys an app has to know which units exist, which one serves the
+API, how to tell each is healthy, which migration histories each owns, what
+holds state and how it is backed up, and what a rollback is. A tool that
+assumes one template's service names is guessing, and the guess fails silently
+the first day an app adds a worker, a shared store or a second deployable. So
+the app says so, in `deployment.json` at its project root, written in the
+vocabulary `deployment-declaration.schema.json` fixes. Nothing in it is read by
+the running app; its readers are the app's own gate and the tools that drive a
+deploy, which read it as data and never import the app.
+
+A file sits in exactly one of four states:
+
+| State | The file | The check | A deploy tool |
+|---|---|---|---|
+| Undeclared | absent | passes | may decline to drive the app, and says so |
+| Own | `"build": "own"` | runs | drives units built from the committed profile and build files |
+| Generated | `"build": "generated"` | runs | drives units whose build files a generator of the stack renders |
+| Opted out | `{"unmanaged": true, "reason": "..."}` | off; a blank reason is refused | does not drive the app, and shows the reason |
+
+It is a **partial** description: a service it does not name is not its
+business, a role nobody has heard of is information, and no rule asks whether a
+topology is approved. Every fact another file owns stays there — the profile
+owns commands, start order, images and volumes; the variable manifest owns
+variables; the code owns jobs and schedules; the environment's record owns
+domains, TLS, the backup destination and its credentials, sizes and instance
+counts per environment, and the image-digest allowlist. Where the declaration
+restates such a fact, the owner wins and a disagreement is refused.
+
+Two rules check it, and the schema is what the first one reads:
+
+- **`backend/deployment_declaration_is_readable`** — every reader reads the
+  file the same way, or refuses it: valid against the schema, in exactly one
+  state, with no key the vocabulary lacks (a `$`-prefixed annotation excepted),
+  no free image field, no shell-string command, no control character and no
+  string past its cap, no path that resolves outside the checkout, never the
+  development profile, and coherent with itself. A key for **deploy policy** —
+  who may publish, how many approvals a deploy needs, who may reach a deployed
+  app, which gate policy applies — is refused with its own message, because
+  anyone who can commit to the app could lower a policy kept there; the schema
+  names those keys (`$defs.deployPolicyKeys`) so every reader gives that message.
+- **`backend/deployment_declaration_tells_the_truth`** — what the declaration
+  says is true of the deployment profile it names (read with its overrides as
+  one resolved profile) and of the app: units, volumes, variables passed,
+  restated commands and start order, datastore images pinned to the stack's
+  published digest, every other unit built from the checkout, migration
+  histories and health paths. The app-side half needs the composed app and skips
+  with a named note where none can be loaded.
+
+The schema also names, as data rather than prose, the role words it knows
+(`$defs.knownRoles`) and the unit fields a reader resolves by role
+(`$defs.roleResolvedFields`): under a role the vocabulary does not know, such a
+field has no reader, and declaring it is refused. Every pattern ends in
+`(?![\s\S])` rather than `$`, because in some regular-expression engines `$`
+also matches before a final newline — which would let a newline through the very
+patterns that exist to refuse control characters.
+
+**Which datastore kinds, versions and digests exist is per stack**: each
+framework release publishes a closed table, one digest per kind and version, and
+a reader refuses a kind or version its table does not carry. The table states
+which digests a framework version accepts; whether an environment accepts them
+is that environment's own allowlist, outside the file.
+
+`deployment-declaration.fixtures.json` holds what every reader runs beside the
+corpus: for each violation case of both rules, the **field** the refusal is
+about and the **values that field allows**, so a reader's test asserts its
+message names both; and the path escapes a corpus case cannot carry — a symbolic
+link out of the checkout, and a build context that is inside a version-control
+work tree but outside the project root — as trees a reader's own test builds on
+disk, because a wheel or a tarball carries no link and a corpus case is no work
+tree.
+
+## Development-loop declaration
+
+A tool that drives an app's development loop has to know which compose file
+describes it, which service serves the interface and which the API, through
+which variable each host port arrives, where the API says it is ready, and
+through which variables the source root and the framing grant reach the
+containers. A tool that assumes one template's names is guessing, and the guess
+fails silently the first time an app renames a variable. So the app says so, in
+`workbench.json` at its project root, in the vocabulary
+`workbench-declaration.schema.json` fixes. An app whose loop is not the compose
+shape a tool assumes names its own commands there instead.
+
+| State | The file | A reader |
+|---|---|---|
+| Undeclared | absent | assumes the conventions of the template the app came from |
+| Declared | `schemaVersion` and `services` | reads it, and refuses what it would act on wrongly |
+| Opted out | `{"unmanaged": true, "reason": "..."}` | does not interpret the loop, and shows the reason |
+
+It is a **partial** description, and unlike the deployment declaration its
+objects are open: a service it does not name, a role nobody has heard of and a
+key the vocabulary lacks (an app's own note, a key another tool invented) are
+never refused. What is refused is a value a reader would act on wrongly. Four of
+those the schema's keyword subset cannot state, so it names their lists in
+`$defs` and every reader applies them: a field resolved by role
+(`roleResolvedFields`) under a role no reader looks up (`knownRoles`); a
+variable a reader would set whose name the container toolchain or the process
+environment reads for itself (`reservedEnvironmentPrefixes`,
+`reservedEnvironmentNames`), because a reader puts every declared name into the
+environment of the commands it runs; and a compose file named as a deployment
+profile (`deploymentProfileMarkers`). The command slots are the `commands`
+block's properties, and any command declared means a `start` is declared.
+
+**An unreadable declaration is not an absent one.** A reader that meets a
+`schemaVersion` it does not know, or a file it cannot read, refuses it and says
+why; it never falls back to the conventions it would assume for an absent file,
+because an app that renamed a variable and then broke its JSON would get the old
+name set, and a stack started on a guess. The template seeds the file once and
+the app owns it afterwards, so a later version reaches an existing app only
+through an adoption step the app runs, never by an upgrade overwriting it.
+
+**A vocabulary, not a rule.** No catalog entry realises it. What the reference
+stack's own gate does with the file - hold it to the compose file it names - is a
+check of that stack's development loop, which a second stack need not have in
+this shape; what every reader must agree on is how the file itself reads, and
+`workbench-declaration.fixtures.json` fixes that: valid documents with what a
+reader resolves from them (`reads`), invalid ones with the field the refusal is
+about and the values it allows, and texts that are not one JSON document. The
+spec suite reads every fixture with a reference reader of the `$defs` lists, and
+holds the list of vocabularies no rule realises by name.
+
 ## Corpus format
 
 ```text
@@ -334,6 +478,16 @@ A case may ship an extra checker input at its root when the rule takes one:
 the `backend/escape_hatch_budget` cases carry the `escape-hatch-budget.json`
 the ratchet is verified against, and a frontend layout-contract case activates
 via a `layout-contract.json` at its root.
+
+The two deployment-declaration rules' cases are rooted at the **project root**,
+not the app package root: `deployment.json` sits beside the profile files it
+names, and beside `environment.schema.json` and `workbench.json` where a case
+needs them. A case that names a datastore `kind` ships the table a checker
+resolves it against as `datastore-table.json` at its root —
+`{"kinds": {"<kind>": {"role": "database" | "store", "versions": {"<version>":
+"<image>@sha256:<digest>"}}}}`, every digest invented — so the case means the
+same on every stack, whatever table that stack publishes. A copied case lies in
+no work tree, so its checkout is its root.
 
 A violation case MAY additionally ship an **`expected-findings.json`** at its
 root: the exact findings (rule + path + line, shaped by

@@ -82,6 +82,11 @@
       "description": "The reference realisation of the abstract escape-hatch contract: a justified inline marker naming the CATALOG RULE NAME (the <rule> half of the id — never a tool-internal rule id, mirroring findings attribution), counted against the app's checked-in budget ratchet. Another stack implements the same contract with its own comment syntax; only the semantics are normative. Omitted exactly by the escape-hatch governance rules themselves (the budget ratchet, the ungoverned-marker condition) — governance cannot be waived by the mechanism it governs. The spec suite holds both the derivation and the omissions.",
       "minLength": 1
     },
+    "escape": {
+      "type": "string",
+      "description": "Normative, stack-neutral: the governed way out of a rule whose subject is a checked-in declaration that cannot carry an inline marker (a JSON document has no comments), stated as a state of that declaration itself - typically opting the whole file out with a stated reason, which a tool then reports. Declared in place of opt_out, never beside it, and only by the rules the spec suite lists as escaped by their declaration; the escape-hatch governance rules carry neither.",
+      "minLength": 1
+    },
     "guide_topic": {
       "type": "string",
       "description": "Reference-implementation metadata (backend only): the `terp guide` topic teaching the compliant pattern. Not normative for other stacks.",

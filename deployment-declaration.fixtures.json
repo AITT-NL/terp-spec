@@ -1,0 +1,151 @@
+{
+  "_comment": "The shared fixtures for deployment-declaration.schema.json, so every reader of a deployment declaration runs the same ones. 'refusals' names, for each violation case of the two deployment rules in the corpus, the field the refusal is about and the values that field allows: a reader's test asserts its message names both, which is how 'rejected with the field and the allowed values' becomes checkable rather than a habit. A field is a path into deployment.json ('$' is the document), or, where 'in' is given, into that profile file. 'trees' are the cases the corpus cannot carry, because a wheel or a tarball carries no symbolic link and a corpus case is not a version-control work tree: each describes a tree that a reader's own test builds on disk - writing 'files', creating each of 'links' as a symbolic link to its relative target, and making the tree root a work tree when 'workTree' is set - and then runs the rule over 'projectRoot'. 'resolve' lists the paths the declaration leads a reader to, each relative to its 'base', and where each lands against the checkout: the root of the work tree that holds the project, or the project root itself when it lies in none. Every name, host and image here is invented.",
+  "refusals": {
+    "backend/deployment_declaration_is_readable": {
+      "violation-01": { "field": "$", "allowed": "one JSON object" },
+      "violation-02": { "field": "$", "allowed": "one JSON object, not an array" },
+      "violation-03": { "field": "$.units[0].image", "allowed": "a unit's keys: backup, command, dependsOn, env, healthPath, id, instances, kind, livenessPath, migrations, role, size, stateful, version - there is no image key: name a datastore by kind and version, or build the unit from the checkout" },
+      "violation-04": { "field": "$.units[0].statefull", "allowed": "a unit's keys, among them stateful" },
+      "violation-05": { "field": "$.environments", "allowed": "the top-level keys: build, compose, externalDatabase, rollback, schemaVersion, sizes, units, volumes - an environment is the deploying tool's record, not this file" },
+      "violation-06": { "field": "$.schemaVersion", "allowed": "1" },
+      "violation-07": { "field": "$.schemaVersion", "allowed": "1" },
+      "violation-08": { "field": "$.build", "allowed": "generated or own" },
+      "violation-09": { "field": "$.build", "allowed": "beside unmanaged, only reason and schemaVersion" },
+      "violation-10": { "field": "$.reason", "allowed": "a sentence saying why a tool cannot drive this deploy" },
+      "violation-11": { "field": "$.reason", "allowed": "a sentence that is not blank" },
+      "violation-12": { "field": "$.build", "allowed": "generated or own" },
+      "violation-13": { "field": "$.units[1].command", "allowed": "an argument list of strings, never a shell string" },
+      "violation-14": { "field": "$.units[1].command[1]", "allowed": "text without control characters" },
+      "violation-15": { "field": "$.reason", "allowed": "text without control characters" },
+      "violation-16": { "field": "$.reason", "allowed": "at most 500 characters" },
+      "violation-17": { "field": "$.units[2].instances", "allowed": "many or one" },
+      "violation-18": { "field": "$.units[2].size", "allowed": "a key of sizes: small" },
+      "violation-19": { "field": "$.units[0].backup", "allowed": "a policy with every and keep - client is valid only on externalDatabase" },
+      "violation-20": { "field": "$.units[0].backup.every", "allowed": "an ISO 8601 duration, such as P1D or PT6H" },
+      "violation-21": { "field": "$.rollback.strategy", "allowed": "redeploy-previous-release" },
+      "violation-22": { "field": "$.units[0].version", "allowed": "the datastore version, declared with its kind: 17 for postgres" },
+      "violation-23": { "field": "$.units[0].version", "allowed": "a version the datastore table carries for postgres: 17" },
+      "violation-24": { "field": "$.units[4].id", "allowed": "an id no other unit has" },
+      "violation-25": { "field": "$.compose.file", "allowed": "a path relative to the project root, with forward slashes" },
+      "violation-26": { "field": "$.compose.file", "allowed": "a path that resolves inside the checkout" },
+      "violation-27": { "field": "$.compose.file", "allowed": "a deployment profile, never the development one (docker-compose.yml)" },
+      "violation-28": { "field": "$.compose.overrides[0]", "allowed": "a deployment profile, never the development one the development declaration names (compose.dev.yml)" },
+      "violation-29": { "field": "$.units[0].stateful", "allowed": "true - a backup policy sits only on a unit declared stateful" },
+      "violation-30": { "field": "$.approvals", "allowed": "nothing - approvals is deploy policy: it belongs to the deploying tool's environment policy, not to this file" },
+      "violation-31": { "field": "$.publishers", "allowed": "nothing - publishers is deploy policy: it belongs to the deploying tool's environment policy, not to this file" },
+      "violation-32": { "field": "$.units[3].access", "allowed": "nothing - access is deploy policy: it belongs to the deploying tool's environment policy, not to this file" },
+      "violation-33": { "field": "$.gatePolicy", "allowed": "nothing - gatePolicy is deploy policy: it belongs to the deploying tool's environment policy, not to this file" },
+      "violation-34": { "field": "$.requiredApprovals", "allowed": "nothing - requiredApprovals is deploy policy: it belongs to the deploying tool's environment policy, not to this file" },
+      "violation-35": { "in": "docker-compose.prod.yml", "field": "services.api.build.context", "allowed": "a build context that resolves inside the checkout" },
+      "violation-36": { "field": "$.externalDatabase.backup", "allowed": "client" },
+      "violation-37": { "field": "$.sizes.small.cpu", "allowed": "a number of cores above 0" },
+      "violation-38": { "field": "$.units[2].env[0]", "allowed": "an upper-case variable name, as the variable manifest declares one" },
+      "violation-39": { "field": "$.units", "allowed": "at least one unit" },
+      "violation-40": { "field": "$.unmanaged", "allowed": "true, or leave the key out" }
+    },
+    "backend/deployment_declaration_tells_the_truth": {
+      "violation-01": { "field": "$.units[4].id", "allowed": "a service of the profile: api, db, migrate, web" },
+      "violation-02": { "field": "$.compose.file", "allowed": "a profile file that exists, whose services the units are" },
+      "violation-03": { "field": "$.volumes[0].id", "allowed": "a named volume of the profile: db-data" },
+      "violation-04": { "field": "$.units[2].env[0]", "allowed": "a name the profile passes to api" },
+      "violation-05": { "field": "$.units[2].env[0]", "allowed": "a name routed to a file api loads - the manifest routes this one to .app.worker.env" },
+      "violation-06": { "field": "$.units[2].command", "allowed": "the profile's command for worker: terp jobs worker" },
+      "violation-07": { "field": "$.units[2].dependsOn", "allowed": "the profile's start order for api, restricted to declared units: db, migrate" },
+      "violation-08": { "field": "$.units[0].kind", "allowed": "a profile image that is the datastore table's digest for postgres 17" },
+      "violation-09": { "field": "$.units[0].kind", "allowed": "a profile image that is the datastore table's digest for postgres 17, from the table's own registry" },
+      "violation-10": { "field": "$.units[0].kind", "allowed": "a profile image that is the datastore table's digest for postgres 17" },
+      "violation-11": { "field": "$.units[2].id", "allowed": "an image some profile service builds from the checkout" },
+      "violation-12": { "field": "$.externalDatabase", "allowed": "a resolved profile that runs no database service" },
+      "violation-13": { "field": "$.externalDatabase", "allowed": "a resolved profile that runs no database service" },
+      "violation-14": { "field": "$.units[3].healthPath", "allowed": "a role that resolves it: api, database, one-shot, scheduler, store, web or worker" },
+      "violation-15": { "field": "$.units[2].command", "allowed": "the resolved profile's command for worker: terp jobs worker --once" }
+    }
+  },
+  "trees": [
+    {
+      "id": "profile-through-a-link-that-leaves",
+      "rule": "backend/deployment_declaration_is_readable",
+      "expect": "violation",
+      "field": "$.compose.file",
+      "projectRoot": "app",
+      "files": {
+        "app/deployment.json": "{\n  \"schemaVersion\": 1,\n  \"build\": \"own\",\n  \"compose\": { \"file\": \"deploy/compose.yml\" },\n  \"units\": [{ \"id\": \"api\", \"role\": \"api\" }]\n}\n",
+        "elsewhere/compose.yml": "services:\n  api:\n    build: .\n"
+      },
+      "links": { "app/deploy": "../elsewhere" },
+      "resolve": [
+        { "base": "app", "path": "deploy/compose.yml", "lands": "outside" }
+      ]
+    },
+    {
+      "id": "build-context-through-a-link-that-leaves",
+      "rule": "backend/deployment_declaration_is_readable",
+      "expect": "violation",
+      "in": "docker-compose.prod.yml",
+      "field": "services.api.build.context",
+      "projectRoot": "app",
+      "files": {
+        "app/deployment.json": "{\n  \"schemaVersion\": 1,\n  \"build\": \"own\",\n  \"compose\": { \"file\": \"docker-compose.prod.yml\" },\n  \"units\": [{ \"id\": \"api\", \"role\": \"api\" }]\n}\n",
+        "app/docker-compose.prod.yml": "services:\n  api:\n    build:\n      context: src\n",
+        "elsewhere/src/Dockerfile": "FROM scratch\n"
+      },
+      "links": { "app/src": "../elsewhere/src" },
+      "resolve": [
+        { "base": "app", "path": "docker-compose.prod.yml", "lands": "inside" },
+        { "base": "app", "path": "src", "lands": "outside" }
+      ]
+    },
+    {
+      "id": "a-link-that-stays-inside",
+      "rule": "backend/deployment_declaration_is_readable",
+      "expect": "compliant",
+      "projectRoot": "app",
+      "files": {
+        "app/deployment.json": "{\n  \"schemaVersion\": 1,\n  \"build\": \"own\",\n  \"compose\": { \"file\": \"current/compose.yml\" },\n  \"units\": [{ \"id\": \"api\", \"role\": \"api\" }]\n}\n",
+        "app/releases/r1/compose.yml": "services:\n  api:\n    build: .\n",
+        "app/releases/r1/Dockerfile": "FROM scratch\n"
+      },
+      "links": { "app/current": "releases/r1" },
+      "resolve": [
+        { "base": "app", "path": "current/compose.yml", "lands": "inside" },
+        { "base": "app/current", "path": ".", "lands": "inside" }
+      ]
+    },
+    {
+      "id": "a-subdirectory-deployable-builds-from-the-work-tree-root",
+      "rule": "backend/deployment_declaration_is_readable",
+      "expect": "compliant",
+      "projectRoot": "apps/demo",
+      "workTree": ".",
+      "files": {
+        "apps/demo/deployment.json": "{\n  \"schemaVersion\": 1,\n  \"build\": \"own\",\n  \"compose\": { \"file\": \"docker-compose.prod.yml\" },\n  \"units\": [{ \"id\": \"api\", \"role\": \"api\" }]\n}\n",
+        "apps/demo/docker-compose.prod.yml": "services:\n  api:\n    build:\n      context: ../..\n      dockerfile: apps/demo/Dockerfile.prod\n",
+        "apps/demo/Dockerfile.prod": "FROM scratch\n"
+      },
+      "links": {},
+      "resolve": [
+        { "base": "apps/demo", "path": "docker-compose.prod.yml", "lands": "inside" },
+        { "base": "apps/demo", "path": "../..", "lands": "inside" },
+        { "base": ".", "path": "apps/demo/Dockerfile.prod", "lands": "inside" }
+      ]
+    },
+    {
+      "id": "the-same-climb-with-no-work-tree",
+      "rule": "backend/deployment_declaration_is_readable",
+      "expect": "violation",
+      "in": "docker-compose.prod.yml",
+      "field": "services.api.build.context",
+      "projectRoot": "apps/demo",
+      "files": {
+        "apps/demo/deployment.json": "{\n  \"schemaVersion\": 1,\n  \"build\": \"own\",\n  \"compose\": { \"file\": \"docker-compose.prod.yml\" },\n  \"units\": [{ \"id\": \"api\", \"role\": \"api\" }]\n}\n",
+        "apps/demo/docker-compose.prod.yml": "services:\n  api:\n    build:\n      context: ../..\n      dockerfile: apps/demo/Dockerfile.prod\n",
+        "apps/demo/Dockerfile.prod": "FROM scratch\n"
+      },
+      "links": {},
+      "resolve": [
+        { "base": "apps/demo", "path": "docker-compose.prod.yml", "lands": "inside" },
+        { "base": "apps/demo", "path": "../..", "lands": "outside" }
+      ]
+    }
+  ]
+}
