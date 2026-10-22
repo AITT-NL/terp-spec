@@ -4,6 +4,11 @@
     "backend/errors_use_the_typed_envelope": [
       "an error constructed under an alias (`from fastapi import HTTPException as ApiError`) is not required to be resolved back to the framework's HTTP error"
     ],
+    "backend/no_destructive_migrations": [
+      "a statement the source does not spell out (a variable, a value a helper returns, a file read at run time) is not required to be read: only a statement written as a literal, an f-string or a concatenation of strings is",
+      "a unique, foreign-key or unique-index constraint on a column the same upgrade adds nullable is not required to be reported when that upgrade fills the column before adding the constraint, which is the one order in which the existing rows can break it",
+      "a constraint written inline in a raw column addition (`ADD COLUMN slug text UNIQUE DEFAULT 'x'`, `ADD COLUMN rank int NOT NULL`) is not required to be read as a step the existing rows can break"
+    ],
     "backend/no_dynamic_sql": [
       "SQL built as a string and handed to a raw DB-API cursor (`cursor.execute(f\"SELECT ... FROM {table}\")`) is not required to be caught: the check matches the reference stack's `text(...)` construct, and a package that does not model the schema it talks to never writes one. The shape is not ungoverned — the reference stack delegates it to a stock analyzer's SQL-string-construction rule, in the platform repository and in every generated project as a blocking step — but that lane is outside the catalog, so the limit is recorded here rather than implied",
       "an alias-renamed symbol import (`from sqlalchemy import text as sql_text`) is not required to be resolved to `text`"
