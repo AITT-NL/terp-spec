@@ -184,11 +184,13 @@ against an earlier version reads this file to see exactly what changed since.
   rename, a type change, a NOT NULL tightening, and a constraint added to an existing table
   (unique, check, foreign key, primary key, a unique index, or the validation of one first
   added without checking the existing rows). It also says what each finding tells the author
-  to do instead: expand, backfill, and contract in a later release, where the contract step
-  is the one the governed marker justifies. Two shapes are not findings, because no existing
-  row can break them. One is a step on a table the same upgrade creates. The other is a unique,
+  to do instead: expand, backfill the rows outside the upgrade, and contract in a later
+  release, where the contract step is the one the governed marker justifies. Two shapes are
+  not findings, because no existing row can break them. One is a step on a table the same upgrade creates. The other is a unique,
   foreign-key or unique-index constraint on columns the same upgrade adds nullable with no
-  default, which is how a new reference column is usually written.
+  default, which is how a new reference column is usually written. Not being a finding does
+  not make either an expand step: whether the previous release keeps working after an
+  upgrade is a separate question, which this rule does not answer.
 
   A changed contract: a conformant checker now reports steps it passed before, and one
   published sample changes verdict. `compliant-01` tightened an existing column, so it now
