@@ -175,7 +175,44 @@ against an earlier version reads this file to see exactly what changed since.
   `dependentRequired`, `if`/`then`/`else`, `number`, `exclusiveMinimum`, with `$defs` and
   `default` as annotations), each with its negative case. No existing artifact changed verdict.
 
-A changed contract (a new catalog field, two new rules and a new vocabulary), hence the minor. The reference
+- **`backend/no_destructive_migrations` reports renames, NOT NULL tightening and constraints
+  the existing rows may break.** The rule named drops and type changes and nothing else, so a
+  conformant checker passed two steps that break a deploy the same way. A rename of a table or
+  a column breaks the release still running, which reads the old name. Tightening an existing
+  column to NOT NULL fails on the first row that holds NULL. Neither shows on the empty
+  database a migration test upgrades. The intent now names five kinds of step: a drop, a
+  rename, a type change, a NOT NULL tightening, and a constraint added to an existing table
+  (unique, check, foreign key, primary key, a unique index, or the validation of one first
+  added without checking the existing rows). It also says what each finding tells the author
+  to do instead: expand, backfill the rows outside the upgrade, and contract in a later
+  release, where the contract step is the one the governed marker justifies. Two shapes are
+  not findings, because no existing row can break them. One is a step on a table the same upgrade creates. The other is a unique,
+  foreign-key or unique-index constraint on columns the same upgrade adds nullable with no
+  default, which is how a new reference column is usually written. Not being a finding does
+  not make either an expand step: whether the previous release keeps working after an
+  upgrade is a separate question, which this rule does not answer.
+
+  A changed contract: a conformant checker now reports steps it passed before, and one
+  published sample changes verdict. `compliant-01` tightened an existing column, so it now
+  restates a constraint the column already has, which is still compliant. Five violations are
+  new, each with its exact findings: renames, including an f-string and a statement run
+  through the driver (`violation-06`); NOT NULL tightening, including a column added,
+  back-filled and tightened in one release (`violation-07`); constraints, including a unique
+  constraint marked `NOT VALID`, which the qualifier does not apply to, and one on a new column
+  that carries a server default (`violation-08`); every kind on a batch block
+  (`violation-09`); and raw type changes, including a column named `type` (`violation-10`).
+  Three compliant cases are new: the expand halves and the statements that share a spelling
+  with a destructive one (`compliant-03`), a table the same upgrade creates (`compliant-04`),
+  and the batch spelling of a new reference column (`compliant-05`). `compliant-03` also
+  contracts a precision fix: `DROP NOT NULL` relaxes a column and is no drop. A checker that
+  knows only drops and type changes misses every finding in `violation-06`, `-07`, `-08` and
+  `-10` and four of six in `-09`, and it reports `compliant-03`. Three residuals are recorded
+  for the rule: a statement the source does not spell out, a constraint on a new nullable
+  column that the same upgrade fills first, and a constraint written inline in a raw column
+  addition.
+
+A changed contract (a new catalog field, two new rules, a new vocabulary, and a rule that
+reports more), hence the minor. The reference
 implementation does not carry either rule yet: `certify-against-reference` stays red for them
 until it does, and `REFERENCE_SHA` is not moved here.
 
