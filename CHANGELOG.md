@@ -165,6 +165,31 @@ against an earlier version reads this file to see exactly what changed since.
   lists, and lists by name the declaration vocabularies no rule realises, each of which must
   ship its fixtures.
 
+- **`backend/personal_fields_are_declared`** — a model field named like personal data says
+  whether it holds personal data. Personal data has no shape a redactor can find, so a log, an
+  audit trail or an outbound payload can withhold an address only where the model holding it
+  declares the field personal, and the declaration is per field and per model: a schema that
+  redeclares a field without it has declared the field not personal. A field whose name is in a
+  short vocabulary (an email address, a phone number, a date of birth, a national identifier, a
+  person's name, a home address, matched against the name's last words, so `contact_email` is
+  in and `email_verified` is not) is declared personal on every model that declares it, or
+  carries a justified opt-out saying why it holds no person's data. The vocabulary is a
+  floor, not a definition: a postcode, a bare address or a bare name belongs to an
+  organisation as often as to a person. `static-portable`, `runtime.applicability:
+  not-applicable`: the running app can see a declared field, but not that a justified opt-out
+  was a decision rather than an oversight. 4 violations (a table, a schema that redeclares a
+  declared field plainly, the noun as the name's last words in an update schema, a model
+  through an app-owned base and a plain one) and 2 compliant cases (declared on the table and
+  the schema beside names outside the vocabulary; a dataclass, a plain class and function
+  parameters, none of them models). Two detector residuals are recorded: a model whose base
+  comes from another package under an unknown name, and a model built at runtime.
+
+- **Corpus for the declaration in two existing rules.** A field declared personal still caps
+  its length and still may not be a plain unique column on a soft-deletable table:
+  `input_str_fields_have_max_length` gains a violation and a compliant case, and
+  `no_unique_columns_on_soft_delete_models` a violation, so a declaration helper that forwards
+  the field's keywords is no way around either.
+
 ### Changed
 
 - **The spec suite's validator applies a keyword by the type of the instance**, as JSON Schema
@@ -175,11 +200,12 @@ against an earlier version reads this file to see exactly what changed since.
   `dependentRequired`, `if`/`then`/`else`, `number`, `exclusiveMinimum`, with `$defs` and
   `default` as annotations), each with its negative case. No existing artifact changed verdict.
 
-A changed contract (a new catalog field, two new rules and a new vocabulary), hence the minor. The reference
-implementation does not carry either rule yet: `certify-against-reference` stays red for them
-until it does, and `REFERENCE_SHA` is not moved here.
+A changed contract (a new catalog field, three new rules and a new vocabulary), hence the minor.
+`REFERENCE_SHA` names a reference commit that carries the two deployment-declaration rules.
+`personal_fields_are_declared` is carried by a later one, so `certify-against-reference` stays
+red for it until `REFERENCE_SHA` moves to a reference commit that carries all three.
 
-102 rules: 84 backend, 18 frontend.
+103 rules: 85 backend, 18 frontend.
 
 ## 0.39.0
 
