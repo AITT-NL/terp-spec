@@ -236,8 +236,9 @@ A rule whose subject is a checked-in declaration that **cannot carry a marker**
 recorded one would send a reader looking for a syntax the file does not have.
 Its one governed way out is a *state of the declaration itself*, stated
 stack-neutrally in the entry's `escape` field in place of `opt_out` (the
-deployment declaration's two rules: opting the whole file out with a reason a
-tool then reports). Such a rule is listed by name in the spec suite, as the
+deployment declaration's three rules: opting the whole file out with a reason a
+tool then reports, or, for the render rule, declaring the build files the app's
+own; a marker in a file a generator rewrites would be erased by the next render). Such a rule is listed by name in the spec suite, as the
 governance rules are, so no entry can grant itself an escape by declaring one.
 
 The `<reason>` is free text, and MAY carry structured metadata tokens so a
@@ -372,7 +373,7 @@ domains, TLS, the backup destination and its credentials, sizes and instance
 counts per environment, and the image-digest allowlist. Where the declaration
 restates such a fact, the owner wins and a disagreement is refused.
 
-Two rules check it, and the schema is what the first one reads:
+Three rules check it, and the schema is what the first one reads:
 
 - **`backend/deployment_declaration_is_readable`** — every reader reads the
   file the same way, or refuses it: valid against the schema, in exactly one
@@ -389,8 +390,31 @@ Two rules check it, and the schema is what the first one reads:
   one resolved profile) and of the app: units, volumes, variables passed,
   restated commands and start order, datastore images pinned to the stack's
   published digest, every other unit built from the checkout, migration
-  histories and health paths. The app-side half needs the composed app and skips
-  with a named note where none can be loaded.
+  histories and health paths, and a volume's restated mount. The app-side half
+  needs the composed app and skips with a named note where none can be loaded.
+- **`backend/deployment_generated_files_match_their_render`** — in the generated
+  state, every build file the stack's generator owns is byte for byte what it
+  renders from the declaration, the project's name and the framework release's
+  tables, a path it owns but does not render is absent, the environment files a
+  generated unit loads stay out of version control and the build context, the
+  project's name is one the container tooling accepts, and the build the app's
+  template recorded agrees. A declaration the generator cannot render is red here,
+  naming the refusal and `own` as the way out. Silent in every other state.
+
+**The generator's words.** Two words exist for the generated state. `generator`
+holds what only a generator reads, and is valid nowhere else: beside `own` it is
+refused, because nothing would honour it. Its one word so far,
+`generator.systemPackages`, names operating-system packages from a closed
+system-package table the stack publishes, one pinned source per entry, as the
+datastore table does for images; a reader refuses a name its table does not carry
+and names the ones it does, so a stack whose table is empty refuses every name,
+and the pattern refuses a name that could be read as an option. `volumes[].mount`
+(`{"path": "var/files", "units": ["api", "worker"]}`) says where a volume is
+mounted and on which declared units, always inside the app's `var/` directory
+with no segment that begins with a dot. Under `own` it restates the profile,
+which the truth rule holds it to; under `generated` it is what the generator
+renders, and required. Which mount paths a stack's generator can render is that
+stack's to say.
 
 The schema also names, as data rather than prose, the role words it knows
 (`$defs.knownRoles`) and the unit fields a reader resolves by role
@@ -407,7 +431,7 @@ which digests a framework version accepts; whether an environment accepts them
 is that environment's own allowlist, outside the file.
 
 `deployment-declaration.fixtures.json` holds what every reader runs beside the
-corpus: for each violation case of both rules, the **field** the refusal is
+corpus: for each violation case of the three rules, the **field** the refusal is
 about and the **values that field allows**, so a reader's test asserts its
 message names both; and the path escapes a corpus case cannot carry — a symbolic
 link out of the checkout, and a build context that is inside a version-control
@@ -479,15 +503,20 @@ the `backend/escape_hatch_budget` cases carry the `escape-hatch-budget.json`
 the ratchet is verified against, and a frontend layout-contract case activates
 via a `layout-contract.json` at its root.
 
-The two deployment-declaration rules' cases are rooted at the **project root**,
+The three deployment-declaration rules' cases are rooted at the **project root**,
 not the app package root: `deployment.json` sits beside the profile files it
 names, and beside `environment.schema.json` and `workbench.json` where a case
 needs them. A case that names a datastore `kind` ships the table a checker
 resolves it against as `datastore-table.json` at its root —
 `{"kinds": {"<kind>": {"role": "database" | "store", "versions": {"<version>":
 "<image>@sha256:<digest>"}}}}`, every digest invented — so the case means the
-same on every stack, whatever table that stack publishes. A copied case lies in
-no work tree, so its checkout is its root.
+same on every stack, whatever table that stack publishes. A case that names a
+system package ships `system-package-table.json` the same way,
+`{"packages": {"<name>": ...}}`. A copied case lies in no work tree, so its
+checkout is its root. The render rule's cases carry no expected render, because
+a generator's bytes are its stack's and move with every framework release's
+base-image digests: its compliant cases are the states it is silent in, and
+each violation is red whatever the render is.
 
 A violation case MAY additionally ship an **`expected-findings.json`** at its
 root: the exact findings (rule + path + line, shaped by
