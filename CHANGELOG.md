@@ -192,6 +192,11 @@ against an earlier version reads this file to see exactly what changed since.
 
 ### Changed
 
+- **`backend/no_adhoc_logging_config` no longer claims more than the redaction does.** Its
+  intent said the central filter redacts "secret/PII". It recognises secrets by name and by
+  shape, and personal data only where a model declares the field personal; the intent now says
+  so. Prose, no change to what the rule refuses.
+
 - **The spec suite's validator applies a keyword by the type of the instance**, as JSON Schema
   specifies, rather than only when the schema also says `type`. Before, `{"required":
   ["unmanaged"]}` constrained nothing, so an `if` written the ordinary way held for every
