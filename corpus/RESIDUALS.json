@@ -26,6 +26,10 @@
     "backend/no_raw_outbound_http": [
       "dynamic import (`importlib.import_module(\"httpx\")`) is not required to be seen as an import"
     ],
+    "backend/personal_fields_are_declared": [
+      "a model whose base comes from another package under a name that is not one of the known model bases (a third-party base model) is not required to be recognised as a model, because the check resolves bases by name within the scanned tree",
+      "a model built at runtime (create_model, a class assembled by a factory) is not required to be read: its fields exist only once the code runs"
+    ],
     "frontend/generated-client-only": [
       "egress through receivers other than `window`/`globalThis` (`self.fetch`) is not required"
     ],
