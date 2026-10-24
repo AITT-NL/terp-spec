@@ -70,7 +70,7 @@ jobs:
                       "'${DEFAULT_BRANCH}' — release tags must point at reviewed," \
                       "merged history"; exit 1; }
           echo "sha=$tagged" >> "$GITHUB_OUTPUT"
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: "3.12"
       - name: The spec is self-consistent at the tagged commit
@@ -129,7 +129,7 @@ jobs:
           echo "sha=$sha" >> "$GITHUB_OUTPUT"
           echo "Certifying against terp-framework@${sha}" | tee -a "$GITHUB_STEP_SUMMARY"
       - name: Install uv
-        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        uses: astral-sh/setup-uv@18d369b23da25a81e9458561248e1aafff6a70fa # v10.3.1
         with:
           # A release restores no cache. ci.yml writes this same scope on a
           # pull request, so a restored cache would be an input a pull request
@@ -198,7 +198,7 @@ jobs:
         with:
           persist-credentials: false
           ref: ${{ needs.verify.outputs.verified_sha }}
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: "3.12"
       - name: Build the sdist + wheel
@@ -214,7 +214,7 @@ jobs:
         # points to. 0.21.0 died exactly in that gap: hatchling wrote
         # `Metadata-Version: 2.5` and the pinned twine refused it as invalid —
         # a release broken by two inputs that were each fine on their own.
-        uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2
+        uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086 # v1.14.3
         with:
           skip-existing: true
 
