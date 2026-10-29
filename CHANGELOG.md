@@ -201,11 +201,21 @@ against an earlier version reads this file to see exactly what changed since.
   `dependentRequired`, `if`/`then`/`else`, `number`, `exclusiveMinimum`, with `$defs` and
   `default` as annotations), each with its negative case. No existing artifact changed verdict.
 
-A changed contract (a new catalog field, two new rules and a new vocabulary), hence the minor. The reference
-implementation does not carry either rule yet: `certify-against-reference` stays red for them
-until it does, and `REFERENCE_SHA` is not moved here.
+- **`backend/not_null_columns_are_backfilled` says "tighten it in a later release"**, where it
+  said "a later revision": a later revision in the same release ships the contract step with
+  the expand step, and that release can no longer roll back without a restore. Prose only.
 
-102 rules: 84 backend, 18 frontend.
+- **`backend/migration_history_is_intact`'s runtime rationale describes the narrowed check.**
+  The reference stack's orphan check no longer refuses every revision the code does not
+  define: it admits one the migration record proves inside the schema window (one migration
+  run ahead, every revision of it expand-only, on the same framework version, walking back to
+  exactly the code head). A rewritten or deleted revision is still never inside it. Prose only.
+
+A changed contract (a new catalog field, three new rules and a new vocabulary), hence the minor.
+`REFERENCE_SHA` names a framework commit that carries all three rules, and moves to the merged
+commit once the framework's pull request lands.
+
+103 rules: 85 backend, 18 frontend.
 
 ## 0.39.0
 
