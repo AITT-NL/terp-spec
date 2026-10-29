@@ -79,7 +79,7 @@
     },
     "opt_out": {
       "type": "string",
-      "description": "The reference realisation of the abstract escape-hatch contract: a justified inline marker naming the CATALOG RULE NAME (the <rule> half of the id — never a tool-internal rule id, mirroring findings attribution), counted against the app's checked-in budget ratchet. Another stack implements the same contract with its own comment syntax; only the semantics are normative. Omitted exactly by the escape-hatch governance rules themselves (the budget ratchet, the ungoverned-marker condition) — governance cannot be waived by the mechanism it governs. The spec suite holds both the derivation and the omissions.",
+      "description": "The reference realisation of the abstract escape-hatch contract: a justified inline marker naming the CATALOG RULE NAME (the <rule> half of the id — never a tool-internal rule id, mirroring findings attribution), counted against the app's checked-in budget ratchet. Another stack implements the same contract with its own comment syntax; only the semantics are normative. Omitted exactly by the escape-hatch governance rules themselves (the budget ratchet, the ungoverned-marker condition) — governance cannot be waived by the mechanism it governs — and by a rule whose way out is its own subject (a migration revision that needs an operation off the expand list declares that it is not expand-only). The spec suite holds both the derivation and the omissions, each list by name.",
       "minLength": 1
     },
     "escape": {

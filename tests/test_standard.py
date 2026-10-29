@@ -268,6 +268,14 @@ _RULES_ESCAPED_BY_THEIR_DECLARATION = {
     "backend/deployment_declaration_tells_the_truth",
 }
 
+#: Rules with no way out at all, because the way out is the rule's own subject: a
+#: migration revision that needs an operation off the expand list declares that it is not
+#: expand-only, which is the rule's other answer rather than an exception to it. Listed by
+#: name, like the two sets above: an entry cannot grant itself this by omitting `opt_out`.
+_RULES_WITHOUT_A_WAY_OUT = {
+    "backend/expand_revisions_only_expand",
+}
+
 _OPT_OUT_TEMPLATES = {
     "backend": "# arch-allow-{name}: <reason>",
     "frontend": "// terp-allow-{name}: <reason>",
@@ -304,6 +312,12 @@ def test_opt_outs_derive_from_the_catalog_rule_name() -> None:
                 assert opt_out is None, (
                     f"{rule_id}: an escape-hatch governance rule must not declare an "
                     "opt_out — waiving governance with governance is refused"
+                )
+                continue
+            if rule_id in _RULES_WITHOUT_A_WAY_OUT:
+                assert opt_out is None, (
+                    f"{rule_id}: a rule whose way out is its own subject declares no "
+                    "opt_out marker"
                 )
                 continue
             expected = _OPT_OUT_TEMPLATES[surface].format(name=name.replace("_", "-"))

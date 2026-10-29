@@ -15,7 +15,7 @@
   "opt_out": "# arch-allow-migration-history-is-intact: <reason>",
   "runtime": {
     "applicability": "not-applicable",
-    "rationale": "Chain integrity is a property of the authored revision files and is checked from source alone. The complementary runtime control (terp.migrations.assert_no_orphaned_revisions, which refuses a database whose applied revisions the code no longer defines) enforces a different invariant on a different input: it needs a live database and cannot be observed from the source tree."
+    "rationale": "Chain integrity is a property of the authored revision files and is checked from source alone. The complementary runtime control (terp.migrations.assert_no_orphaned_revisions, which refuses a database holding a revision the code does not define unless the migration record proves it inside the schema window: one migration run ahead, every revision of it expand-only, applied on the same framework version, walking back to exactly the code head; a rewritten or deleted revision is never inside it) enforces a different invariant on a different input: it needs a live database and cannot be observed from the source tree."
   },
   "guide_topic": "migrations",
   "corpus": true

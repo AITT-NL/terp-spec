@@ -115,6 +115,32 @@ against an earlier version reads this file to see exactly what changed since.
   ships the table it resolves against as `datastore-table.json`, so the corpus means the same
   on every stack.
 
+- **`backend/expand_revisions_only_expand`** — a migration revision that declares itself
+  expand-only holds only expand operations. The declaration is the promise that the previous
+  release keeps working on the schema the revision leaves, which is what lets a release be
+  rolled back by starting the previous release again on the same database instead of
+  restoring a backup and losing every write since. The list is closed: a new table with what
+  is its own (a foreign key from it only with a cascading or nulling delete action, never onto
+  a soft-deleted table) and its seed rows; a column added to an existing table that is
+  nullable, defaulted or generated, with no uniqueness, no check and at most a nulling key on
+  that nullable column; an index that is not unique. Everything else is refused, any raw
+  statement and any data write to an existing table included, and so is a merge revision and
+  a declaration the checker cannot read. `static-portable`, `runtime.applicability:
+  required`: the reference stack's migration run refuses the same operations as they
+  execute, before their DDL.
+
+  It is the first rule with no way out at all, neither a marker nor an `escape`: a revision
+  that needs an operation off the list declares that it is not expand-only, which is the
+  rule's other answer and costs only its own release's restore-free rollback. The spec suite
+  lists such rules by name, as it lists the governance rules, and the generated rule page
+  says where the way out is instead of calling the rule a governance rule. Corpus: 10
+  violations, each with its expected finding, and 3 compliant cases (a new table with its own
+  unique index, cascading key and seed rows beside nullable, defaulted and generated columns;
+  the batch-block shape a SQLite-backed generator writes, with a nulling key over the column
+  it adds; and an undeclared revision full of drops, which the rule does not read). Two
+  detector residuals are recorded: an operation made in a helper function, and the order of
+  operations inside one revision.
+
 - **The catalog's `escape` field.** A rule over a declaration that cannot carry an inline
   marker — a JSON document has no comments — had nowhere honest to state its way out: the
   marker spelling `opt_out` records is one nobody could write, and the generated rule page
@@ -175,11 +201,21 @@ against an earlier version reads this file to see exactly what changed since.
   `dependentRequired`, `if`/`then`/`else`, `number`, `exclusiveMinimum`, with `$defs` and
   `default` as annotations), each with its negative case. No existing artifact changed verdict.
 
-A changed contract (a new catalog field, two new rules and a new vocabulary), hence the minor. The reference
-implementation does not carry either rule yet: `certify-against-reference` stays red for them
-until it does, and `REFERENCE_SHA` is not moved here.
+- **`backend/not_null_columns_are_backfilled` says "tighten it in a later release"**, where it
+  said "a later revision": a later revision in the same release ships the contract step with
+  the expand step, and that release can no longer roll back without a restore. Prose only.
 
-102 rules: 84 backend, 18 frontend.
+- **`backend/migration_history_is_intact`'s runtime rationale describes the narrowed check.**
+  The reference stack's orphan check no longer refuses every revision the code does not
+  define: it admits one the migration record proves inside the schema window (one migration
+  run ahead, every revision of it expand-only, on the same framework version, walking back to
+  exactly the code head). A rewritten or deleted revision is still never inside it. Prose only.
+
+A changed contract (a new catalog field, three new rules and a new vocabulary), hence the minor.
+`REFERENCE_SHA` names a framework commit that carries all three rules, and moves to the merged
+commit once the framework's pull request lands.
+
+103 rules: 85 backend, 18 frontend.
 
 ## 0.39.0
 
