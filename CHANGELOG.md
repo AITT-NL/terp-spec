@@ -115,6 +115,61 @@ against an earlier version reads this file to see exactly what changed since.
   ships the table it resolves against as `datastore-table.json`, so the corpus means the same
   on every stack.
 
+- **The generator's words**, in `deployment-declaration.schema.json`. `build: generated` is
+  in the vocabulary from this release, and a generator needs two facts no other state does.
+  `generator` holds what only a generator reads and is valid only beside `generated`: beside
+  `own` nothing renders, so a block there would be a request nothing honours, and it is
+  refused (the schema states it as a conditional on `build`; every reader names the block).
+  Its one word, `generator.systemPackages`, names operating-system packages for the
+  generated backend image from a closed system-package table the stack publishes, one pinned
+  source per entry, so two builds of one commit install the same thing. A reader refuses a
+  name its table does not carry, naming the ones it does; a stack whose table is empty — the
+  reference stack's, in this release — refuses every name, so the word exists with its
+  refusal until a measured need fills the table. The pattern refuses a name that begins
+  with anything but a letter or a digit, so a name can never be read as an option of the
+  package manager it reaches. `volumes[].mount` (`{"path": "var/files", "units": [...]}`)
+  says where a volume is mounted and on which declared units: always a path inside the
+  app's `var/` directory, relative to where the image runs the app, with no segment that
+  begins with a dot. Under `own` it restates the profile; under `generated` it is what the
+  generator renders and it is required, because a generator has nowhere else to learn where
+  a volume goes. Which paths a stack's generator can render is that stack's to say.
+
+- **`backend/deployment_generated_files_match_their_render`** — where the declaration says
+  `generated`, the build files are the generator's: changed by changing the declaration,
+  the project's name or the framework release, and rendering again. Every file the stack's
+  generator owns must be byte for byte its render, a path it owns that the declaration
+  renders nothing for must be absent, the environment files a generated unit loads stay out
+  of version control and the build context, the project's name is one the container tooling
+  accepts, and the build the app's template recorded agrees with the declaration's. A
+  declaration the generator cannot render is red here, naming the refusal and `own` as the
+  way out, because the app chose the one state that promises a render. Silent for an
+  undeclared app, `own`, the opted-out state and an unreadable declaration (the readable
+  rule's). The check never writes: rendering is a command whose output is reviewed and
+  committed. `static-bespoke`, `runtime.applicability: not-applicable` — the app never
+  reads its build files, and the deploy-boundary controls (the release tooling's own
+  render, the executor's escape audit) are the release tooling's. Its escape is the
+  declaration's own state, `build: own`, and it is listed beside the other two rules
+  escaped by their declaration: a marker in a file a generator rewrites would be erased by
+  the next render.
+
+  It ships with corpus, 7 violations and 4 compliant cases. A case cannot carry the expected
+  render — a generator's bytes are its stack's, and move with every framework release's
+  base-image digests — so the violations are red whatever the render is: a build file that
+  is not a render, a build file the declaration renders nothing for, an ignore file that
+  lets an environment file into the build context, a project name the container tooling
+  refuses, a template answer that disagrees, a start-order cycle, and a unit of an unknown
+  role with no command. The compliant cases are the four states the rule is silent in.
+
+- **Corpus for the two words.** `deployment_declaration_is_readable` gains 7 violations (a
+  `generator` block beside `own`, a system package its table does not carry, a package
+  named like an option, a mount outside `var/`, a mount that climbs out, a mount naming an
+  undeclared unit, a generated volume without a mount) and 2 compliant cases (a restated
+  mount under `own`; a generated declaration with its mount and an empty package list), and
+  `deployment_declaration_tells_the_truth` 2 violations (a mount restating units the profile
+  does not mount it on, and a path it is not mounted at) and a compliant case. A case that
+  names a system package ships the table it resolves against as `system-package-table.json`,
+  as a case naming a datastore kind ships `datastore-table.json`.
+
 - **The catalog's `escape` field.** A rule over a declaration that cannot carry an inline
   marker — a JSON document has no comments — had nowhere honest to state its way out: the
   marker spelling `opt_out` records is one nobody could write, and the generated rule page

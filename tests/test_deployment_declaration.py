@@ -36,11 +36,14 @@ _FIXTURES = json.loads(
 _CORPUS = _SPEC / "corpus" / "backend"
 _READABLE = "backend/deployment_declaration_is_readable"
 _TRUTH = "backend/deployment_declaration_tells_the_truth"
-_RULES = (_READABLE, _TRUTH)
+_RENDER = "backend/deployment_generated_files_match_their_render"
+_RULES = (_READABLE, _TRUTH, _RENDER)
 
 _MANAGED = _SCHEMA["else"]
 _UNMANAGED = _SCHEMA["then"]
 _UNIT = _MANAGED["properties"]["units"]["items"]
+_VOLUME = _MANAGED["properties"]["volumes"]["items"]
+_GENERATOR = _MANAGED["properties"]["generator"]
 _POLICY_KEYS = set(_SCHEMA["$defs"]["deployPolicyKeys"]["enum"])
 _POLICY_MESSAGE = (
     "{key} is deploy policy: it belongs to the deploying tool's environment policy, "
@@ -152,6 +155,38 @@ def _read(project: pathlib.Path) -> list[tuple[str, str]]:
                 ))
             if isinstance(ident, str):
                 seen.add(ident)
+
+    if document.get("build") == "own" and "generator" in document:
+        # The schema refuses this at build (a generator block asks for build generated);
+        # every reader names the block itself, which is what the person removes.
+        refusals.append((
+            "$.generator",
+            "$.generator: the generator's words are valid only beside build generated",
+        ))
+    generator = document.get("generator") if isinstance(document.get("generator"), dict) else {}
+    packages = generator.get("systemPackages")
+    package_file = project / "system-package-table.json"
+    if isinstance(packages, list) and package_file.is_file():
+        offered = json.loads(package_file.read_text(encoding="utf-8"))["packages"]
+        for index, name in enumerate(packages):
+            if isinstance(name, str) and name not in offered:
+                refusals.append((
+                    f"$.generator.systemPackages[{index}]",
+                    f"$.generator.systemPackages[{index}]: {name!r} is not in the "
+                    f"system-package table (packages: {', '.join(sorted(offered)) or 'none'})",
+                ))
+    declared = {unit.get("id") for unit in units if isinstance(unit, dict)}
+    volumes = document.get("volumes") if isinstance(document.get("volumes"), list) else []
+    for index, volume in enumerate(volumes):
+        mount = volume.get("mount") if isinstance(volume, dict) else None
+        named = mount.get("units") if isinstance(mount, dict) else None
+        for position, ident in enumerate(named if isinstance(named, list) else []):
+            if isinstance(ident, str) and ident not in declared:
+                refusals.append((
+                    f"$.volumes[{index}].mount.units[{position}]",
+                    f"$.volumes[{index}].mount.units[{position}]: {ident!r} is no declared "
+                    f"unit (declared: {', '.join(sorted(filter(None, declared)))})",
+                ))
 
     sizes = document.get("sizes") if isinstance(document.get("sizes"), dict) else {}
     table_file = project / "datastore-table.json"
@@ -405,6 +440,19 @@ _VALID = {
     "a volume with no backup": _seed(volumes=[{"id": "files"}]),
     "an external database": _seed(units=_SEED["units"][1:], externalDatabase={"backup": "client"}),
     "a rollback": _seed(rollback={"strategy": "redeploy-previous-release"}),
+    "a restated mount": _seed(volumes=[{"id": "files", "mount": {"path": "var/files",
+                                                                 "units": ["api", "migrate"]}}]),
+    "a mount deeper in var": _seed(volumes=[{"id": "cache", "mount": {"path": "var/cache/v2.1",
+                                                                       "units": ["api"]}}]),
+    "a generated volume with its mount": _seed(build="generated", volumes=[
+        {"id": "files", "mount": {"path": "var/files", "units": ["api"]},
+         "backup": {"every": "P1D", "keep": "P30D"}}
+    ]),
+    "a generator block": _seed(build="generated", generator={"systemPackages": ["libpq5"]}),
+    "a package name with its punctuation": _seed(
+        build="generated", generator={"systemPackages": ["g++", "libstdc++6", "python3.13-venv"]}
+    ),
+    "an empty generator block": _seed(build="generated", generator={}),
     "annotations": {**_seed(), "$schema": "https://terp.dev/spec/deployment-declaration.schema.json",
                     "$comment": "the hardened profile"},
 }
@@ -481,6 +529,39 @@ _INVALID = {
     "a terp version key": _seed(terp="0.40.0"),
     "an environment": _seed(environments={"production": {}}),
     "a domain": _seed(domain="app.example.invalid"),
+    "a generator block beside own": _seed(generator={"systemPackages": []}),
+    "an empty generator block beside own": _seed(generator={}),
+    "a generator word it lacks": _seed(build="generated", generator={"aptPackages": ["curl"]}),
+    "a package list as text": _seed(build="generated", generator={"systemPackages": "curl"}),
+    "a package named like an option": _seed(
+        build="generated", generator={"systemPackages": ["-oDir::Etc=/tmp"]}
+    ),
+    "a package in capitals": _seed(build="generated", generator={"systemPackages": ["Curl"]}),
+    "a package of one letter": _seed(build="generated", generator={"systemPackages": ["c"]}),
+    "a package with a space": _seed(build="generated", generator={"systemPackages": ["a b"]}),
+    "a package twice": _seed(build="generated", generator={"systemPackages": ["curl", "curl"]}),
+    "a generated volume without its mount": _seed(build="generated", volumes=[{"id": "files"}]),
+    "a mount outside var": _seed(volumes=[{"id": "files", "mount": {"path": "data",
+                                                                    "units": ["api"]}}]),
+    "a mount that is var itself": _seed(volumes=[{"id": "files", "mount": {"path": "var",
+                                                                          "units": ["api"]}}]),
+    "an absolute mount": _seed(volumes=[{"id": "files", "mount": {"path": "/srv/var/files",
+                                                                  "units": ["api"]}}]),
+    "a mount that climbs out": _seed(volumes=[{"id": "files", "mount": {"path": "var/../etc",
+                                                                        "units": ["api"]}}]),
+    "a mount into a hidden directory": _seed(volumes=[{"id": "files", "mount": {
+        "path": "var/.ssh", "units": ["api"]}}]),
+    "a mount with a backslash": _seed(volumes=[{"id": "files", "mount": {"path": "var\\files",
+                                                                         "units": ["api"]}}]),
+    "a mount with no units": _seed(volumes=[{"id": "files", "mount": {"path": "var/files",
+                                                                      "units": []}}]),
+    "a mount without units": _seed(volumes=[{"id": "files", "mount": {"path": "var/files"}}]),
+    "a mount without a path": _seed(volumes=[{"id": "files", "mount": {"units": ["api"]}}]),
+    "a mount naming a unit twice": _seed(volumes=[{"id": "files", "mount": {
+        "path": "var/files", "units": ["api", "api"]}}]),
+    "a mount as a string": _seed(volumes=[{"id": "files", "mount": "var/files"}]),
+    "a mount with a read-only flag": _seed(volumes=[{"id": "files", "mount": {
+        "path": "var/files", "units": ["api"], "readOnly": True}}]),
 }
 
 
@@ -545,6 +626,19 @@ def test_an_unknown_key_is_refused_at_every_level_and_an_annotation_nowhere() ->
     opted_out = {"unmanaged": True, "reason": "x"}
     assert _errors({**opted_out, "statefull": True})
     assert _errors({**opted_out, "$comment": "an annotation"}) == []
+    generated = _seed(
+        build="generated",
+        generator={"systemPackages": []},
+        volumes=[{"id": "files", "mount": {"path": "var/files", "units": ["api"]}}],
+    )
+    assert _errors(generated) == []
+    for level in (("generator",), ("volumes", 0, "mount")):
+        misspelt = copy.deepcopy(generated)
+        at(misspelt, *level)["statefull"] = True
+        assert _errors(misspelt), f"{level}: an unknown key must be refused"
+        annotated = copy.deepcopy(generated)
+        at(annotated, *level)["$comment"] = "an annotation"
+        assert _errors(annotated) == [], f"{level}: a $-prefixed annotation is exempt"
 
 
 def test_deploy_policy_is_refused_with_its_own_message_at_every_level_and_in_every_state(
@@ -676,6 +770,8 @@ def test_every_violation_case_names_its_field_and_what_it_allows() -> None:
         for name, expected in refusals[rule].items():
             assert set(expected) <= {"field", "allowed", "in"}, f"{rule}/{name}"
             assert expected["field"].strip() and expected["allowed"].strip(), f"{rule}/{name}"
+            if rule == _RENDER:
+                continue  # held by test_a_render_refusal_names_a_file_the_case_holds
             if rule == _TRUTH:
                 document = json.loads(
                     (_CORPUS / rule.split("/")[1] / name / "deployment.json").read_text(
@@ -732,6 +828,102 @@ def test_a_case_that_names_a_kind_ships_the_table_it_resolves_against() -> None:
                     assert re.fullmatch(r"[a-z0-9./-]+@sha256:[0-9a-f]{64}", image), (
                         f"{rule}/{case.name}: {kind} {version} is pinned by digest"
                     )
+
+
+def test_the_generator_words_stand_only_in_the_generated_state() -> None:
+    """``generator`` asks a generator for something, so beside ``own`` - where nothing
+    renders - it is refused, and beside ``unmanaged`` it is one more key of a state that
+    carries none. In the generated state the generator renders each volume's mount, so a
+    volume without one is refused there and only there."""
+    with_block = {"systemPackages": []}
+    assert _errors(_seed(build="generated", generator=with_block)) == []
+    assert any(error.startswith("$.build:") for error in _errors(_seed(generator=with_block)))
+    assert _errors({"unmanaged": True, "reason": "x", "generator": with_block})
+    unmounted = [{"id": "files", "backup": {"every": "P1D", "keep": "P30D"}}]
+    assert _errors(_seed(volumes=unmounted)) == [], "own: a mount is a restatement, optional"
+    for document in (_seed(build="generated", volumes=unmounted),
+                     _seed(build="generated", volumes=unmounted, generator=with_block)):
+        assert "$.volumes[0]: missing required field 'mount'" in _errors(document)
+    # No default: an absent block asks for nothing, so filling one in would turn every own
+    # declaration into a refusal.
+    assert "default" not in _GENERATOR
+    assert _GENERATOR["properties"]["systemPackages"]["default"] == []
+    assert "default" not in _VOLUME["properties"]["mount"]
+
+
+def test_a_package_name_can_never_be_read_as_an_option() -> None:
+    """A name reaches a package manager's argument list, where a leading dash is an
+    option: the pattern refuses one, and a name shorter than two characters, which no
+    package has."""
+    pattern = _GENERATOR["properties"]["systemPackages"]["items"]["pattern"]
+    for name in ("libpq5", "g++", "python3.13-venv", "ca-certificates"):
+        assert re.search(pattern, name), name
+    for name in ("-y", "--allow-unauthenticated", "-oDir::Etc=/tmp", "+x", ".x", "Curl", "a b",
+                 "curl=7.88", "curl/stable", "c"):
+        assert re.search(pattern, name) is None, name
+
+
+def _render_cases(prefix: str) -> list[pathlib.Path]:
+    return [case for case in _cases(_RENDER) if case.name.startswith(prefix)]
+
+
+def test_the_render_corpus_holds_only_what_every_stack_can_judge() -> None:
+    """No case carries the expected render: the generator's bytes are the stack's, and
+    they move with every framework release's base-image digests. So every violation is a
+    readable generated declaration that is red whatever the render is, and every compliant
+    case is a state the rule is silent in - and each of the four such states is sampled."""
+    for case in _render_cases("violation-"):
+        document = json.loads((case / "deployment.json").read_text(encoding="utf-8"))
+        assert document.get("build") == "generated", f"{case.name}: red only when generated"
+        assert _read(case) == [], f"{case.name}: the readable rule would stop first: {_read(case)}"
+    silent: set[str] = set()
+    for case in _render_cases("compliant-"):
+        file = case / "deployment.json"
+        if not file.is_file():
+            silent.add("undeclared")
+            continue
+        document = json.loads(file.read_text(encoding="utf-8"))
+        if _read(case):
+            silent.add("unreadable")
+        elif document.get("unmanaged") is True:
+            silent.add("opted out")
+        else:
+            assert document.get("build") == "own", f"{case.name}: a generated case is judged"
+            silent.add("own")
+    assert silent == {"undeclared", "unreadable", "opted out", "own"}, sorted(silent)
+
+
+def test_a_render_refusal_names_a_file_the_case_holds() -> None:
+    """A refusal about a file (a build file, an ignore file, pyproject.toml, the template's
+    answers) names it in ``in``, and the case holds that file - the stale file the render
+    does not produce included, since that file is the finding."""
+    for name, expected in _FIXTURES["refusals"][_RENDER].items():
+        case = _CORPUS / _RENDER.split("/")[1] / name
+        if "in" in expected:
+            assert (case / expected["in"]).is_file(), f"{name}: {expected['in']} missing"
+        else:
+            # A refusal may be about a field the unit lacks (a command the role has no
+            # default for), so the field's own container is what has to be declared.
+            document = json.loads((case / "deployment.json").read_text(encoding="utf-8"))
+            container = re.sub(r"(\.[^.\[]+|\[\d+\])$", "", expected["field"])
+            assert _member(document, container), f"{name}: {expected['field']}"
+
+
+def test_a_case_that_names_a_system_package_ships_the_table_it_resolves_against() -> None:
+    """Which packages exist is per stack, as datastore kinds are, so a case that names one
+    carries the table it resolves against, and stays stack-independent."""
+    for rule in _RULES:
+        for case in _cases(rule):
+            file = case / "deployment.json"
+            try:
+                document = json.loads(file.read_text(encoding="utf-8")) if file.is_file() else {}
+            except json.JSONDecodeError:
+                continue
+            generator = document.get("generator") if isinstance(document, dict) else None
+            if not (isinstance(generator, dict) and generator.get("systemPackages")):
+                continue
+            table = json.loads((case / "system-package-table.json").read_text(encoding="utf-8"))
+            assert set(table) == {"packages"} and isinstance(table["packages"], dict), case.name
 
 
 # --------------------------------------------------------------------------- #

@@ -261,11 +261,15 @@ _GOVERNANCE_RULES_WITHOUT_OPT_OUT = {
 #: Rules whose subject is a checked-in declaration that cannot carry an inline marker -
 #: a JSON document has no comments - so their one governed way out is a state of the
 #: declaration itself, stated in the entry's `escape` field rather than as a marker
-#: spelling nobody could write. Listed by name, like the governance rules above: an
-#: entry cannot grant itself this by declaring `escape`.
+#: spelling nobody could write. The render rule's subject is the build files a declaration
+#: makes generated: they could carry a comment, but a marker in a file the generator
+#: rewrites would be erased by the next render, so the declaration's own state is the
+#: way out there too. Listed by name, like the governance rules above: an entry cannot
+#: grant itself this by declaring `escape`.
 _RULES_ESCAPED_BY_THEIR_DECLARATION = {
     "backend/deployment_declaration_is_readable",
     "backend/deployment_declaration_tells_the_truth",
+    "backend/deployment_generated_files_match_their_render",
 }
 
 _OPT_OUT_TEMPLATES = {

@@ -1,5 +1,5 @@
 {
-  "_comment": "The shared fixtures for deployment-declaration.schema.json, so every reader of a deployment declaration runs the same ones. 'refusals' names, for each violation case of the two deployment rules in the corpus, the field the refusal is about and the values that field allows: a reader's test asserts its message names both, which is how 'rejected with the field and the allowed values' becomes checkable rather than a habit. A field is a path into deployment.json ('$' is the document), or, where 'in' is given, into that profile file. 'trees' are the cases the corpus cannot carry, because a wheel or a tarball carries no symbolic link and a corpus case is not a version-control work tree: each describes a tree that a reader's own test builds on disk - writing 'files', creating each of 'links' as a symbolic link to its relative target, and making the tree root a work tree when 'workTree' is set - and then runs the rule over 'projectRoot'. 'resolve' lists the paths the declaration leads a reader to, each relative to its 'base', and where each lands against the checkout: the root of the work tree that holds the project, or the project root itself when it lies in none. Every name, host and image here is invented.",
+  "_comment": "The shared fixtures for deployment-declaration.schema.json, so every reader of a deployment declaration runs the same ones. 'refusals' names, for each violation case of the three deployment rules in the corpus, the field the refusal is about and the values that field allows: a reader's test asserts its message names both, which is how 'rejected with the field and the allowed values' becomes checkable rather than a habit. A field is a path into deployment.json ('$' is the document), or, where 'in' is given, into that file: a profile, pyproject.toml or the template's answers file, and for a build file or an ignore file '$' is the whole file. The render rule's cases cannot carry the expected render, because a stack's generator renders its own bytes and they move with every framework release's base-image digests, so its violations are red whatever the render is and its compliant cases are the states it is silent in. A case that names a system package ships the table it resolves against as system-package-table.json, as a case that names a datastore kind ships datastore-table.json. 'trees' are the cases the corpus cannot carry, because a wheel or a tarball carries no symbolic link and a corpus case is not a version-control work tree: each describes a tree that a reader's own test builds on disk - writing 'files', creating each of 'links' as a symbolic link to its relative target, and making the tree root a work tree when 'workTree' is set - and then runs the rule over 'projectRoot'. 'resolve' lists the paths the declaration leads a reader to, each relative to its 'base', and where each lands against the checkout: the root of the work tree that holds the project, or the project root itself when it lies in none. Every name, host and image here is invented.",
   "refusals": {
     "backend/deployment_declaration_is_readable": {
       "violation-01": { "field": "$", "allowed": "one JSON object" },
@@ -41,7 +41,14 @@
       "violation-37": { "field": "$.sizes.small.cpu", "allowed": "a number of cores above 0" },
       "violation-38": { "field": "$.units[2].env[0]", "allowed": "an upper-case variable name, as the variable manifest declares one" },
       "violation-39": { "field": "$.units", "allowed": "at least one unit" },
-      "violation-40": { "field": "$.unmanaged", "allowed": "true, or leave the key out" }
+      "violation-40": { "field": "$.unmanaged", "allowed": "true, or leave the key out" },
+      "violation-41": { "field": "$.generator", "allowed": "nothing beside build own - generator is valid only beside build generated" },
+      "violation-42": { "field": "$.generator.systemPackages[0]", "allowed": "a package of the system-package table: none - this table carries no package" },
+      "violation-43": { "field": "$.generator.systemPackages[0]", "allowed": "a package name: lower-case letters, digits, + . and -, beginning with a letter or a digit" },
+      "violation-44": { "field": "$.volumes[0].mount.path", "allowed": "a path inside var/, relative to where the image runs the app, such as var/files" },
+      "violation-45": { "field": "$.volumes[0].mount.path", "allowed": "a path inside var/ with no segment that begins with a dot" },
+      "violation-46": { "field": "$.volumes[0].mount.units[1]", "allowed": "a declared unit's id: api, db, migrate, web" },
+      "violation-47": { "field": "$.volumes[0].mount", "allowed": "a mount: in the generated state the generator renders where each volume goes" }
     },
     "backend/deployment_declaration_tells_the_truth": {
       "violation-01": { "field": "$.units[4].id", "allowed": "a service of the profile: api, db, migrate, web" },
@@ -58,7 +65,18 @@
       "violation-12": { "field": "$.externalDatabase", "allowed": "a resolved profile that runs no database service" },
       "violation-13": { "field": "$.externalDatabase", "allowed": "a resolved profile that runs no database service" },
       "violation-14": { "field": "$.units[3].healthPath", "allowed": "a role that resolves it: api, database, one-shot, scheduler, store, web or worker" },
-      "violation-15": { "field": "$.units[2].command", "allowed": "the resolved profile's command for worker: terp jobs worker --once" }
+      "violation-15": { "field": "$.units[2].command", "allowed": "the resolved profile's command for worker: terp jobs worker --once" },
+      "violation-16": { "field": "$.volumes[0].mount.units", "allowed": "the declared units whose services mount files-data at var/files: api" },
+      "violation-17": { "field": "$.volumes[0].mount.path", "allowed": "where the profile mounts files-data: var/files" }
+    },
+    "backend/deployment_generated_files_match_their_render": {
+      "violation-01": { "in": "Dockerfile.prod", "field": "$", "allowed": "the render of deployment.json - render again and commit it, never edit the file" },
+      "violation-02": { "in": "frontend/Dockerfile.prod", "field": "$", "allowed": "no file - no web unit is declared, so the render has no frontend/Dockerfile.prod" },
+      "violation-03": { "in": ".dockerignore", "field": "$", "allowed": "patterns that leave .env, .app.env and each backend unit's .app.<id>.env out of the build context" },
+      "violation-04": { "in": "pyproject.toml", "field": "project.name", "allowed": "a name compose and Docker accept as a project and an image repository name: lower-case letters and digits, joined by -, _ or __" },
+      "violation-05": { "in": ".copier-answers.yml", "field": "deploy_build", "allowed": "generated, the build deployment.json declares" },
+      "violation-06": { "field": "$.units[2].dependsOn", "allowed": "a start order without a cycle" },
+      "violation-07": { "field": "$.units[3].command", "allowed": "an argument list - the generator has no command of its own for role virus-scanner" }
     }
   },
   "trees": [
