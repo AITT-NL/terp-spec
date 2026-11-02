@@ -230,7 +230,64 @@ against an earlier version reads this file to see exactly what changed since.
   `dependentRequired`, `if`/`then`/`else`, `number`, `exclusiveMinimum`, with `$defs` and
   `default` as annotations), each with its negative case. No existing artifact changed verdict.
 
-A changed contract (a new catalog field, two new rules and a new vocabulary), hence the minor. The reference
+- **`backend/no_destructive_migrations` reports renames, NOT NULL tightening and constraints
+  the existing rows may break.** The rule named drops and type changes and nothing else, so a
+  conformant checker passed two steps that break a deploy the same way. A rename of a table or
+  a column breaks the release still running, which reads the old name. Tightening an existing
+  column to NOT NULL fails on the first row that holds NULL. Neither shows on the empty
+  database a migration test upgrades. The intent now names five kinds of step: a drop, a
+  rename, a type change, a NOT NULL tightening, and a constraint added to an existing table
+  (unique, check, foreign key, primary key, a unique index, or the validation of one first
+  added without checking the existing rows). It also says what each finding tells the author
+  to do instead: expand, backfill the rows outside the upgrade, and contract in a later
+  release, where the contract step is the one the governed marker justifies. Two shapes are
+  not findings, because no existing row can break them. One is a step on a table the same upgrade creates. The other is a unique,
+  foreign-key or unique-index constraint on columns the same upgrade adds nullable with no
+  default, which is how a new reference column is usually written. Not being a finding does
+  not make either an expand step: whether the previous release keeps working after an
+  upgrade is a separate question, which this rule does not answer.
+
+  A changed contract: a conformant checker now reports steps it passed before, and one
+  published sample changes verdict. `compliant-01` tightened an existing column, so it now
+  restates a constraint the column already has, which is still compliant. Five violations are
+  new, each with its exact findings: renames, including an f-string and a statement run
+  through the driver (`violation-06`); NOT NULL tightening, including a column added,
+  back-filled and tightened in one release (`violation-07`); constraints, including a unique
+  constraint marked `NOT VALID`, which the qualifier does not apply to, and one on a new column
+  that carries a server default (`violation-08`); every kind on a batch block
+  (`violation-09`); and raw type changes, including a column named `type` (`violation-10`).
+  Three compliant cases are new: the expand halves and the statements that share a spelling
+  with a destructive one (`compliant-03`), a table the same upgrade creates (`compliant-04`),
+  and the batch spelling of a new reference column (`compliant-05`). `compliant-03` also
+  contracts a precision fix: `DROP NOT NULL` relaxes a column and is no drop. A checker that
+  knows only drops and type changes misses every finding in `violation-06`, `-07`, `-08` and
+  `-10` and four of six in `-09`, and it reports `compliant-03`. Three residuals are recorded
+  for the rule: a statement the source does not spell out, a constraint on a new nullable
+  column that the same upgrade fills first, and a constraint written inline in a raw column
+  addition.
+
+  The rule also reads what a migration runs beyond what its upgrade spells: a function of the
+  same revision that the upgrade calls, transitively and each once; an operation imported under
+  its own name or another, or looked up by a literal name; the function a top-level alias names
+  as the upgrade; a schema drop in a raw statement; each statement of a raw text that holds
+  several, split only where a statement ends; and every revision file the migration tool loads,
+  a name that begins with an underscore included. Seven violations hold those, each with its
+  exact findings: two helpers that call each other (`violation-11`), operations imported by name
+  (`violation-12`), the upgrade named through an alias (`violation-13`), operations looked up by
+  a literal name, on a batch block too (`violation-14`), schema drops (`violation-15`), two
+  statements in one text beside a quoted semicolon (`violation-16`), and a revision file whose
+  name begins with an underscore (`violation-17`). A checker that reads only what the upgrade
+  spells, in files whose names do not begin with an underscore, reports none of `-11` to `-15`
+  or `-17`, and one finding fewer in `-16`. `compliant-06` holds the boundary: a helper only the
+  downgrade calls, a dollar-quoted body whose semicolons end no statement, and a package marker
+  in the versions directory, which the migration tool never loads. Five residuals join the
+  three: an operation whose name is computed, a step reached other than by calling a top-level
+  function of the revision by name, an upgrade bound to anything else, rows deleted through an
+  object-relational session, and a revision file in a subdirectory the tool searches only when
+  configured to. The first residual now names a query-builder construct as well.
+
+A changed contract (a new catalog field, two new rules, a new vocabulary, and a rule that
+reports more), hence the minor. The reference
 implementation does not carry either rule yet: `certify-against-reference` stays red for them
 until it does, and `REFERENCE_SHA` is not moved here.
 
