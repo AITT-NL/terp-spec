@@ -8,7 +8,7 @@
 
 ## Why this rule exists
 
-Structured logging plus secret/PII redaction is installed once, centrally, at composition. A module that re-points the global logging configuration itself can silently bypass the central redaction filter.
+Structured logging plus its redaction is installed once, centrally, at composition: secrets, recognised by name and by shape, and personal data, recognised only where a model declares the field personal, since an undeclared address has no shape to find. A module that re-points the global logging configuration itself can silently bypass the central redaction filter.
 
 ## How the reference stack realises this
 
