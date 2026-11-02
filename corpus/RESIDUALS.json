@@ -4,6 +4,10 @@
     "backend/errors_use_the_typed_envelope": [
       "an error constructed under an alias (`from fastapi import HTTPException as ApiError`) is not required to be resolved back to the framework's HTTP error"
     ],
+    "backend/expand_revisions_only_expand": [
+      "an operation made in a helper function that `upgrade()` calls, or through an alias of the operations handle under a method name no operation has, is not required to be seen: the reference stack's migration run refuses it as it executes, which is the half of the rule that sees every operation",
+      "the order of operations inside one revision is not required to be followed: an operation on a table, or over a column, that the same revision creates or adds is admitted wherever it sits in `upgrade()`, while the run admits it only after the creation"
+    ],
     "backend/no_destructive_migrations": [
       "a statement the source does not spell out (a variable, a value a helper returns, a query-builder construct such as `op.execute(notes.delete())`, a file read at run time) is not required to be read: only a statement written as a literal, an f-string or a concatenation of strings is",
       "an operation whose name is computed (`getattr(op, name)(...)` with a name that is not a literal, source text run through `exec`) is not required to be read: an operation is read under its own name, under a name the revision imports it as at its top level, or through `getattr` with a literal name",

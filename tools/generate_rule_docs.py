@@ -27,6 +27,12 @@ _RUNTIME_LABEL = {
     "deferred": "Not yet — a runtime control is planned; the gap is explicit and tracked.",
 }
 
+#: The escape-hatch governance rules: the ones whose missing opt-out is because they
+#: govern the mechanism. Any other rule without an opt-out has its way out in its intent.
+_GOVERNANCE_RULES = frozenset(
+    {"backend/escape_hatch_budget", "backend/ungoverned_escape_hatch", "frontend/escape-hatch"}
+)
+
 
 def render(entry: dict, residuals: list[str] | None = None) -> str:
     """The Markdown page for one catalog entry (deterministic).
@@ -99,10 +105,18 @@ def render(entry: dict, residuals: list[str] | None = None) -> str:
             entry["escape"],
             "",
         ]
-    else:
+    elif entry["id"] in _GOVERNANCE_RULES:
         lines += [
             "There is none. This rule governs the escape-hatch mechanism itself,",
             "so it cannot be waived by that mechanism.",
+            "",
+        ]
+    else:
+        # A rule whose way out is its own subject: what a reader does instead is the other
+        # answer the rule allows, which its intent states, never a marker.
+        lines += [
+            "There is none, and no marker suppresses a finding: the way out is the",
+            "other answer the rule itself allows, which the intent above states.",
             "",
         ]
     if residuals:
