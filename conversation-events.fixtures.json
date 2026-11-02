@@ -1,0 +1,3667 @@
+{
+  "_comment": "The shared fixtures for conversation-events.schema.json, so every producer and every reader of a conversation stream runs the same ones. 'events' are single events: a valid one passes the schema, an invalid one names the 'field' the refusal is about and what that field 'allowed'. 'streams' are recorded runs: a valid one carries 'reads', what every reader must resolve from it, and an invalid one names the stream 'rule' it breaks and the index of the event it breaks it 'at' (the length of the stream when the end is what is missing), with the 'field' when the rule is events-are-valid. Every id, name and figure is invented.",
+  "events": [
+    {
+      "id": "event-valid-01",
+      "expect": "valid",
+      "about": "the minimal opening of a run",
+      "event": {
+        "type": "RUN_STARTED",
+        "threadId": "conv-1",
+        "runId": "run-1",
+        "protocolVersion": "1.0",
+        "metadata": {
+          "terp": {
+            "schemaVersion": 1
+          }
+        }
+      }
+    },
+    {
+      "id": "event-valid-02",
+      "expect": "valid",
+      "about": "an opening with a parent run and a timestamp",
+      "event": {
+        "type": "RUN_STARTED",
+        "threadId": "conv-1",
+        "runId": "run-1",
+        "protocolVersion": "1.0",
+        "metadata": {
+          "terp": {
+            "schemaVersion": 1
+          }
+        },
+        "parentRunId": "run-0",
+        "timestamp": 1793600000000
+      }
+    },
+    {
+      "id": "event-valid-03",
+      "expect": "valid",
+      "about": "an assistant message opens",
+      "event": {
+        "type": "TEXT_MESSAGE_START",
+        "messageId": "msg-1",
+        "role": "assistant"
+      }
+    },
+    {
+      "id": "event-valid-04",
+      "expect": "valid",
+      "about": "text with a line break and a tab",
+      "event": {
+        "type": "TEXT_MESSAGE_CONTENT",
+        "messageId": "msg-1",
+        "delta": "Two orders match:\n\t- 42\n\t- 43"
+      }
+    },
+    {
+      "id": "event-valid-05",
+      "expect": "valid",
+      "about": "an empty delta, which providers send as a keep-alive",
+      "event": {
+        "type": "TEXT_MESSAGE_CONTENT",
+        "messageId": "msg-1",
+        "delta": ""
+      }
+    },
+    {
+      "id": "event-valid-06",
+      "expect": "valid",
+      "about": "an assistant message closes",
+      "event": {
+        "type": "TEXT_MESSAGE_END",
+        "messageId": "msg-1"
+      }
+    },
+    {
+      "id": "event-valid-07",
+      "expect": "valid",
+      "about": "a tool call with the assistant's own sentence about it",
+      "event": {
+        "type": "TOOL_CALL_START",
+        "toolCallId": "call-1",
+        "toolCallName": "lookup_order",
+        "parentMessageId": "msg-1",
+        "metadata": {
+          "terp": {
+            "subtitle": "Looking up the two orders you mentioned"
+          }
+        }
+      }
+    },
+    {
+      "id": "event-valid-08",
+      "expect": "valid",
+      "about": "a fragment of a tool call's arguments",
+      "event": {
+        "type": "TOOL_CALL_ARGS",
+        "toolCallId": "call-1",
+        "delta": "{\"order\": \"42\"}"
+      }
+    },
+    {
+      "id": "event-valid-09",
+      "expect": "valid",
+      "about": "a tool call's arguments close",
+      "event": {
+        "type": "TOOL_CALL_END",
+        "toolCallId": "call-1"
+      }
+    },
+    {
+      "id": "event-valid-10",
+      "expect": "valid",
+      "about": "a failed tool call's result",
+      "event": {
+        "type": "TOOL_CALL_RESULT",
+        "messageId": "res-1",
+        "toolCallId": "call-1",
+        "content": "Order 42 was not found.",
+        "role": "tool",
+        "metadata": {
+          "terp": {
+            "status": "error"
+          }
+        }
+      }
+    },
+    {
+      "id": "event-valid-11",
+      "expect": "valid",
+      "about": "a compaction row",
+      "event": {
+        "type": "ACTIVITY_SNAPSHOT",
+        "messageId": "act-1",
+        "activityType": "terp.compaction",
+        "content": {
+          "trigger": "auto",
+          "before": 182000,
+          "after": 41000
+        }
+      }
+    },
+    {
+      "id": "event-valid-12",
+      "expect": "valid",
+      "about": "a producer's own activity type, whose content is its own",
+      "event": {
+        "type": "ACTIVITY_SNAPSHOT",
+        "messageId": "act-2",
+        "activityType": "example.notice",
+        "content": {
+          "anything": [
+            "the producer",
+            "decides"
+          ]
+        }
+      }
+    },
+    {
+      "id": "event-valid-13",
+      "expect": "valid",
+      "about": "how full the assistant's memory is",
+      "event": {
+        "type": "CUSTOM",
+        "name": "terp.context",
+        "value": {
+          "usedTokens": 52000,
+          "windowTokens": 1000000,
+          "model": "example-model-1"
+        }
+      }
+    },
+    {
+      "id": "event-valid-14",
+      "expect": "valid",
+      "about": "memory fill with an unknown window",
+      "event": {
+        "type": "CUSTOM",
+        "name": "terp.context",
+        "value": {
+          "usedTokens": 9000,
+          "windowTokens": 0
+        }
+      }
+    },
+    {
+      "id": "event-valid-15",
+      "expect": "valid",
+      "about": "another run follows this one",
+      "event": {
+        "type": "CUSTOM",
+        "name": "terp.handoff",
+        "value": {
+          "nextRunId": "run-2"
+        }
+      }
+    },
+    {
+      "id": "event-valid-16",
+      "expect": "valid",
+      "about": "a producer's own custom event, with any value",
+      "event": {
+        "type": "CUSTOM",
+        "name": "example.trace",
+        "value": [
+          1,
+          "two",
+          {
+            "three": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "event-valid-17",
+      "expect": "valid",
+      "about": "a run that completed, with its token usage",
+      "event": {
+        "type": "RUN_FINISHED",
+        "threadId": "conv-1",
+        "runId": "run-1",
+        "outcome": {
+          "type": "success"
+        },
+        "usage": [
+          {
+            "provider": "example",
+            "model": "example-model-1",
+            "inputTokens": 1200,
+            "outputTokens": 300,
+            "totalTokens": 1500,
+            "cachedInputTokens": 800
+          }
+        ],
+        "timestamp": 1793600004000
+      }
+    },
+    {
+      "id": "event-valid-18",
+      "expect": "valid",
+      "about": "a run that asks the person to pick an order",
+      "event": {
+        "type": "RUN_FINISHED",
+        "threadId": "conv-1",
+        "runId": "run-1",
+        "outcome": {
+          "type": "interrupt",
+          "interrupts": [
+            {
+              "id": "q-1",
+              "reason": "terp.question",
+              "message": "Which order do you mean?",
+              "metadata": {
+                "terp": {
+                  "input": "choice",
+                  "options": [
+                    {
+                      "value": "42",
+                      "label": "Order 42"
+                    },
+                    {
+                      "value": "43",
+                      "label": "Order 43"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "event-valid-19",
+      "expect": "valid",
+      "about": "a written question with a schema for generic clients and an expiry",
+      "event": {
+        "type": "RUN_FINISHED",
+        "threadId": "conv-1",
+        "runId": "run-1",
+        "outcome": {
+          "type": "interrupt",
+          "interrupts": [
+            {
+              "id": "q-1",
+              "reason": "terp.question",
+              "message": "What should the note say?",
+              "metadata": {
+                "terp": {
+                  "input": "text"
+                }
+              },
+              "responseSchema": {
+                "type": "string",
+                "maxLength": 500
+              },
+              "expiresAt": "2026-11-03T09:00:00Z"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "event-valid-20",
+      "expect": "valid",
+      "about": "a question answered with a button",
+      "event": {
+        "type": "RUN_FINISHED",
+        "threadId": "conv-1",
+        "runId": "run-1",
+        "outcome": {
+          "type": "interrupt",
+          "interrupts": [
+            {
+              "id": "q-1",
+              "reason": "terp.question",
+              "message": "Go ahead?",
+              "metadata": {
+                "terp": {
+                  "input": "buttons",
+                  "options": [
+                    {
+                      "value": "yes",
+                      "label": "Yes"
+                    },
+                    {
+                      "value": "no",
+                      "label": "Not now"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "event-valid-21",
+      "expect": "valid",
+      "about": "a question answered with any number of choices",
+      "event": {
+        "type": "RUN_FINISHED",
+        "threadId": "conv-1",
+        "runId": "run-1",
+        "outcome": {
+          "type": "interrupt",
+          "interrupts": [
+            {
+              "id": "q-1",
+              "reason": "terp.question",
+              "message": "Which orders?",
+              "metadata": {
+                "terp": {
+                  "input": "choices",
+                  "options": [
+                    {
+                      "value": "42",
+                      "label": "Order 42"
+                    },
+                    {
+                      "value": "43",
+                      "label": "Order 43"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "event-valid-22",
+      "expect": "valid",
+      "about": "a run cancelled to make way for the next message",
+      "event": {
+        "type": "RUN_FINISHED",
+        "threadId": "conv-1",
+        "runId": "run-1",
+        "outcome": {
+          "type": "cancelled"
+        },
+        "metadata": {
+          "terp": {
+            "reason": "steered"
+          }
+        }
+      }
+    },
+    {
+      "id": "event-valid-23",
+      "expect": "valid",
+      "about": "a run stopped by the person",
+      "event": {
+        "type": "RUN_FINISHED",
+        "threadId": "conv-1",
+        "runId": "run-1",
+        "outcome": {
+          "type": "cancelled"
+        }
+      }
+    },
+    {
+      "id": "event-valid-24",
+      "expect": "valid",
+      "about": "an interrupt with a producer's own reason, about a tool call",
+      "event": {
+        "type": "RUN_FINISHED",
+        "threadId": "conv-1",
+        "runId": "run-1",
+        "outcome": {
+          "type": "interrupt",
+          "interrupts": [
+            {
+              "id": "ap-1",
+              "reason": "example.approval",
+              "message": "Delete order 42?",
+              "toolCallId": "call-1"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "event-valid-25",
+      "expect": "valid",
+      "about": "a failed run, with a code and the usage it spent",
+      "event": {
+        "type": "RUN_ERROR",
+        "message": "The assistant could not be reached.",
+        "code": "assistant.unavailable",
+        "usage": [
+          {
+            "provider": "example",
+            "model": "example-model-1",
+            "inputTokens": 1200,
+            "outputTokens": 300,
+            "totalTokens": 1500,
+            "cachedInputTokens": 800
+          }
+        ]
+      }
+    },
+    {
+      "id": "event-invalid-01",
+      "expect": "invalid",
+      "about": "a type the profile does not carry",
+      "event": {
+        "type": "RAW",
+        "event": {}
+      },
+      "field": "$.type",
+      "allowed": "one of the twelve AG-UI event types the profile carries"
+    },
+    {
+      "id": "event-invalid-02",
+      "expect": "invalid",
+      "about": "no type at all",
+      "event": {
+        "messageId": "msg-1"
+      },
+      "field": "$.type",
+      "allowed": "an AG-UI event type"
+    },
+    {
+      "id": "event-invalid-03",
+      "expect": "invalid",
+      "about": "a type in the wrong case",
+      "event": {
+        "type": "run_started"
+      },
+      "field": "$.type",
+      "allowed": "the AG-UI spelling, upper case"
+    },
+    {
+      "id": "event-invalid-04",
+      "expect": "invalid",
+      "about": "AG-UI's convenience chunk, which a Terp producer never sends",
+      "event": {
+        "type": "TEXT_MESSAGE_CHUNK",
+        "messageId": "msg-1",
+        "delta": "x"
+      },
+      "field": "$.type",
+      "allowed": "TEXT_MESSAGE_START, _CONTENT and _END"
+    },
+    {
+      "id": "event-invalid-05",
+      "expect": "invalid",
+      "about": "an incremental activity patch",
+      "event": {
+        "type": "ACTIVITY_DELTA",
+        "messageId": "act-1",
+        "activityType": "terp.compaction",
+        "patch": []
+      },
+      "field": "$.type",
+      "allowed": "ACTIVITY_SNAPSHOT"
+    },
+    {
+      "id": "event-invalid-06",
+      "expect": "invalid",
+      "about": "an opening that does not say its vocabulary version",
+      "event": {
+        "type": "RUN_STARTED",
+        "threadId": "conv-1",
+        "runId": "run-1",
+        "protocolVersion": "1.0"
+      },
+      "field": "$.metadata",
+      "allowed": "metadata.terp.schemaVersion"
+    },
+    {
+      "id": "event-invalid-07",
+      "expect": "invalid",
+      "about": "an opening from a later version of the vocabulary",
+      "event": {
+        "type": "RUN_STARTED",
+        "threadId": "conv-1",
+        "runId": "run-1",
+        "protocolVersion": "1.0",
+        "metadata": {
+          "terp": {
+            "schemaVersion": 2
+          }
+        }
+      },
+      "field": "$.metadata.terp.schemaVersion",
+      "allowed": "1"
+    },
+    {
+      "id": "event-invalid-08",
+      "expect": "invalid",
+      "about": "a version written as a boolean",
+      "event": {
+        "type": "RUN_STARTED",
+        "threadId": "conv-1",
+        "runId": "run-1",
+        "protocolVersion": "1.0",
+        "metadata": {
+          "terp": {
+            "schemaVersion": true
+          }
+        }
+      },
+      "field": "$.metadata.terp.schemaVersion",
+      "allowed": "the number 1"
+    },
+    {
+      "id": "event-invalid-09",
+      "expect": "invalid",
+      "about": "an AG-UI version the profile is not written for",
+      "event": {
+        "type": "RUN_STARTED",
+        "threadId": "conv-1",
+        "runId": "run-1",
+        "protocolVersion": "0.1",
+        "metadata": {
+          "terp": {
+            "schemaVersion": 1
+          }
+        }
+      },
+      "field": "$.protocolVersion",
+      "allowed": "1.0"
+    },
+    {
+      "id": "event-invalid-10",
+      "expect": "invalid",
+      "about": "the request echoed back, which would replay the whole conversation to every reader",
+      "event": {
+        "type": "RUN_STARTED",
+        "threadId": "conv-1",
+        "runId": "run-1",
+        "protocolVersion": "1.0",
+        "metadata": {
+          "terp": {
+            "schemaVersion": 1
+          }
+        },
+        "input": {
+          "messages": []
+        }
+      },
+      "field": "$.input",
+      "allowed": "no input echo"
+    },
+    {
+      "id": "event-invalid-11",
+      "expect": "invalid",
+      "about": "a key of another vendor's in the metadata",
+      "event": {
+        "type": "RUN_STARTED",
+        "threadId": "conv-1",
+        "runId": "run-1",
+        "protocolVersion": "1.0",
+        "metadata": {
+          "terp": {
+            "schemaVersion": 1
+          },
+          "vendor": {
+            "x": 1
+          }
+        }
+      },
+      "field": "$.metadata.vendor",
+      "allowed": "terp only"
+    },
+    {
+      "id": "event-invalid-12",
+      "expect": "invalid",
+      "about": "a conversation id with a space",
+      "event": {
+        "type": "RUN_STARTED",
+        "threadId": "conv 1",
+        "runId": "run-1",
+        "protocolVersion": "1.0",
+        "metadata": {
+          "terp": {
+            "schemaVersion": 1
+          }
+        }
+      },
+      "field": "$.threadId",
+      "allowed": "letters, digits and . _ : -, at most 128"
+    },
+    {
+      "id": "event-invalid-13",
+      "expect": "invalid",
+      "about": "a run id with a trailing newline",
+      "event": {
+        "type": "RUN_STARTED",
+        "threadId": "conv-1",
+        "runId": "run-1\n",
+        "protocolVersion": "1.0",
+        "metadata": {
+          "terp": {
+            "schemaVersion": 1
+          }
+        }
+      },
+      "field": "$.runId",
+      "allowed": "an id ending at the end of the input"
+    },
+    {
+      "id": "event-invalid-14",
+      "expect": "invalid",
+      "about": "a run id of 129 characters",
+      "event": {
+        "type": "RUN_STARTED",
+        "threadId": "conv-1",
+        "runId": "rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr",
+        "protocolVersion": "1.0",
+        "metadata": {
+          "terp": {
+            "schemaVersion": 1
+          }
+        }
+      },
+      "field": "$.runId",
+      "allowed": "at most 128 characters"
+    },
+    {
+      "id": "event-invalid-15",
+      "expect": "invalid",
+      "about": "a text message from the user, which the stream never carries",
+      "event": {
+        "type": "TEXT_MESSAGE_START",
+        "messageId": "msg-1",
+        "role": "user"
+      },
+      "field": "$.role",
+      "allowed": "assistant"
+    },
+    {
+      "id": "event-invalid-16",
+      "expect": "invalid",
+      "about": "a text message that does not say who wrote it",
+      "event": {
+        "type": "TEXT_MESSAGE_START",
+        "messageId": "msg-1"
+      },
+      "field": "$.role",
+      "allowed": "assistant"
+    },
+    {
+      "id": "event-invalid-17",
+      "expect": "invalid",
+      "about": "text with a NUL character",
+      "event": {
+        "type": "TEXT_MESSAGE_CONTENT",
+        "messageId": "msg-1",
+        "delta": "hello\u0000"
+      },
+      "field": "$.delta",
+      "allowed": "text: tab, line feed and carriage return are the only controls"
+    },
+    {
+      "id": "event-invalid-18",
+      "expect": "invalid",
+      "about": "text with an escape sequence that would repaint a terminal",
+      "event": {
+        "type": "TEXT_MESSAGE_CONTENT",
+        "messageId": "msg-1",
+        "delta": "\u001b[2Jcleared"
+      },
+      "field": "$.delta",
+      "allowed": "text without control characters"
+    },
+    {
+      "id": "event-invalid-19",
+      "expect": "invalid",
+      "about": "text with a C1 control",
+      "event": {
+        "type": "TEXT_MESSAGE_CONTENT",
+        "messageId": "msg-1",
+        "delta": "next\u0085line"
+      },
+      "field": "$.delta",
+      "allowed": "text without control characters"
+    },
+    {
+      "id": "event-invalid-20",
+      "expect": "invalid",
+      "about": "content without a delta",
+      "event": {
+        "type": "TEXT_MESSAGE_CONTENT",
+        "messageId": "msg-1"
+      },
+      "field": "$.delta",
+      "allowed": "a string, possibly empty"
+    },
+    {
+      "id": "event-invalid-21",
+      "expect": "invalid",
+      "about": "the provider's native event carried verbatim",
+      "event": {
+        "type": "TEXT_MESSAGE_CONTENT",
+        "messageId": "msg-1",
+        "delta": "x",
+        "rawEvent": {
+          "type": "content_block_delta"
+        }
+      },
+      "field": "$.rawEvent",
+      "allowed": "no rawEvent: a provider's native event can carry anything"
+    },
+    {
+      "id": "event-invalid-22",
+      "expect": "invalid",
+      "about": "a tool name with a space",
+      "event": {
+        "type": "TOOL_CALL_START",
+        "toolCallId": "call-1",
+        "toolCallName": "look up"
+      },
+      "field": "$.toolCallName",
+      "allowed": "letters, digits and _ . : -"
+    },
+    {
+      "id": "event-invalid-23",
+      "expect": "invalid",
+      "about": "the assistant's sentence running to 161 characters",
+      "event": {
+        "type": "TOOL_CALL_START",
+        "toolCallId": "call-1",
+        "toolCallName": "lookup_order",
+        "metadata": {
+          "terp": {
+            "subtitle": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+          }
+        }
+      },
+      "field": "$.metadata.terp.subtitle",
+      "allowed": "at most 160 characters"
+    },
+    {
+      "id": "event-invalid-24",
+      "expect": "invalid",
+      "about": "a sentence that is only spaces",
+      "event": {
+        "type": "TOOL_CALL_START",
+        "toolCallId": "call-1",
+        "toolCallName": "lookup_order",
+        "metadata": {
+          "terp": {
+            "subtitle": "   "
+          }
+        }
+      },
+      "field": "$.metadata.terp.subtitle",
+      "allowed": "one line with something on it"
+    },
+    {
+      "id": "event-invalid-25",
+      "expect": "invalid",
+      "about": "a sentence over two lines",
+      "event": {
+        "type": "TOOL_CALL_START",
+        "toolCallId": "call-1",
+        "toolCallName": "lookup_order",
+        "metadata": {
+          "terp": {
+            "subtitle": "Looking up\nthe order"
+          }
+        }
+      },
+      "field": "$.metadata.terp.subtitle",
+      "allowed": "one line"
+    },
+    {
+      "id": "event-invalid-26",
+      "expect": "invalid",
+      "about": "a position into the reply text, which the order of the stream already gives",
+      "event": {
+        "type": "TOOL_CALL_START",
+        "toolCallId": "call-1",
+        "toolCallName": "lookup_order",
+        "metadata": {
+          "terp": {
+            "offset": 12
+          }
+        }
+      },
+      "field": "$.metadata.terp.offset",
+      "allowed": "subtitle"
+    },
+    {
+      "id": "event-invalid-27",
+      "expect": "invalid",
+      "about": "arguments that do not say whose they are",
+      "event": {
+        "type": "TOOL_CALL_ARGS",
+        "delta": "{}"
+      },
+      "field": "$.toolCallId",
+      "allowed": "the call's id"
+    },
+    {
+      "id": "event-invalid-28",
+      "expect": "invalid",
+      "about": "a result of 2001 characters",
+      "event": {
+        "type": "TOOL_CALL_RESULT",
+        "messageId": "res-1",
+        "toolCallId": "call-1",
+        "content": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+      },
+      "field": "$.content",
+      "allowed": "at most 2000 characters, clipped by the producer"
+    },
+    {
+      "id": "event-invalid-29",
+      "expect": "invalid",
+      "about": "a result as content parts",
+      "event": {
+        "type": "TOOL_CALL_RESULT",
+        "messageId": "res-1",
+        "toolCallId": "call-1",
+        "content": [
+          {
+            "type": "text",
+            "text": "3 orders"
+          }
+        ]
+      },
+      "field": "$.content",
+      "allowed": "a string"
+    },
+    {
+      "id": "event-invalid-30",
+      "expect": "invalid",
+      "about": "a status outside the two",
+      "event": {
+        "type": "TOOL_CALL_RESULT",
+        "messageId": "res-1",
+        "toolCallId": "call-1",
+        "content": "done",
+        "metadata": {
+          "terp": {
+            "status": "failed"
+          }
+        }
+      },
+      "field": "$.metadata.terp.status",
+      "allowed": "completed or error"
+    },
+    {
+      "id": "event-invalid-31",
+      "expect": "invalid",
+      "about": "a result with no message id",
+      "event": {
+        "type": "TOOL_CALL_RESULT",
+        "toolCallId": "call-1",
+        "content": "ok"
+      },
+      "field": "$.messageId",
+      "allowed": "an id for the result"
+    },
+    {
+      "id": "event-invalid-32",
+      "expect": "invalid",
+      "about": "a compaction that does not say how full memory was after",
+      "event": {
+        "type": "ACTIVITY_SNAPSHOT",
+        "messageId": "act-1",
+        "activityType": "terp.compaction",
+        "content": {
+          "trigger": "auto",
+          "before": 1
+        }
+      },
+      "field": "$.content.after",
+      "allowed": "trigger, before and after"
+    },
+    {
+      "id": "event-invalid-33",
+      "expect": "invalid",
+      "about": "a compaction started by something other than the assistant or the person",
+      "event": {
+        "type": "ACTIVITY_SNAPSHOT",
+        "messageId": "act-1",
+        "activityType": "terp.compaction",
+        "content": {
+          "trigger": "scheduled",
+          "before": 182000,
+          "after": 41000
+        }
+      },
+      "field": "$.content.trigger",
+      "allowed": "auto or manual"
+    },
+    {
+      "id": "event-invalid-34",
+      "expect": "invalid",
+      "about": "a compaction with a figure of its own",
+      "event": {
+        "type": "ACTIVITY_SNAPSHOT",
+        "messageId": "act-1",
+        "activityType": "terp.compaction",
+        "content": {
+          "trigger": "auto",
+          "before": 182000,
+          "after": 41000,
+          "percent": 22
+        }
+      },
+      "field": "$.content.percent",
+      "allowed": "trigger, before and after"
+    },
+    {
+      "id": "event-invalid-35",
+      "expect": "invalid",
+      "about": "an activity type in terp. the vocabulary does not define",
+      "event": {
+        "type": "ACTIVITY_SNAPSHOT",
+        "messageId": "act-1",
+        "activityType": "terp.continuation",
+        "content": {
+          "from": "conv-0"
+        }
+      },
+      "field": "$.activityType",
+      "allowed": "terp.compaction, or a name outside terp."
+    },
+    {
+      "id": "event-invalid-36",
+      "expect": "invalid",
+      "about": "an activity type in capitals",
+      "event": {
+        "type": "ACTIVITY_SNAPSHOT",
+        "messageId": "act-1",
+        "activityType": "Compaction",
+        "content": {
+          "trigger": "auto",
+          "before": 182000,
+          "after": 41000
+        }
+      },
+      "field": "$.activityType",
+      "allowed": "lower-case words joined by . _ or -"
+    },
+    {
+      "id": "event-invalid-37",
+      "expect": "invalid",
+      "about": "a snapshot that asks not to replace",
+      "event": {
+        "type": "ACTIVITY_SNAPSHOT",
+        "messageId": "act-1",
+        "activityType": "terp.compaction",
+        "content": {
+          "trigger": "auto",
+          "before": 182000,
+          "after": 41000
+        },
+        "replace": false
+      },
+      "field": "$.replace",
+      "allowed": "no replace: a snapshot replaces"
+    },
+    {
+      "id": "event-invalid-38",
+      "expect": "invalid",
+      "about": "a memory fill below zero",
+      "event": {
+        "type": "CUSTOM",
+        "name": "terp.context",
+        "value": {
+          "usedTokens": -1,
+          "windowTokens": 0
+        }
+      },
+      "field": "$.value.usedTokens",
+      "allowed": "a whole number, zero or more"
+    },
+    {
+      "id": "event-invalid-39",
+      "expect": "invalid",
+      "about": "a memory fill as text",
+      "event": {
+        "type": "CUSTOM",
+        "name": "terp.context",
+        "value": {
+          "usedTokens": "52000",
+          "windowTokens": 0
+        }
+      },
+      "field": "$.value.usedTokens",
+      "allowed": "a whole number"
+    },
+    {
+      "id": "event-invalid-40",
+      "expect": "invalid",
+      "about": "a memory fill with a percentage of its own",
+      "event": {
+        "type": "CUSTOM",
+        "name": "terp.context",
+        "value": {
+          "usedTokens": 52000,
+          "windowTokens": 1000000,
+          "model": "example-model-1",
+          "percent": 5
+        }
+      },
+      "field": "$.value.percent",
+      "allowed": "usedTokens, windowTokens and model"
+    },
+    {
+      "id": "event-invalid-41",
+      "expect": "invalid",
+      "about": "a memory fill that does not say the window",
+      "event": {
+        "type": "CUSTOM",
+        "name": "terp.context",
+        "value": {
+          "usedTokens": 1
+        }
+      },
+      "field": "$.value.windowTokens",
+      "allowed": "0 when the window is unknown"
+    },
+    {
+      "id": "event-invalid-42",
+      "expect": "invalid",
+      "about": "a handoff that does not say which run follows",
+      "event": {
+        "type": "CUSTOM",
+        "name": "terp.handoff",
+        "value": {}
+      },
+      "field": "$.value.nextRunId",
+      "allowed": "the run that follows"
+    },
+    {
+      "id": "event-invalid-43",
+      "expect": "invalid",
+      "about": "a custom name in terp. the vocabulary does not define",
+      "event": {
+        "type": "CUSTOM",
+        "name": "terp.usage",
+        "value": {}
+      },
+      "field": "$.name",
+      "allowed": "terp.context or terp.handoff, or a name outside terp."
+    },
+    {
+      "id": "event-invalid-44",
+      "expect": "invalid",
+      "about": "a custom event with no value",
+      "event": {
+        "type": "CUSTOM",
+        "name": "example.trace"
+      },
+      "field": "$.value",
+      "allowed": "any JSON value"
+    },
+    {
+      "id": "event-invalid-45",
+      "expect": "invalid",
+      "about": "a finish that does not say how the run ended",
+      "event": {
+        "type": "RUN_FINISHED",
+        "threadId": "conv-1",
+        "runId": "run-1"
+      },
+      "field": "$.outcome",
+      "allowed": "success, interrupt or cancelled"
+    },
+    {
+      "id": "event-invalid-46",
+      "expect": "invalid",
+      "about": "an outcome outside the three",
+      "event": {
+        "type": "RUN_FINISHED",
+        "threadId": "conv-1",
+        "runId": "run-1",
+        "outcome": {
+          "type": "failed"
+        }
+      },
+      "field": "$.outcome.type",
+      "allowed": "success, interrupt or cancelled; a failure is RUN_ERROR"
+    },
+    {
+      "id": "event-invalid-47",
+      "expect": "invalid",
+      "about": "an interrupt outcome with nothing to answer",
+      "event": {
+        "type": "RUN_FINISHED",
+        "threadId": "conv-1",
+        "runId": "run-1",
+        "outcome": {
+          "type": "interrupt"
+        }
+      },
+      "field": "$.outcome.interrupts",
+      "allowed": "exactly one interrupt"
+    },
+    {
+      "id": "event-invalid-48",
+      "expect": "invalid",
+      "about": "two questions at once",
+      "event": {
+        "type": "RUN_FINISHED",
+        "threadId": "conv-1",
+        "runId": "run-1",
+        "outcome": {
+          "type": "interrupt",
+          "interrupts": [
+            {
+              "id": "q-1",
+              "reason": "terp.question",
+              "message": "Which order do you mean?",
+              "metadata": {
+                "terp": {
+                  "input": "text"
+                }
+              }
+            },
+            {
+              "id": "q-2",
+              "reason": "terp.question",
+              "message": "Which order do you mean?",
+              "metadata": {
+                "terp": {
+                  "input": "text"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "field": "$.outcome.interrupts",
+      "allowed": "exactly one interrupt"
+    },
+    {
+      "id": "event-invalid-49",
+      "expect": "invalid",
+      "about": "a success that still waits for something",
+      "event": {
+        "type": "RUN_FINISHED",
+        "threadId": "conv-1",
+        "runId": "run-1",
+        "outcome": {
+          "type": "success",
+          "interrupts": [
+            {
+              "id": "q-1",
+              "reason": "terp.question",
+              "message": "Which order do you mean?",
+              "metadata": {
+                "terp": {
+                  "input": "text"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "field": "$.outcome.interrupts",
+      "allowed": "nothing beside the type"
+    },
+    {
+      "id": "event-invalid-50",
+      "expect": "invalid",
+      "about": "frontend tool calls left for the client, which the profile does not have",
+      "event": {
+        "type": "RUN_FINISHED",
+        "threadId": "conv-1",
+        "runId": "run-1",
+        "outcome": {
+          "type": "success",
+          "pendingToolCallIds": [
+            "call-1"
+          ]
+        }
+      },
+      "field": "$.outcome.pendingToolCallIds",
+      "allowed": "nothing beside the type"
+    },
+    {
+      "id": "event-invalid-51",
+      "expect": "invalid",
+      "about": "a Terp question that does not say how it is answered",
+      "event": {
+        "type": "RUN_FINISHED",
+        "threadId": "conv-1",
+        "runId": "run-1",
+        "outcome": {
+          "type": "interrupt",
+          "interrupts": [
+            {
+              "id": "q-1",
+              "reason": "terp.question",
+              "message": "Which order do you mean?"
+            }
+          ]
+        }
+      },
+      "field": "$.outcome.interrupts[0].metadata",
+      "allowed": "metadata.terp.input"
+    },
+    {
+      "id": "event-invalid-52",
+      "expect": "invalid",
+      "about": "a Terp question with no question in it",
+      "event": {
+        "type": "RUN_FINISHED",
+        "threadId": "conv-1",
+        "runId": "run-1",
+        "outcome": {
+          "type": "interrupt",
+          "interrupts": [
+            {
+              "id": "q-1",
+              "reason": "terp.question",
+              "metadata": {
+                "terp": {
+                  "input": "text"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "field": "$.outcome.interrupts[0].message",
+      "allowed": "the question as the person reads it"
+    },
+    {
+      "id": "event-invalid-53",
+      "expect": "invalid",
+      "about": "a secret asked for in a conversation, where the answer would be stored as a message",
+      "event": {
+        "type": "RUN_FINISHED",
+        "threadId": "conv-1",
+        "runId": "run-1",
+        "outcome": {
+          "type": "interrupt",
+          "interrupts": [
+            {
+              "id": "q-1",
+              "reason": "terp.question",
+              "message": "Which order do you mean?",
+              "metadata": {
+                "terp": {
+                  "input": "secret"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "field": "$.outcome.interrupts[0].metadata.terp.input",
+      "allowed": "buttons, choice, choices or text"
+    },
+    {
+      "id": "event-invalid-54",
+      "expect": "invalid",
+      "about": "a choice with nothing to choose from",
+      "event": {
+        "type": "RUN_FINISHED",
+        "threadId": "conv-1",
+        "runId": "run-1",
+        "outcome": {
+          "type": "interrupt",
+          "interrupts": [
+            {
+              "id": "q-1",
+              "reason": "terp.question",
+              "message": "Which order do you mean?",
+              "metadata": {
+                "terp": {
+                  "input": "choice"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "field": "$.outcome.interrupts[0].metadata.terp.options",
+      "allowed": "at least one option"
+    },
+    {
+      "id": "event-invalid-55",
+      "expect": "invalid",
+      "about": "a written answer offered options",
+      "event": {
+        "type": "RUN_FINISHED",
+        "threadId": "conv-1",
+        "runId": "run-1",
+        "outcome": {
+          "type": "interrupt",
+          "interrupts": [
+            {
+              "id": "q-1",
+              "reason": "terp.question",
+              "message": "Which order do you mean?",
+              "metadata": {
+                "terp": {
+                  "input": "text",
+                  "options": [
+                    {
+                      "value": "42",
+                      "label": "Order 42"
+                    },
+                    {
+                      "value": "43",
+                      "label": "Order 43"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      },
+      "field": "$.outcome.interrupts[0].metadata.terp.options",
+      "allowed": "no options for a text question"
+    },
+    {
+      "id": "event-invalid-56",
+      "expect": "invalid",
+      "about": "the same option twice",
+      "event": {
+        "type": "RUN_FINISHED",
+        "threadId": "conv-1",
+        "runId": "run-1",
+        "outcome": {
+          "type": "interrupt",
+          "interrupts": [
+            {
+              "id": "q-1",
+              "reason": "terp.question",
+              "message": "Which order do you mean?",
+              "metadata": {
+                "terp": {
+                  "input": "buttons",
+                  "options": [
+                    {
+                      "value": "42",
+                      "label": "Order 42"
+                    },
+                    {
+                      "value": "42",
+                      "label": "Order 42"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      },
+      "field": "$.outcome.interrupts[0].metadata.terp.options[1]",
+      "allowed": "distinct options"
+    },
+    {
+      "id": "event-invalid-57",
+      "expect": "invalid",
+      "about": "an interrupt reason in terp. the vocabulary does not define",
+      "event": {
+        "type": "RUN_FINISHED",
+        "threadId": "conv-1",
+        "runId": "run-1",
+        "outcome": {
+          "type": "interrupt",
+          "interrupts": [
+            {
+              "id": "q-1",
+              "reason": "terp.approval",
+              "message": "Which order do you mean?",
+              "metadata": {
+                "terp": {
+                  "input": "text"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "field": "$.outcome.interrupts[0].reason",
+      "allowed": "terp.question, or a reason outside terp."
+    },
+    {
+      "id": "event-invalid-58",
+      "expect": "invalid",
+      "about": "an expiry with an offset instead of UTC",
+      "event": {
+        "type": "RUN_FINISHED",
+        "threadId": "conv-1",
+        "runId": "run-1",
+        "outcome": {
+          "type": "interrupt",
+          "interrupts": [
+            {
+              "id": "q-1",
+              "reason": "terp.question",
+              "message": "Which order do you mean?",
+              "metadata": {
+                "terp": {
+                  "input": "text"
+                }
+              },
+              "expiresAt": "2026-11-03T10:00:00+01:00"
+            }
+          ]
+        }
+      },
+      "field": "$.outcome.interrupts[0].expiresAt",
+      "allowed": "an ISO 8601 instant in UTC, ending in Z"
+    },
+    {
+      "id": "event-invalid-59",
+      "expect": "invalid",
+      "about": "a subagent's interrupt, which the profile does not carry",
+      "event": {
+        "type": "RUN_FINISHED",
+        "threadId": "conv-1",
+        "runId": "run-1",
+        "outcome": {
+          "type": "interrupt",
+          "interrupts": [
+            {
+              "id": "q-1",
+              "reason": "terp.question",
+              "message": "Which order do you mean?",
+              "metadata": {
+                "terp": {
+                  "input": "text"
+                }
+              },
+              "subagentRunId": "sub-1"
+            }
+          ]
+        }
+      },
+      "field": "$.outcome.interrupts[0].subagentRunId",
+      "allowed": "no subagents in this version"
+    },
+    {
+      "id": "event-invalid-60",
+      "expect": "invalid",
+      "about": "steered, on a run that completed",
+      "event": {
+        "type": "RUN_FINISHED",
+        "threadId": "conv-1",
+        "runId": "run-1",
+        "outcome": {
+          "type": "success"
+        },
+        "metadata": {
+          "terp": {
+            "reason": "steered"
+          }
+        }
+      },
+      "field": "$.outcome.type",
+      "allowed": "cancelled, for a steered run"
+    },
+    {
+      "id": "event-invalid-61",
+      "expect": "invalid",
+      "about": "a reason of the producer's own",
+      "event": {
+        "type": "RUN_FINISHED",
+        "threadId": "conv-1",
+        "runId": "run-1",
+        "outcome": {
+          "type": "cancelled"
+        },
+        "metadata": {
+          "terp": {
+            "reason": "timeout"
+          }
+        }
+      },
+      "field": "$.metadata.terp.reason",
+      "allowed": "steered"
+    },
+    {
+      "id": "event-invalid-62",
+      "expect": "invalid",
+      "about": "usage below zero",
+      "event": {
+        "type": "RUN_FINISHED",
+        "threadId": "conv-1",
+        "runId": "run-1",
+        "outcome": {
+          "type": "success"
+        },
+        "usage": [
+          {
+            "inputTokens": -5
+          }
+        ]
+      },
+      "field": "$.usage[0].inputTokens",
+      "allowed": "a whole number, zero or more"
+    },
+    {
+      "id": "event-invalid-63",
+      "expect": "invalid",
+      "about": "usage that carries the prompt",
+      "event": {
+        "type": "RUN_FINISHED",
+        "threadId": "conv-1",
+        "runId": "run-1",
+        "outcome": {
+          "type": "success"
+        },
+        "usage": [
+          {
+            "inputTokens": 5,
+            "prompt": "Summarise my orders"
+          }
+        ]
+      },
+      "field": "$.usage[0].prompt",
+      "allowed": "counts, a provider and a model: never content"
+    },
+    {
+      "id": "event-invalid-64",
+      "expect": "invalid",
+      "about": "a run's return value, which the profile does not carry",
+      "event": {
+        "type": "RUN_FINISHED",
+        "threadId": "conv-1",
+        "runId": "run-1",
+        "outcome": {
+          "type": "success"
+        },
+        "result": {
+          "answer": 42
+        }
+      },
+      "field": "$.result",
+      "allowed": "no result"
+    },
+    {
+      "id": "event-invalid-65",
+      "expect": "invalid",
+      "about": "a failure with no message",
+      "event": {
+        "type": "RUN_ERROR",
+        "code": "assistant.unavailable"
+      },
+      "field": "$.message",
+      "allowed": "one sentence for a person"
+    },
+    {
+      "id": "event-invalid-66",
+      "expect": "invalid",
+      "about": "a failure that is a stack trace",
+      "event": {
+        "type": "RUN_ERROR",
+        "message": "Traceback (most recent call last):\n  File \"app.py\""
+      },
+      "field": "$.message",
+      "allowed": "one line, written by the producer"
+    },
+    {
+      "id": "event-invalid-67",
+      "expect": "invalid",
+      "about": "a failure code in capitals",
+      "event": {
+        "type": "RUN_ERROR",
+        "message": "It failed.",
+        "code": "UNAVAILABLE"
+      },
+      "field": "$.code",
+      "allowed": "lower-case words joined by . or _"
+    },
+    {
+      "id": "event-invalid-68",
+      "expect": "invalid",
+      "about": "a failure that names the conversation, which AG-UI's RUN_ERROR does not carry",
+      "event": {
+        "type": "RUN_ERROR",
+        "message": "It failed.",
+        "threadId": "conv-1"
+      },
+      "field": "$.threadId",
+      "allowed": "message, code and usage"
+    },
+    {
+      "id": "event-invalid-69",
+      "expect": "invalid",
+      "about": "a timestamp before the epoch",
+      "event": {
+        "type": "TEXT_MESSAGE_END",
+        "messageId": "msg-1",
+        "timestamp": -1
+      },
+      "field": "$.timestamp",
+      "allowed": "milliseconds since the epoch, zero or more"
+    },
+    {
+      "id": "event-invalid-70",
+      "expect": "invalid",
+      "about": "a timestamp with a fraction",
+      "event": {
+        "type": "TEXT_MESSAGE_END",
+        "messageId": "msg-1",
+        "timestamp": 1793600000000.5
+      },
+      "field": "$.timestamp",
+      "allowed": "a whole number of milliseconds"
+    },
+    {
+      "id": "event-invalid-71",
+      "expect": "invalid",
+      "about": "a timestamp written as true",
+      "event": {
+        "type": "TEXT_MESSAGE_END",
+        "messageId": "msg-1",
+        "timestamp": true
+      },
+      "field": "$.timestamp",
+      "allowed": "a whole number"
+    }
+  ],
+  "streams": [
+    {
+      "id": "stream-valid-01",
+      "expect": "valid",
+      "about": "a plain answer in two fragments",
+      "events": [
+        {
+          "type": "RUN_STARTED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "protocolVersion": "1.0",
+          "metadata": {
+            "terp": {
+              "schemaVersion": 1
+            }
+          }
+        },
+        {
+          "type": "TEXT_MESSAGE_START",
+          "messageId": "msg-1",
+          "role": "assistant"
+        },
+        {
+          "type": "TEXT_MESSAGE_CONTENT",
+          "messageId": "msg-1",
+          "delta": "Hello"
+        },
+        {
+          "type": "TEXT_MESSAGE_CONTENT",
+          "messageId": "msg-1",
+          "delta": " world."
+        },
+        {
+          "type": "TEXT_MESSAGE_END",
+          "messageId": "msg-1"
+        },
+        {
+          "type": "RUN_FINISHED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "outcome": {
+            "type": "success"
+          }
+        }
+      ],
+      "reads": {
+        "outcome": "success",
+        "items": [
+          {
+            "kind": "text",
+            "id": "msg-1",
+            "text": "Hello world."
+          }
+        ],
+        "interrupt": null,
+        "context": null,
+        "usage": [],
+        "handoff": null,
+        "error": null
+      }
+    },
+    {
+      "id": "stream-valid-02",
+      "expect": "valid",
+      "about": "text, a tool call with its sentence, more text, memory fill and usage",
+      "events": [
+        {
+          "type": "RUN_STARTED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "protocolVersion": "1.0",
+          "metadata": {
+            "terp": {
+              "schemaVersion": 1
+            }
+          }
+        },
+        {
+          "type": "TEXT_MESSAGE_START",
+          "messageId": "msg-1",
+          "role": "assistant"
+        },
+        {
+          "type": "TEXT_MESSAGE_CONTENT",
+          "messageId": "msg-1",
+          "delta": "Let me look."
+        },
+        {
+          "type": "TEXT_MESSAGE_END",
+          "messageId": "msg-1"
+        },
+        {
+          "type": "TOOL_CALL_START",
+          "toolCallId": "call-1",
+          "toolCallName": "lookup_orders",
+          "parentMessageId": "msg-1",
+          "metadata": {
+            "terp": {
+              "subtitle": "Looking up your orders"
+            }
+          }
+        },
+        {
+          "type": "TOOL_CALL_ARGS",
+          "toolCallId": "call-1",
+          "delta": "{\"status\":"
+        },
+        {
+          "type": "TOOL_CALL_ARGS",
+          "toolCallId": "call-1",
+          "delta": " \"open\"}"
+        },
+        {
+          "type": "TOOL_CALL_END",
+          "toolCallId": "call-1"
+        },
+        {
+          "type": "TOOL_CALL_RESULT",
+          "messageId": "res-1",
+          "toolCallId": "call-1",
+          "content": "3 open orders",
+          "role": "tool"
+        },
+        {
+          "type": "TEXT_MESSAGE_START",
+          "messageId": "msg-2",
+          "role": "assistant"
+        },
+        {
+          "type": "TEXT_MESSAGE_CONTENT",
+          "messageId": "msg-2",
+          "delta": "You have 3 open orders."
+        },
+        {
+          "type": "TEXT_MESSAGE_END",
+          "messageId": "msg-2"
+        },
+        {
+          "type": "CUSTOM",
+          "name": "terp.context",
+          "value": {
+            "usedTokens": 52000,
+            "windowTokens": 1000000,
+            "model": "example-model-1"
+          }
+        },
+        {
+          "type": "RUN_FINISHED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "outcome": {
+            "type": "success"
+          },
+          "usage": [
+            {
+              "provider": "example",
+              "model": "example-model-1",
+              "inputTokens": 1200,
+              "outputTokens": 300,
+              "totalTokens": 1500,
+              "cachedInputTokens": 800
+            }
+          ]
+        }
+      ],
+      "reads": {
+        "outcome": "success",
+        "items": [
+          {
+            "kind": "text",
+            "id": "msg-1",
+            "text": "Let me look."
+          },
+          {
+            "kind": "tool",
+            "id": "call-1",
+            "name": "lookup_orders",
+            "args": "{\"status\": \"open\"}",
+            "status": "completed",
+            "subtitle": "Looking up your orders",
+            "parent": "msg-1",
+            "result": "3 open orders"
+          },
+          {
+            "kind": "text",
+            "id": "msg-2",
+            "text": "You have 3 open orders."
+          }
+        ],
+        "interrupt": null,
+        "context": {
+          "usedTokens": 52000,
+          "windowTokens": 1000000,
+          "model": "example-model-1"
+        },
+        "usage": [
+          {
+            "provider": "example",
+            "model": "example-model-1",
+            "inputTokens": 1200,
+            "outputTokens": 300,
+            "totalTokens": 1500,
+            "cachedInputTokens": 800
+          }
+        ],
+        "handoff": null,
+        "error": null
+      }
+    },
+    {
+      "id": "stream-valid-03",
+      "expect": "valid",
+      "about": "a tool call that failed, and an answer that says so",
+      "events": [
+        {
+          "type": "RUN_STARTED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "protocolVersion": "1.0",
+          "metadata": {
+            "terp": {
+              "schemaVersion": 1
+            }
+          }
+        },
+        {
+          "type": "TOOL_CALL_START",
+          "toolCallId": "call-1",
+          "toolCallName": "lookup_order"
+        },
+        {
+          "type": "TOOL_CALL_ARGS",
+          "toolCallId": "call-1",
+          "delta": "{\"order\": \"99\"}"
+        },
+        {
+          "type": "TOOL_CALL_END",
+          "toolCallId": "call-1"
+        },
+        {
+          "type": "TOOL_CALL_RESULT",
+          "messageId": "res-1",
+          "toolCallId": "call-1",
+          "content": "Order 99 was not found.",
+          "metadata": {
+            "terp": {
+              "status": "error"
+            }
+          }
+        },
+        {
+          "type": "TEXT_MESSAGE_START",
+          "messageId": "msg-1",
+          "role": "assistant"
+        },
+        {
+          "type": "TEXT_MESSAGE_CONTENT",
+          "messageId": "msg-1",
+          "delta": "I could not find order 99."
+        },
+        {
+          "type": "TEXT_MESSAGE_END",
+          "messageId": "msg-1"
+        },
+        {
+          "type": "RUN_FINISHED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "outcome": {
+            "type": "success"
+          }
+        }
+      ],
+      "reads": {
+        "outcome": "success",
+        "items": [
+          {
+            "kind": "tool",
+            "id": "call-1",
+            "name": "lookup_order",
+            "args": "{\"order\": \"99\"}",
+            "status": "error",
+            "result": "Order 99 was not found."
+          },
+          {
+            "kind": "text",
+            "id": "msg-1",
+            "text": "I could not find order 99."
+          }
+        ],
+        "interrupt": null,
+        "context": null,
+        "usage": [],
+        "handoff": null,
+        "error": null
+      }
+    },
+    {
+      "id": "stream-valid-04",
+      "expect": "valid",
+      "about": "two tool calls running side by side",
+      "events": [
+        {
+          "type": "RUN_STARTED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "protocolVersion": "1.0",
+          "metadata": {
+            "terp": {
+              "schemaVersion": 1
+            }
+          }
+        },
+        {
+          "type": "TOOL_CALL_START",
+          "toolCallId": "call-1",
+          "toolCallName": "lookup_order"
+        },
+        {
+          "type": "TOOL_CALL_START",
+          "toolCallId": "call-2",
+          "toolCallName": "lookup_order"
+        },
+        {
+          "type": "TOOL_CALL_ARGS",
+          "toolCallId": "call-2",
+          "delta": "{\"order\": \"43\"}"
+        },
+        {
+          "type": "TOOL_CALL_ARGS",
+          "toolCallId": "call-1",
+          "delta": "{\"order\": \"42\"}"
+        },
+        {
+          "type": "TOOL_CALL_END",
+          "toolCallId": "call-2"
+        },
+        {
+          "type": "TOOL_CALL_END",
+          "toolCallId": "call-1"
+        },
+        {
+          "type": "TOOL_CALL_RESULT",
+          "messageId": "res-2",
+          "toolCallId": "call-2",
+          "content": "Order 43: shipped"
+        },
+        {
+          "type": "TOOL_CALL_RESULT",
+          "messageId": "res-1",
+          "toolCallId": "call-1",
+          "content": "Order 42: open"
+        },
+        {
+          "type": "RUN_FINISHED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "outcome": {
+            "type": "success"
+          }
+        }
+      ],
+      "reads": {
+        "outcome": "success",
+        "items": [
+          {
+            "kind": "tool",
+            "id": "call-1",
+            "name": "lookup_order",
+            "args": "{\"order\": \"42\"}",
+            "status": "completed",
+            "result": "Order 42: open"
+          },
+          {
+            "kind": "tool",
+            "id": "call-2",
+            "name": "lookup_order",
+            "args": "{\"order\": \"43\"}",
+            "status": "completed",
+            "result": "Order 43: shipped"
+          }
+        ],
+        "interrupt": null,
+        "context": null,
+        "usage": [],
+        "handoff": null,
+        "error": null
+      }
+    },
+    {
+      "id": "stream-valid-05",
+      "expect": "valid",
+      "about": "the assistant asks which order and ends the run",
+      "events": [
+        {
+          "type": "RUN_STARTED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "protocolVersion": "1.0",
+          "metadata": {
+            "terp": {
+              "schemaVersion": 1
+            }
+          }
+        },
+        {
+          "type": "TEXT_MESSAGE_START",
+          "messageId": "msg-1",
+          "role": "assistant"
+        },
+        {
+          "type": "TEXT_MESSAGE_CONTENT",
+          "messageId": "msg-1",
+          "delta": "Two orders match."
+        },
+        {
+          "type": "TEXT_MESSAGE_END",
+          "messageId": "msg-1"
+        },
+        {
+          "type": "RUN_FINISHED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "outcome": {
+            "type": "interrupt",
+            "interrupts": [
+              {
+                "id": "q-1",
+                "reason": "terp.question",
+                "message": "Which order do you mean?",
+                "metadata": {
+                  "terp": {
+                    "input": "choice",
+                    "options": [
+                      {
+                        "value": "42",
+                        "label": "Order 42"
+                      },
+                      {
+                        "value": "43",
+                        "label": "Order 43"
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "reads": {
+        "outcome": "interrupt",
+        "items": [
+          {
+            "kind": "text",
+            "id": "msg-1",
+            "text": "Two orders match."
+          }
+        ],
+        "interrupt": {
+          "id": "q-1",
+          "reason": "terp.question",
+          "message": "Which order do you mean?",
+          "input": "choice",
+          "options": [
+            {
+              "value": "42",
+              "label": "Order 42"
+            },
+            {
+              "value": "43",
+              "label": "Order 43"
+            }
+          ]
+        },
+        "context": null,
+        "usage": [],
+        "handoff": null,
+        "error": null
+      }
+    },
+    {
+      "id": "stream-valid-06",
+      "expect": "valid",
+      "about": "a run waiting for the person to approve a tool call, under a producer's own reason",
+      "events": [
+        {
+          "type": "RUN_STARTED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "protocolVersion": "1.0",
+          "metadata": {
+            "terp": {
+              "schemaVersion": 1
+            }
+          }
+        },
+        {
+          "type": "TOOL_CALL_START",
+          "toolCallId": "call-1",
+          "toolCallName": "delete_order"
+        },
+        {
+          "type": "TOOL_CALL_ARGS",
+          "toolCallId": "call-1",
+          "delta": "{\"order\": \"42\"}"
+        },
+        {
+          "type": "TOOL_CALL_END",
+          "toolCallId": "call-1"
+        },
+        {
+          "type": "RUN_FINISHED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "outcome": {
+            "type": "interrupt",
+            "interrupts": [
+              {
+                "id": "ap-1",
+                "reason": "example.approval",
+                "message": "Delete order 42?",
+                "toolCallId": "call-1"
+              }
+            ]
+          }
+        }
+      ],
+      "reads": {
+        "outcome": "interrupt",
+        "items": [
+          {
+            "kind": "tool",
+            "id": "call-1",
+            "name": "delete_order",
+            "args": "{\"order\": \"42\"}",
+            "status": "waiting"
+          }
+        ],
+        "interrupt": {
+          "id": "ap-1",
+          "reason": "example.approval",
+          "message": "Delete order 42?",
+          "toolCallId": "call-1"
+        },
+        "context": null,
+        "usage": [],
+        "handoff": null,
+        "error": null
+      }
+    },
+    {
+      "id": "stream-valid-07",
+      "expect": "valid",
+      "about": "stopped by the person",
+      "events": [
+        {
+          "type": "RUN_STARTED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "protocolVersion": "1.0",
+          "metadata": {
+            "terp": {
+              "schemaVersion": 1
+            }
+          }
+        },
+        {
+          "type": "TEXT_MESSAGE_START",
+          "messageId": "msg-1",
+          "role": "assistant"
+        },
+        {
+          "type": "TEXT_MESSAGE_CONTENT",
+          "messageId": "msg-1",
+          "delta": "Starting with"
+        },
+        {
+          "type": "TEXT_MESSAGE_END",
+          "messageId": "msg-1"
+        },
+        {
+          "type": "RUN_FINISHED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "outcome": {
+            "type": "cancelled"
+          }
+        }
+      ],
+      "reads": {
+        "outcome": "cancelled",
+        "items": [
+          {
+            "kind": "text",
+            "id": "msg-1",
+            "text": "Starting with"
+          }
+        ],
+        "interrupt": null,
+        "context": null,
+        "usage": [],
+        "handoff": null,
+        "error": null
+      }
+    },
+    {
+      "id": "stream-valid-08",
+      "expect": "valid",
+      "about": "steered: a new message redirected the run, and the next run follows",
+      "events": [
+        {
+          "type": "RUN_STARTED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "protocolVersion": "1.0",
+          "metadata": {
+            "terp": {
+              "schemaVersion": 1
+            }
+          }
+        },
+        {
+          "type": "TEXT_MESSAGE_START",
+          "messageId": "msg-1",
+          "role": "assistant"
+        },
+        {
+          "type": "TEXT_MESSAGE_CONTENT",
+          "messageId": "msg-1",
+          "delta": "First I will"
+        },
+        {
+          "type": "TEXT_MESSAGE_END",
+          "messageId": "msg-1"
+        },
+        {
+          "type": "CUSTOM",
+          "name": "terp.handoff",
+          "value": {
+            "nextRunId": "run-2"
+          }
+        },
+        {
+          "type": "RUN_FINISHED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "outcome": {
+            "type": "cancelled"
+          },
+          "metadata": {
+            "terp": {
+              "reason": "steered"
+            }
+          }
+        }
+      ],
+      "reads": {
+        "outcome": "steered",
+        "items": [
+          {
+            "kind": "text",
+            "id": "msg-1",
+            "text": "First I will"
+          }
+        ],
+        "interrupt": null,
+        "context": null,
+        "usage": [],
+        "handoff": "run-2",
+        "error": null
+      }
+    },
+    {
+      "id": "stream-valid-09",
+      "expect": "valid",
+      "about": "a run that fails in the middle of a message and a tool call",
+      "events": [
+        {
+          "type": "RUN_STARTED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "protocolVersion": "1.0",
+          "metadata": {
+            "terp": {
+              "schemaVersion": 1
+            }
+          }
+        },
+        {
+          "type": "TEXT_MESSAGE_START",
+          "messageId": "msg-1",
+          "role": "assistant"
+        },
+        {
+          "type": "TEXT_MESSAGE_CONTENT",
+          "messageId": "msg-1",
+          "delta": "Looking"
+        },
+        {
+          "type": "TOOL_CALL_START",
+          "toolCallId": "call-1",
+          "toolCallName": "lookup_order"
+        },
+        {
+          "type": "TOOL_CALL_ARGS",
+          "toolCallId": "call-1",
+          "delta": "{\"ord"
+        },
+        {
+          "type": "RUN_ERROR",
+          "message": "The assistant could not be reached.",
+          "code": "assistant.unavailable"
+        }
+      ],
+      "reads": {
+        "outcome": "error",
+        "items": [
+          {
+            "kind": "text",
+            "id": "msg-1",
+            "text": "Looking"
+          },
+          {
+            "kind": "tool",
+            "id": "call-1",
+            "name": "lookup_order",
+            "args": "{\"ord",
+            "status": "unfinished"
+          }
+        ],
+        "interrupt": null,
+        "context": null,
+        "usage": [],
+        "handoff": null,
+        "error": {
+          "message": "The assistant could not be reached.",
+          "code": "assistant.unavailable"
+        }
+      }
+    },
+    {
+      "id": "stream-valid-10",
+      "expect": "valid",
+      "about": "a compaction whose row is updated, beside events of the producer's own a reader shows nothing for",
+      "events": [
+        {
+          "type": "RUN_STARTED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "protocolVersion": "1.0",
+          "metadata": {
+            "terp": {
+              "schemaVersion": 1
+            }
+          }
+        },
+        {
+          "type": "ACTIVITY_SNAPSHOT",
+          "messageId": "act-1",
+          "activityType": "terp.compaction",
+          "content": {
+            "trigger": "auto",
+            "before": 182000,
+            "after": 182000
+          }
+        },
+        {
+          "type": "CUSTOM",
+          "name": "example.trace",
+          "value": {
+            "span": "abc"
+          }
+        },
+        {
+          "type": "ACTIVITY_SNAPSHOT",
+          "messageId": "act-2",
+          "activityType": "example.notice",
+          "content": {
+            "note": "ignored"
+          }
+        },
+        {
+          "type": "ACTIVITY_SNAPSHOT",
+          "messageId": "act-1",
+          "activityType": "terp.compaction",
+          "content": {
+            "trigger": "auto",
+            "before": 182000,
+            "after": 41000
+          }
+        },
+        {
+          "type": "TEXT_MESSAGE_START",
+          "messageId": "msg-1",
+          "role": "assistant"
+        },
+        {
+          "type": "TEXT_MESSAGE_CONTENT",
+          "messageId": "msg-1",
+          "delta": "Done."
+        },
+        {
+          "type": "TEXT_MESSAGE_END",
+          "messageId": "msg-1"
+        },
+        {
+          "type": "RUN_FINISHED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "outcome": {
+            "type": "success"
+          }
+        }
+      ],
+      "reads": {
+        "outcome": "success",
+        "items": [
+          {
+            "kind": "activity",
+            "id": "act-1",
+            "type": "terp.compaction",
+            "content": {
+              "trigger": "auto",
+              "before": 182000,
+              "after": 41000
+            }
+          },
+          {
+            "kind": "text",
+            "id": "msg-1",
+            "text": "Done."
+          }
+        ],
+        "interrupt": null,
+        "context": null,
+        "usage": [],
+        "handoff": null,
+        "error": null
+      }
+    },
+    {
+      "id": "stream-valid-11",
+      "expect": "valid",
+      "about": "keep-alive deltas, a tool call with no arguments, and the memory fill read last",
+      "events": [
+        {
+          "type": "RUN_STARTED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "protocolVersion": "1.0",
+          "metadata": {
+            "terp": {
+              "schemaVersion": 1
+            }
+          }
+        },
+        {
+          "type": "TEXT_MESSAGE_START",
+          "messageId": "msg-1",
+          "role": "assistant"
+        },
+        {
+          "type": "TEXT_MESSAGE_CONTENT",
+          "messageId": "msg-1",
+          "delta": ""
+        },
+        {
+          "type": "TEXT_MESSAGE_CONTENT",
+          "messageId": "msg-1",
+          "delta": "Checking."
+        },
+        {
+          "type": "TEXT_MESSAGE_CONTENT",
+          "messageId": "msg-1",
+          "delta": ""
+        },
+        {
+          "type": "TEXT_MESSAGE_END",
+          "messageId": "msg-1"
+        },
+        {
+          "type": "CUSTOM",
+          "name": "terp.context",
+          "value": {
+            "usedTokens": 1000,
+            "windowTokens": 0
+          }
+        },
+        {
+          "type": "TOOL_CALL_START",
+          "toolCallId": "call-1",
+          "toolCallName": "current_time"
+        },
+        {
+          "type": "TOOL_CALL_END",
+          "toolCallId": "call-1"
+        },
+        {
+          "type": "TOOL_CALL_RESULT",
+          "messageId": "res-1",
+          "toolCallId": "call-1",
+          "content": "09:30"
+        },
+        {
+          "type": "CUSTOM",
+          "name": "terp.context",
+          "value": {
+            "usedTokens": 52000,
+            "windowTokens": 1000000,
+            "model": "example-model-1"
+          }
+        },
+        {
+          "type": "RUN_FINISHED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "outcome": {
+            "type": "success"
+          }
+        }
+      ],
+      "reads": {
+        "outcome": "success",
+        "items": [
+          {
+            "kind": "text",
+            "id": "msg-1",
+            "text": "Checking."
+          },
+          {
+            "kind": "tool",
+            "id": "call-1",
+            "name": "current_time",
+            "args": "",
+            "status": "completed",
+            "result": "09:30"
+          }
+        ],
+        "interrupt": null,
+        "context": {
+          "usedTokens": 52000,
+          "windowTokens": 1000000,
+          "model": "example-model-1"
+        },
+        "usage": [],
+        "handoff": null,
+        "error": null
+      }
+    },
+    {
+      "id": "stream-invalid-01",
+      "expect": "invalid",
+      "about": "a stream that does not open with RUN_STARTED",
+      "events": [
+        {
+          "type": "TEXT_MESSAGE_START",
+          "messageId": "msg-1",
+          "role": "assistant"
+        },
+        {
+          "type": "TEXT_MESSAGE_END",
+          "messageId": "msg-1"
+        },
+        {
+          "type": "RUN_FINISHED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "outcome": {
+            "type": "success"
+          }
+        }
+      ],
+      "at": 0,
+      "rule": "starts-with-run-started"
+    },
+    {
+      "id": "stream-invalid-02",
+      "expect": "invalid",
+      "about": "an empty stream",
+      "events": [],
+      "at": 0,
+      "rule": "starts-with-run-started"
+    },
+    {
+      "id": "stream-invalid-03",
+      "expect": "invalid",
+      "about": "a second opening inside the run",
+      "events": [
+        {
+          "type": "RUN_STARTED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "protocolVersion": "1.0",
+          "metadata": {
+            "terp": {
+              "schemaVersion": 1
+            }
+          }
+        },
+        {
+          "type": "TEXT_MESSAGE_START",
+          "messageId": "msg-1",
+          "role": "assistant"
+        },
+        {
+          "type": "RUN_STARTED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "protocolVersion": "1.0",
+          "metadata": {
+            "terp": {
+              "schemaVersion": 1
+            }
+          }
+        },
+        {
+          "type": "TEXT_MESSAGE_END",
+          "messageId": "msg-1"
+        },
+        {
+          "type": "RUN_FINISHED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "outcome": {
+            "type": "success"
+          }
+        }
+      ],
+      "at": 2,
+      "rule": "starts-with-run-started"
+    },
+    {
+      "id": "stream-invalid-04",
+      "expect": "invalid",
+      "about": "a stream that never ends",
+      "events": [
+        {
+          "type": "RUN_STARTED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "protocolVersion": "1.0",
+          "metadata": {
+            "terp": {
+              "schemaVersion": 1
+            }
+          }
+        },
+        {
+          "type": "TEXT_MESSAGE_START",
+          "messageId": "msg-1",
+          "role": "assistant"
+        },
+        {
+          "type": "TEXT_MESSAGE_CONTENT",
+          "messageId": "msg-1",
+          "delta": "Hello"
+        },
+        {
+          "type": "TEXT_MESSAGE_END",
+          "messageId": "msg-1"
+        }
+      ],
+      "at": 4,
+      "rule": "ends-with-one-terminal"
+    },
+    {
+      "id": "stream-invalid-05",
+      "expect": "invalid",
+      "about": "an event after the run ended",
+      "events": [
+        {
+          "type": "RUN_STARTED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "protocolVersion": "1.0",
+          "metadata": {
+            "terp": {
+              "schemaVersion": 1
+            }
+          }
+        },
+        {
+          "type": "RUN_FINISHED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "outcome": {
+            "type": "success"
+          }
+        },
+        {
+          "type": "TEXT_MESSAGE_START",
+          "messageId": "msg-1",
+          "role": "assistant"
+        }
+      ],
+      "at": 2,
+      "rule": "ends-with-one-terminal"
+    },
+    {
+      "id": "stream-invalid-06",
+      "expect": "invalid",
+      "about": "two endings",
+      "events": [
+        {
+          "type": "RUN_STARTED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "protocolVersion": "1.0",
+          "metadata": {
+            "terp": {
+              "schemaVersion": 1
+            }
+          }
+        },
+        {
+          "type": "RUN_FINISHED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "outcome": {
+            "type": "success"
+          }
+        },
+        {
+          "type": "RUN_ERROR",
+          "message": "It failed."
+        }
+      ],
+      "at": 2,
+      "rule": "ends-with-one-terminal"
+    },
+    {
+      "id": "stream-invalid-07",
+      "expect": "invalid",
+      "about": "a run closed under another run's id",
+      "events": [
+        {
+          "type": "RUN_STARTED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "protocolVersion": "1.0",
+          "metadata": {
+            "terp": {
+              "schemaVersion": 1
+            }
+          }
+        },
+        {
+          "type": "RUN_FINISHED",
+          "threadId": "conv-1",
+          "runId": "run-2",
+          "outcome": {
+            "type": "success"
+          }
+        }
+      ],
+      "at": 1,
+      "rule": "one-run"
+    },
+    {
+      "id": "stream-invalid-08",
+      "expect": "invalid",
+      "about": "a run closed in another conversation",
+      "events": [
+        {
+          "type": "RUN_STARTED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "protocolVersion": "1.0",
+          "metadata": {
+            "terp": {
+              "schemaVersion": 1
+            }
+          }
+        },
+        {
+          "type": "RUN_FINISHED",
+          "threadId": "conv-2",
+          "runId": "run-1",
+          "outcome": {
+            "type": "success"
+          }
+        }
+      ],
+      "at": 1,
+      "rule": "one-run"
+    },
+    {
+      "id": "stream-invalid-09",
+      "expect": "invalid",
+      "about": "text for a message that was never opened",
+      "events": [
+        {
+          "type": "RUN_STARTED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "protocolVersion": "1.0",
+          "metadata": {
+            "terp": {
+              "schemaVersion": 1
+            }
+          }
+        },
+        {
+          "type": "TEXT_MESSAGE_CONTENT",
+          "messageId": "msg-1",
+          "delta": "Hello"
+        },
+        {
+          "type": "RUN_FINISHED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "outcome": {
+            "type": "success"
+          }
+        }
+      ],
+      "at": 1,
+      "rule": "text-message-lifecycle"
+    },
+    {
+      "id": "stream-invalid-10",
+      "expect": "invalid",
+      "about": "text after its message ended",
+      "events": [
+        {
+          "type": "RUN_STARTED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "protocolVersion": "1.0",
+          "metadata": {
+            "terp": {
+              "schemaVersion": 1
+            }
+          }
+        },
+        {
+          "type": "TEXT_MESSAGE_START",
+          "messageId": "msg-1",
+          "role": "assistant"
+        },
+        {
+          "type": "TEXT_MESSAGE_END",
+          "messageId": "msg-1"
+        },
+        {
+          "type": "TEXT_MESSAGE_CONTENT",
+          "messageId": "msg-1",
+          "delta": "more"
+        },
+        {
+          "type": "RUN_FINISHED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "outcome": {
+            "type": "success"
+          }
+        }
+      ],
+      "at": 3,
+      "rule": "text-message-lifecycle"
+    },
+    {
+      "id": "stream-invalid-11",
+      "expect": "invalid",
+      "about": "one message opened twice",
+      "events": [
+        {
+          "type": "RUN_STARTED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "protocolVersion": "1.0",
+          "metadata": {
+            "terp": {
+              "schemaVersion": 1
+            }
+          }
+        },
+        {
+          "type": "TEXT_MESSAGE_START",
+          "messageId": "msg-1",
+          "role": "assistant"
+        },
+        {
+          "type": "TEXT_MESSAGE_END",
+          "messageId": "msg-1"
+        },
+        {
+          "type": "TEXT_MESSAGE_START",
+          "messageId": "msg-1",
+          "role": "assistant"
+        },
+        {
+          "type": "TEXT_MESSAGE_END",
+          "messageId": "msg-1"
+        },
+        {
+          "type": "RUN_FINISHED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "outcome": {
+            "type": "success"
+          }
+        }
+      ],
+      "at": 3,
+      "rule": "text-message-lifecycle"
+    },
+    {
+      "id": "stream-invalid-12",
+      "expect": "invalid",
+      "about": "arguments for a call that was never opened",
+      "events": [
+        {
+          "type": "RUN_STARTED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "protocolVersion": "1.0",
+          "metadata": {
+            "terp": {
+              "schemaVersion": 1
+            }
+          }
+        },
+        {
+          "type": "TOOL_CALL_ARGS",
+          "toolCallId": "call-1",
+          "delta": "{}"
+        },
+        {
+          "type": "RUN_FINISHED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "outcome": {
+            "type": "success"
+          }
+        }
+      ],
+      "at": 1,
+      "rule": "tool-call-lifecycle"
+    },
+    {
+      "id": "stream-invalid-13",
+      "expect": "invalid",
+      "about": "a result before the call's arguments closed",
+      "events": [
+        {
+          "type": "RUN_STARTED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "protocolVersion": "1.0",
+          "metadata": {
+            "terp": {
+              "schemaVersion": 1
+            }
+          }
+        },
+        {
+          "type": "TOOL_CALL_START",
+          "toolCallId": "call-1",
+          "toolCallName": "lookup_order"
+        },
+        {
+          "type": "TOOL_CALL_RESULT",
+          "messageId": "res-1",
+          "toolCallId": "call-1",
+          "content": "ok"
+        },
+        {
+          "type": "TOOL_CALL_END",
+          "toolCallId": "call-1"
+        },
+        {
+          "type": "RUN_FINISHED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "outcome": {
+            "type": "success"
+          }
+        }
+      ],
+      "at": 2,
+      "rule": "tool-call-lifecycle"
+    },
+    {
+      "id": "stream-invalid-14",
+      "expect": "invalid",
+      "about": "two results for one call",
+      "events": [
+        {
+          "type": "RUN_STARTED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "protocolVersion": "1.0",
+          "metadata": {
+            "terp": {
+              "schemaVersion": 1
+            }
+          }
+        },
+        {
+          "type": "TOOL_CALL_START",
+          "toolCallId": "call-1",
+          "toolCallName": "lookup_order"
+        },
+        {
+          "type": "TOOL_CALL_END",
+          "toolCallId": "call-1"
+        },
+        {
+          "type": "TOOL_CALL_RESULT",
+          "messageId": "res-1",
+          "toolCallId": "call-1",
+          "content": "ok"
+        },
+        {
+          "type": "TOOL_CALL_RESULT",
+          "messageId": "res-2",
+          "toolCallId": "call-1",
+          "content": "again"
+        },
+        {
+          "type": "RUN_FINISHED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "outcome": {
+            "type": "success"
+          }
+        }
+      ],
+      "at": 4,
+      "rule": "tool-call-lifecycle"
+    },
+    {
+      "id": "stream-invalid-15",
+      "expect": "invalid",
+      "about": "one call opened twice",
+      "events": [
+        {
+          "type": "RUN_STARTED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "protocolVersion": "1.0",
+          "metadata": {
+            "terp": {
+              "schemaVersion": 1
+            }
+          }
+        },
+        {
+          "type": "TOOL_CALL_START",
+          "toolCallId": "call-1",
+          "toolCallName": "lookup_order"
+        },
+        {
+          "type": "TOOL_CALL_END",
+          "toolCallId": "call-1"
+        },
+        {
+          "type": "TOOL_CALL_START",
+          "toolCallId": "call-1",
+          "toolCallName": "lookup_order"
+        },
+        {
+          "type": "RUN_FINISHED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "outcome": {
+            "type": "success"
+          }
+        }
+      ],
+      "at": 3,
+      "rule": "tool-call-lifecycle"
+    },
+    {
+      "id": "stream-invalid-16",
+      "expect": "invalid",
+      "about": "a tool call under a message that does not exist",
+      "events": [
+        {
+          "type": "RUN_STARTED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "protocolVersion": "1.0",
+          "metadata": {
+            "terp": {
+              "schemaVersion": 1
+            }
+          }
+        },
+        {
+          "type": "TOOL_CALL_START",
+          "toolCallId": "call-1",
+          "toolCallName": "lookup_order",
+          "parentMessageId": "msg-9"
+        },
+        {
+          "type": "TOOL_CALL_END",
+          "toolCallId": "call-1"
+        },
+        {
+          "type": "TOOL_CALL_RESULT",
+          "messageId": "res-1",
+          "toolCallId": "call-1",
+          "content": "ok"
+        },
+        {
+          "type": "RUN_FINISHED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "outcome": {
+            "type": "success"
+          }
+        }
+      ],
+      "at": 1,
+      "rule": "references-are-known"
+    },
+    {
+      "id": "stream-invalid-17",
+      "expect": "invalid",
+      "about": "an approval for a tool call the run never made",
+      "events": [
+        {
+          "type": "RUN_STARTED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "protocolVersion": "1.0",
+          "metadata": {
+            "terp": {
+              "schemaVersion": 1
+            }
+          }
+        },
+        {
+          "type": "RUN_FINISHED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "outcome": {
+            "type": "interrupt",
+            "interrupts": [
+              {
+                "id": "ap-1",
+                "reason": "example.approval",
+                "toolCallId": "call-9"
+              }
+            ]
+          }
+        }
+      ],
+      "at": 1,
+      "rule": "references-are-known"
+    },
+    {
+      "id": "stream-invalid-18",
+      "expect": "invalid",
+      "about": "a run that completes with a message still open",
+      "events": [
+        {
+          "type": "RUN_STARTED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "protocolVersion": "1.0",
+          "metadata": {
+            "terp": {
+              "schemaVersion": 1
+            }
+          }
+        },
+        {
+          "type": "TEXT_MESSAGE_START",
+          "messageId": "msg-1",
+          "role": "assistant"
+        },
+        {
+          "type": "TEXT_MESSAGE_CONTENT",
+          "messageId": "msg-1",
+          "delta": "Hel"
+        },
+        {
+          "type": "RUN_FINISHED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "outcome": {
+            "type": "success"
+          }
+        }
+      ],
+      "at": 3,
+      "rule": "closed-before-finish"
+    },
+    {
+      "id": "stream-invalid-19",
+      "expect": "invalid",
+      "about": "a run that completes with a call that has no result",
+      "events": [
+        {
+          "type": "RUN_STARTED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "protocolVersion": "1.0",
+          "metadata": {
+            "terp": {
+              "schemaVersion": 1
+            }
+          }
+        },
+        {
+          "type": "TOOL_CALL_START",
+          "toolCallId": "call-1",
+          "toolCallName": "lookup_order"
+        },
+        {
+          "type": "TOOL_CALL_END",
+          "toolCallId": "call-1"
+        },
+        {
+          "type": "RUN_FINISHED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "outcome": {
+            "type": "success"
+          }
+        }
+      ],
+      "at": 3,
+      "rule": "closed-before-finish"
+    },
+    {
+      "id": "stream-invalid-20",
+      "expect": "invalid",
+      "about": "a question asked while a call still waits, which the question does not name",
+      "events": [
+        {
+          "type": "RUN_STARTED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "protocolVersion": "1.0",
+          "metadata": {
+            "terp": {
+              "schemaVersion": 1
+            }
+          }
+        },
+        {
+          "type": "TOOL_CALL_START",
+          "toolCallId": "call-1",
+          "toolCallName": "lookup_order"
+        },
+        {
+          "type": "TOOL_CALL_END",
+          "toolCallId": "call-1"
+        },
+        {
+          "type": "RUN_FINISHED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "outcome": {
+            "type": "interrupt",
+            "interrupts": [
+              {
+                "id": "q-1",
+                "reason": "terp.question",
+                "message": "Which order do you mean?",
+                "metadata": {
+                  "terp": {
+                    "input": "text"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "at": 3,
+      "rule": "closed-before-finish"
+    },
+    {
+      "id": "stream-invalid-21",
+      "expect": "invalid",
+      "about": "text after the handoff",
+      "events": [
+        {
+          "type": "RUN_STARTED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "protocolVersion": "1.0",
+          "metadata": {
+            "terp": {
+              "schemaVersion": 1
+            }
+          }
+        },
+        {
+          "type": "CUSTOM",
+          "name": "terp.handoff",
+          "value": {
+            "nextRunId": "run-2"
+          }
+        },
+        {
+          "type": "TEXT_MESSAGE_START",
+          "messageId": "msg-1",
+          "role": "assistant"
+        },
+        {
+          "type": "TEXT_MESSAGE_END",
+          "messageId": "msg-1"
+        },
+        {
+          "type": "RUN_FINISHED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "outcome": {
+            "type": "success"
+          }
+        }
+      ],
+      "at": 2,
+      "rule": "handoff-precedes-the-terminal"
+    },
+    {
+      "id": "stream-invalid-22",
+      "expect": "invalid",
+      "about": "two handoffs",
+      "events": [
+        {
+          "type": "RUN_STARTED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "protocolVersion": "1.0",
+          "metadata": {
+            "terp": {
+              "schemaVersion": 1
+            }
+          }
+        },
+        {
+          "type": "CUSTOM",
+          "name": "terp.handoff",
+          "value": {
+            "nextRunId": "run-2"
+          }
+        },
+        {
+          "type": "CUSTOM",
+          "name": "terp.handoff",
+          "value": {
+            "nextRunId": "run-3"
+          }
+        },
+        {
+          "type": "RUN_FINISHED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "outcome": {
+            "type": "success"
+          }
+        }
+      ],
+      "at": 2,
+      "rule": "handoff-precedes-the-terminal"
+    },
+    {
+      "id": "stream-invalid-23",
+      "expect": "invalid",
+      "about": "an activity under a text message's id",
+      "events": [
+        {
+          "type": "RUN_STARTED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "protocolVersion": "1.0",
+          "metadata": {
+            "terp": {
+              "schemaVersion": 1
+            }
+          }
+        },
+        {
+          "type": "TEXT_MESSAGE_START",
+          "messageId": "msg-1",
+          "role": "assistant"
+        },
+        {
+          "type": "TEXT_MESSAGE_END",
+          "messageId": "msg-1"
+        },
+        {
+          "type": "ACTIVITY_SNAPSHOT",
+          "messageId": "msg-1",
+          "activityType": "terp.compaction",
+          "content": {
+            "trigger": "auto",
+            "before": 182000,
+            "after": 41000
+          }
+        },
+        {
+          "type": "RUN_FINISHED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "outcome": {
+            "type": "success"
+          }
+        }
+      ],
+      "at": 3,
+      "rule": "message-id-names-one-thing"
+    },
+    {
+      "id": "stream-invalid-24",
+      "expect": "invalid",
+      "about": "two results under one id",
+      "events": [
+        {
+          "type": "RUN_STARTED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "protocolVersion": "1.0",
+          "metadata": {
+            "terp": {
+              "schemaVersion": 1
+            }
+          }
+        },
+        {
+          "type": "TOOL_CALL_START",
+          "toolCallId": "call-1",
+          "toolCallName": "a"
+        },
+        {
+          "type": "TOOL_CALL_START",
+          "toolCallId": "call-2",
+          "toolCallName": "b"
+        },
+        {
+          "type": "TOOL_CALL_END",
+          "toolCallId": "call-1"
+        },
+        {
+          "type": "TOOL_CALL_END",
+          "toolCallId": "call-2"
+        },
+        {
+          "type": "TOOL_CALL_RESULT",
+          "messageId": "res-1",
+          "toolCallId": "call-1",
+          "content": "ok"
+        },
+        {
+          "type": "TOOL_CALL_RESULT",
+          "messageId": "res-1",
+          "toolCallId": "call-2",
+          "content": "ok"
+        },
+        {
+          "type": "RUN_FINISHED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "outcome": {
+            "type": "success"
+          }
+        }
+      ],
+      "at": 6,
+      "rule": "message-id-names-one-thing"
+    },
+    {
+      "id": "stream-invalid-25",
+      "expect": "invalid",
+      "about": "a text message under a result's id",
+      "events": [
+        {
+          "type": "RUN_STARTED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "protocolVersion": "1.0",
+          "metadata": {
+            "terp": {
+              "schemaVersion": 1
+            }
+          }
+        },
+        {
+          "type": "TOOL_CALL_START",
+          "toolCallId": "call-1",
+          "toolCallName": "a"
+        },
+        {
+          "type": "TOOL_CALL_END",
+          "toolCallId": "call-1"
+        },
+        {
+          "type": "TOOL_CALL_RESULT",
+          "messageId": "res-1",
+          "toolCallId": "call-1",
+          "content": "ok"
+        },
+        {
+          "type": "TEXT_MESSAGE_START",
+          "messageId": "res-1",
+          "role": "assistant"
+        },
+        {
+          "type": "TEXT_MESSAGE_END",
+          "messageId": "res-1"
+        },
+        {
+          "type": "RUN_FINISHED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "outcome": {
+            "type": "success"
+          }
+        }
+      ],
+      "at": 4,
+      "rule": "message-id-names-one-thing"
+    },
+    {
+      "id": "stream-invalid-26",
+      "expect": "invalid",
+      "about": "an event the schema refuses, inside a valid run",
+      "events": [
+        {
+          "type": "RUN_STARTED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "protocolVersion": "1.0",
+          "metadata": {
+            "terp": {
+              "schemaVersion": 1
+            }
+          }
+        },
+        {
+          "type": "TEXT_MESSAGE_START",
+          "messageId": "msg-1",
+          "role": "assistant"
+        },
+        {
+          "type": "TEXT_MESSAGE_CONTENT",
+          "messageId": "msg-1",
+          "delta": "bad\u0000"
+        },
+        {
+          "type": "TEXT_MESSAGE_END",
+          "messageId": "msg-1"
+        },
+        {
+          "type": "RUN_FINISHED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "outcome": {
+            "type": "success"
+          }
+        }
+      ],
+      "at": 2,
+      "rule": "events-are-valid",
+      "field": "$.delta"
+    },
+    {
+      "id": "stream-invalid-27",
+      "expect": "invalid",
+      "about": "an opening from a later version, which a reader reads nothing from",
+      "events": [
+        {
+          "type": "RUN_STARTED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "protocolVersion": "1.0",
+          "metadata": {
+            "terp": {
+              "schemaVersion": 2
+            }
+          }
+        },
+        {
+          "type": "TEXT_MESSAGE_START",
+          "messageId": "msg-1",
+          "role": "assistant"
+        },
+        {
+          "type": "TEXT_MESSAGE_END",
+          "messageId": "msg-1"
+        },
+        {
+          "type": "RUN_FINISHED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "outcome": {
+            "type": "success"
+          }
+        }
+      ],
+      "at": 0,
+      "rule": "events-are-valid",
+      "field": "$.metadata.terp.schemaVersion"
+    }
+  ]
+}
