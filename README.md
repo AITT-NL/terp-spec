@@ -522,7 +522,8 @@ behind a Terp producer. The profile says three things AG-UI leaves open:
   question, and an event is at most `maxEventBytes` of compact UTF-8 JSON.
 - **What Terp adds where AG-UI leaves a name open** — `terp.compaction` as an
   activity type, `terp.context` (how full the assistant's memory is) and
-  `terp.handoff` (which run follows) as custom events, `terp.question` as an
+  `terp.handoff` (another run follows, and which one when the producer knows) as
+  custom events, `terp.question` as an
   interrupt reason answered by buttons, a choice, several choices or a text,
   and a `metadata.terp` key where an event needs one: the vocabulary version
   on `RUN_STARTED`, the assistant's own sentence about a tool call, a tool

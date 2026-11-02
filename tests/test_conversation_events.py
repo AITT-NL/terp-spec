@@ -188,7 +188,7 @@ def _reads(events: list[dict]) -> dict:
         elif kind == "CUSTOM" and event["name"] == "terp.context":
             read["context"] = event["value"]
         elif kind == "CUSTOM" and event["name"] == "terp.handoff":
-            read["handoff"] = event["value"]["nextRunId"]
+            read["handoff"] = event["value"]
         elif kind == "RUN_FINISHED":
             outcome = event["outcome"]
             steered = event.get("metadata", {}).get("terp", {}).get("reason") == "steered"

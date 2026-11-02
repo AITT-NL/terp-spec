@@ -52,7 +52,7 @@ against an earlier version reads this file to see exactly what changed since.
   nothing from the run, as the declarations' readers refuse a version they do not know.
 
   A vocabulary with readers and no catalog rule, so `REFERENCE_SHA` did not have to move. The
-  fixtures hold 25 valid and 71 refused events and 38 recorded runs, each valid run with what a
+  fixtures hold 26 valid and 71 refused events and 38 recorded runs, each valid run with what a
   reader resolves from it and each invalid one with the rule it breaks and where, and the
   spec suite reads every one with a reference reader. The list of vocabularies no rule
   realises, by name, now holds it beside the development-loop declaration.

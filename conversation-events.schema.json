@@ -714,15 +714,12 @@
                           }
                         },
                         "then": {
-                          "description": "Another run follows this one in the same conversation.",
+                          "description": "Another run follows this one in the same conversation, so a client keeps following instead of going idle.",
                           "properties": {
                             "value": {
-                              "description": "Which run to follow next, so a client keeps following instead of going idle.",
+                              "description": "Which run follows, when the producer knows it. A producer that knows only that one follows sends an empty object, and the client finds the next run in the conversation itself.",
                               "type": "object",
                               "additionalProperties": false,
-                              "required": [
-                                "nextRunId"
-                              ],
                               "properties": {
                                 "nextRunId": {
                                   "description": "The run that follows.",

@@ -199,6 +199,16 @@
     {
       "id": "event-valid-16",
       "expect": "valid",
+      "about": "a run follows, and the producer does not know its id yet",
+      "event": {
+        "type": "CUSTOM",
+        "name": "terp.handoff",
+        "value": {}
+      }
+    },
+    {
+      "id": "event-valid-17",
+      "expect": "valid",
       "about": "a producer's own custom event, with any value",
       "event": {
         "type": "CUSTOM",
@@ -213,7 +223,7 @@
       }
     },
     {
-      "id": "event-valid-17",
+      "id": "event-valid-18",
       "expect": "valid",
       "about": "a run that completed, with its token usage",
       "event": {
@@ -237,7 +247,7 @@
       }
     },
     {
-      "id": "event-valid-18",
+      "id": "event-valid-19",
       "expect": "valid",
       "about": "a run that asks the person to pick an order",
       "event": {
@@ -272,7 +282,7 @@
       }
     },
     {
-      "id": "event-valid-19",
+      "id": "event-valid-20",
       "expect": "valid",
       "about": "a written question with a schema for generic clients and an expiry",
       "event": {
@@ -302,7 +312,7 @@
       }
     },
     {
-      "id": "event-valid-20",
+      "id": "event-valid-21",
       "expect": "valid",
       "about": "a question answered with a button",
       "event": {
@@ -337,7 +347,7 @@
       }
     },
     {
-      "id": "event-valid-21",
+      "id": "event-valid-22",
       "expect": "valid",
       "about": "a question answered with any number of choices",
       "event": {
@@ -372,7 +382,7 @@
       }
     },
     {
-      "id": "event-valid-22",
+      "id": "event-valid-23",
       "expect": "valid",
       "about": "a run cancelled to make way for the next message",
       "event": {
@@ -390,7 +400,7 @@
       }
     },
     {
-      "id": "event-valid-23",
+      "id": "event-valid-24",
       "expect": "valid",
       "about": "a run stopped by the person",
       "event": {
@@ -403,7 +413,7 @@
       }
     },
     {
-      "id": "event-valid-24",
+      "id": "event-valid-25",
       "expect": "valid",
       "about": "an interrupt with a producer's own reason, about a tool call",
       "event": {
@@ -424,7 +434,7 @@
       }
     },
     {
-      "id": "event-valid-25",
+      "id": "event-valid-26",
       "expect": "valid",
       "about": "a failed run, with a code and the usage it spent",
       "event": {
@@ -1064,14 +1074,16 @@
     {
       "id": "event-invalid-42",
       "expect": "invalid",
-      "about": "a handoff that does not say which run follows",
+      "about": "a handoff with a key of its own",
       "event": {
         "type": "CUSTOM",
         "name": "terp.handoff",
-        "value": {}
+        "value": {
+          "next": "run-2"
+        }
       },
-      "field": "$.value.nextRunId",
-      "allowed": "the run that follows"
+      "field": "$.value.next",
+      "allowed": "nextRunId, or nothing"
     },
     {
       "id": "event-invalid-43",
@@ -2330,7 +2342,9 @@
         "interrupt": null,
         "context": null,
         "usage": [],
-        "handoff": "run-2",
+        "handoff": {
+          "nextRunId": "run-2"
+        },
         "error": null
       }
     },
