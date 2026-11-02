@@ -5,7 +5,12 @@
       "an error constructed under an alias (`from fastapi import HTTPException as ApiError`) is not required to be resolved back to the framework's HTTP error"
     ],
     "backend/no_destructive_migrations": [
-      "a statement the source does not spell out (a variable, a value a helper returns, a file read at run time) is not required to be read: only a statement written as a literal, an f-string or a concatenation of strings is",
+      "a statement the source does not spell out (a variable, a value a helper returns, a query-builder construct such as `op.execute(notes.delete())`, a file read at run time) is not required to be read: only a statement written as a literal, an f-string or a concatenation of strings is",
+      "an operation whose name is computed (`getattr(op, name)(...)` with a name that is not a literal, source text run through `exec`) is not required to be read: an operation is read under its own name, under a name the revision imports it as at its top level, or through `getattr` with a literal name",
+      "a step the upgrade reaches other than by calling a top-level function of the same revision by its name (a helper imported from another module, a callable held in a variable, a method, a function passed as a value and called through it) is not required to be followed",
+      "an upgrade entry point bound to anything but a top-level function of the revision, directly or through a chain of top-level names (`upgrade = make_upgrade()`), is not required to be resolved",
+      "rows deleted through an object-relational session rather than by a statement or a schema operation (`session.delete(row)`, `session.query(Note).delete()`) are not required to be read as a drop",
+      "a revision file in a subdirectory of the versions directory, which the migration tool loads only when it is configured to search recursively, is not required to be read",
       "a unique, foreign-key or unique-index constraint on a column the same upgrade adds nullable is not required to be reported when that upgrade fills the column before adding the constraint, which is the one order in which the existing rows can break it",
       "a constraint written inline in a raw column addition (`ADD COLUMN slug text UNIQUE DEFAULT 'x'`, `ADD COLUMN rank int NOT NULL`) is not required to be read as a step the existing rows can break"
     ],

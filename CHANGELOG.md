@@ -211,6 +211,26 @@ against an earlier version reads this file to see exactly what changed since.
   column that the same upgrade fills first, and a constraint written inline in a raw column
   addition.
 
+  The rule also reads what a migration runs beyond what its upgrade spells: a function of the
+  same revision that the upgrade calls, transitively and each once; an operation imported under
+  its own name or another, or looked up by a literal name; the function a top-level alias names
+  as the upgrade; a schema drop in a raw statement; each statement of a raw text that holds
+  several, split only where a statement ends; and every revision file the migration tool loads,
+  a name that begins with an underscore included. Seven violations hold those, each with its
+  exact findings: two helpers that call each other (`violation-11`), operations imported by name
+  (`violation-12`), the upgrade named through an alias (`violation-13`), operations looked up by
+  a literal name, on a batch block too (`violation-14`), schema drops (`violation-15`), two
+  statements in one text beside a quoted semicolon (`violation-16`), and a revision file whose
+  name begins with an underscore (`violation-17`). A checker that reads only what the upgrade
+  spells, in files whose names do not begin with an underscore, reports none of `-11` to `-15`
+  or `-17`, and one finding fewer in `-16`. `compliant-06` holds the boundary: a helper only the
+  downgrade calls, a dollar-quoted body whose semicolons end no statement, and a package marker
+  in the versions directory, which the migration tool never loads. Five residuals join the
+  three: an operation whose name is computed, a step reached other than by calling a top-level
+  function of the revision by name, an upgrade bound to anything else, rows deleted through an
+  object-relational session, and a revision file in a subdirectory the tool searches only when
+  configured to. The first residual now names a query-builder construct as well.
+
 A changed contract (a new catalog field, two new rules, a new vocabulary, and a rule that
 reports more), hence the minor. The reference
 implementation does not carry either rule yet: `certify-against-reference` stays red for them
