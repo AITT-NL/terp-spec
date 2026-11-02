@@ -7,6 +7,361 @@ fields and new rules also bump the minor; prose bumps the patch (see
 checked-in `VERSION` — held by `tests/test_changelog.py`. A checker certified
 against an earlier version reads this file to see exactly what changed since.
 
+## 0.40.0
+
+### Added
+
+- **`deployment-declaration.schema.json`** — the normative, stack-neutral schema for the
+  `deployment.json` an app checks in at its project root to declare its deployable units. A
+  tool that deploys an app has to know which units exist, which one serves the API, how to
+  tell each is healthy, which migration histories each owns, what holds state and how it is
+  backed up, and what a rollback is. Until now it could only assume one template's service
+  names, and that assumption fails silently the first day an app adds a worker, a shared
+  store or a second deployable.
+
+  A file sits in exactly one of four states: absent (undeclared, which passes), `build: own`,
+  `build: generated`, or `{"unmanaged": true, "reason": "..."}`. `build` is a field of its
+  own, so `unmanaged` keeps the one meaning it already has in the development declaration —
+  a tool cannot drive this — and is never stretched to mean "builds from its own build
+  files". Units without `build`, or `build` beside `unmanaged`, are refused rather than
+  guessed into a state. `generated` is in the vocabulary from this first release, so the four
+  states are fixed once; a toolchain with no generator refuses it by name.
+
+  The vocabulary is the one the units need and no more: `id`, `role`, a datastore's `kind`
+  and `version`, `command` as an argument list, `healthPath` and `livenessPath`,
+  `migrations`, `env`, `dependsOn`, `instances` (`one` or `many`), `size` into the file's own
+  `sizes` table, and `stateful` with a `backup` policy (how often and how long kept, as ISO
+  8601 durations). A named volume no declared stateful unit owns — a files volume — gets its
+  own policy in `volumes`; a database the deployment does not run is `externalDatabase` with
+  `{"backup": "client"}`, and `client` is valid nowhere else. `rollback.strategy` is closed,
+  and `redeploy-previous-release` is the one value this version knows. Whether a particular
+  rollback needs a restore is never declared: it is decided from the target release's own
+  images. Defaults are stated where an absent field has one meaning (`instances: one`,
+  `stateful: false`, empty `env`, `migrations`, `volumes`, `sizes` and `compose.overrides`)
+  and deliberately absent where it does not: an absent `command` or `dependsOn` is not
+  restated, which is not the same as one that is empty.
+
+  What is refused at the schema level, and why. **No deploy policy**: who may publish, how
+  many approvals a deploy needs, who may reach a deployed app and which gate policy applies
+  are decisions about an environment, and anyone who can commit to the app could lower a
+  policy kept in it. The schema names those keys in `$defs.deployPolicyKeys` with the one
+  message every reader gives, and the opted-out state can never carry one. **No free image**:
+  there is no `image` key, so the file cannot name a registry; a unit is built from the
+  checkout or named by kind and version from the stack's datastore table, one digest per
+  entry. **No hostile text**: every string has a length cap and refuses control characters,
+  and a command is an argument list, never a shell string. **No unknown key** at any level,
+  because a misspelt `stateful` would otherwise be a backup policy that silently does
+  nothing; a `$`-prefixed annotation is exempt. Every pattern ends in `(?![\s\S])`, not `$`:
+  in Python's regular expressions `$` also matches before a final newline, so a `$`-anchored
+  pattern accepts `"api\n"` — including a pattern that exists to refuse control characters —
+  in the language most readers of the file are written in. `(?![\s\S])` is the end of the
+  input in Python and in ECMA-262 alike, and the spec suite probes every pattern for it.
+
+  The role vocabulary is open: `$defs.knownRoles` lists the words it knows, and a role
+  outside it is information. `$defs.roleResolvedFields` (`healthPath`, `livenessPath`) are the
+  fields a reader resolves by role — the file carries a path and never an address, so where
+  the path is reached is the role's to say — and declaring one under an unknown role is
+  refused, because nothing will ever read it.
+
+- **`deployment-declaration.fixtures.json`** — the fixtures every reader of the declaration
+  runs. For each violation case of the two rules below it names the field the refusal is
+  about and the values that field allows, so "rejected with the field and the allowed values"
+  is something a reader's test can assert rather than a habit. It also describes, as trees a
+  reader's own test builds on disk, the path escapes a corpus case cannot carry: a symbolic
+  link out of the checkout (a wheel or a tarball carries no link), and a build context that
+  leaves the project root but stays inside a version-control work tree — legal there, and an
+  escape when the same tree lies in no work tree.
+
+- **`backend/deployment_declaration_is_readable`** — every reader reads the declaration the
+  same way, or refuses it: the schema, exactly one state, the deploy-policy message, a schema
+  version, closed-vocabulary value or datastore kind and version the reader's stack cannot
+  honour refused by name, every path the file leads a reader to resolved against the checkout
+  with links followed, never the development profile, and a file that agrees with itself (no
+  two units or volumes with one id, a size that names an entry of `sizes`, a backup policy only
+  on a unit declared stateful). `static-portable`.
+
+- **`backend/deployment_declaration_tells_the_truth`** — what the declaration says is true of
+  the profile it names, read with its overrides as one resolved profile, and of the app: units
+  and volumes exist, variables reach the unit (directly, or through the environment file the
+  variable manifest routes them to), restated commands and start order are the profile's, a
+  datastore unit runs exactly the table's digest — not a tag, not another registry, not
+  another digest — every other unit runs an image the profile builds from the checkout, and a
+  database left to its owner never stands beside a profile that still runs one. Migration
+  labels and health paths are checked against the composed app, and skipped with a named note
+  where none can be loaded. It is never a gate on topology: three APIs, no frontend, an
+  unknown role, a schedule with no scheduler and a stateful unit with no backup are all never
+  red here. `static-bespoke`.
+
+  Both rules are `runtime.applicability: not-applicable`: the running app never reads the
+  file, and the deploy-time checks belong to the tools that drive a deploy.
+
+  Both ship with corpus, rooted at the project root. `deployment_declaration_is_readable` has
+  40 violations — among them invalid JSON, a free `image`, a misspelt `stateful`, an unknown
+  schema version, units without `build`, `unmanaged` beside `build` or without a reason, a
+  shell-string command, an ANSI escape in an argument, a bell in a reason, a reason past its
+  cap, a size that points nowhere, `client` on a unit, a datastore version the table does not
+  carry, a duplicate id, an absolute path, a path that climbs out of the checkout, the
+  development profile named as the deployment one, five deploy-policy keys at the top, in a
+  unit and beside `unmanaged`, and a build context that climbs out — and 10 compliant cases:
+  the seed a fresh app is rendered with, the full sketch, the opted-out state with a reason,
+  an absent file, an argument list full of shell metacharacters (data, never a shell), a role
+  nobody has heard of, an external database, a profile of any name, and the deploy-policy
+  words used as values. `deployment_declaration_tells_the_truth` has 15 violations and 10
+  compliant cases, among them a resolved profile that contradicts its base file, the table's
+  own digest pulled from a foreign registry (which a checker that compares only digests
+  passes), and the never-red shapes: an undeclared service with a free image and writable
+  mounts, three APIs with no frontend, and claimed migrations and health paths with no
+  loadable app, which must be skipped and not reported. A case that names a datastore kind
+  ships the table it resolves against as `datastore-table.json`, so the corpus means the same
+  on every stack.
+
+- **The generator's words**, in `deployment-declaration.schema.json`. `build: generated` is
+  in the vocabulary from this release, and a generator needs two facts no other state does.
+  `generator` holds what only a generator reads and is valid only beside `generated`: beside
+  `own` nothing renders, so a block there would be a request nothing honours, and it is
+  refused (the schema states it as a conditional on `build`; every reader names the block).
+  Its one word, `generator.systemPackages`, names operating-system packages for the
+  generated backend image from a closed system-package table the stack publishes, one pinned
+  source per entry, so two builds of one commit install the same thing. A reader refuses a
+  name its table does not carry, naming the ones it does; a stack whose table is empty — the
+  reference stack's, in this release — refuses every name, so the word exists with its
+  refusal until a measured need fills the table. The pattern refuses a name that begins
+  with anything but a letter or a digit, so a name can never be read as an option of the
+  package manager it reaches. `volumes[].mount` (`{"path": "var/files", "units": [...]}`)
+  says where a volume is mounted and on which declared units: always a path inside the
+  app's `var/` directory, relative to where the image runs the app, with no segment that
+  begins with a dot. Under `own` it restates the profile; under `generated` it is what the
+  generator renders and it is required, because a generator has nowhere else to learn where
+  a volume goes. Which paths a stack's generator can render is that stack's to say.
+
+- **`backend/deployment_generated_files_match_their_render`** — where the declaration says
+  `generated`, the build files are the generator's: changed by changing the declaration,
+  the project's name or the framework release, and rendering again. Every file the stack's
+  generator owns must be byte for byte its render, a path it owns that the declaration
+  renders nothing for must be absent, the environment files a generated unit loads stay out
+  of version control and the build context, the project's name is one the container tooling
+  accepts, and the build the app's template recorded agrees with the declaration's. A
+  declaration the generator cannot render is red here, naming the refusal and `own` as the
+  way out, because the app chose the one state that promises a render. Silent for an
+  undeclared app, `own`, the opted-out state and an unreadable declaration (the readable
+  rule's). The check never writes: rendering is a command whose output is reviewed and
+  committed. `static-bespoke`, `runtime.applicability: not-applicable` — the app never
+  reads its build files, and the deploy-boundary controls (the release tooling's own
+  render, the executor's escape audit) are the release tooling's. Its escape is the
+  declaration's own state, `build: own`, and it is listed beside the other two rules
+  escaped by their declaration: a marker in a file a generator rewrites would be erased by
+  the next render.
+
+  It ships with corpus, 7 violations and 4 compliant cases. A case cannot carry the expected
+  render — a generator's bytes are its stack's, and move with every framework release's
+  base-image digests — so the violations are red whatever the render is: a build file that
+  is not a render, a build file the declaration renders nothing for, an ignore file that
+  lets an environment file into the build context, a project name the container tooling
+  refuses, a template answer that disagrees, a start-order cycle, and a unit of an unknown
+  role with no command. The compliant cases are the four states the rule is silent in.
+
+- **Corpus for the two words.** `deployment_declaration_is_readable` gains 7 violations (a
+  `generator` block beside `own`, a system package its table does not carry, a package
+  named like an option, a mount outside `var/`, a mount that climbs out, a mount naming an
+  undeclared unit, a generated volume without a mount) and 2 compliant cases (a restated
+  mount under `own`; a generated declaration with its mount and an empty package list), and
+  `deployment_declaration_tells_the_truth` 2 violations (a mount restating units the profile
+  does not mount it on, and a path it is not mounted at) and a compliant case. A case that
+  names a system package ships the table it resolves against as `system-package-table.json`,
+  as a case naming a datastore kind ships `datastore-table.json`.
+
+- **`backend/expand_revisions_only_expand`** — a migration revision that declares itself
+  expand-only holds only expand operations. The declaration is the promise that the previous
+  release keeps working on the schema the revision leaves, which is what lets a release be
+  rolled back by starting the previous release again on the same database instead of
+  restoring a backup and losing every write since. The list is closed: a new table with what
+  is its own (a foreign key from it only with a cascading or nulling delete action, never onto
+  a soft-deleted table) and its seed rows; a column added to an existing table that is
+  nullable, defaulted or generated, with no uniqueness, no check and at most a nulling key on
+  that nullable column; an index that is not unique. Everything else is refused, any raw
+  statement and any data write to an existing table included, and so is a merge revision and
+  a declaration the checker cannot read. `static-portable`, `runtime.applicability:
+  required`: the reference stack's migration run refuses the same operations as they
+  execute, before their DDL.
+
+  It is the first rule with no way out at all, neither a marker nor an `escape`: a revision
+  that needs an operation off the list declares that it is not expand-only, which is the
+  rule's other answer and costs only its own release's restore-free rollback. The spec suite
+  lists such rules by name, as it lists the governance rules, and the generated rule page
+  says where the way out is instead of calling the rule a governance rule. Corpus: 10
+  violations, each with its expected finding, and 3 compliant cases (a new table with its own
+  unique index, cascading key and seed rows beside nullable, defaulted and generated columns;
+  the batch-block shape a SQLite-backed generator writes, with a nulling key over the column
+  it adds; and an undeclared revision full of drops, which the rule does not read). Two
+  detector residuals are recorded: an operation made in a helper function, and the order of
+  operations inside one revision.
+
+- **The catalog's `escape` field.** A rule over a declaration that cannot carry an inline
+  marker — a JSON document has no comments — had nowhere honest to state its way out: the
+  marker spelling `opt_out` records is one nobody could write, and the generated rule page
+  would have told a reader to add it. `escape` states the declared state that is the rule's
+  one governed way out, in place of `opt_out` and never beside it. The rules that may use it
+  are listed by name in the spec suite, as the escape-hatch governance rules are, so no entry
+  can grant itself one; it is normative prose and is held to the same stack-neutral check as
+  `title` and `intent`.
+
+- **`workbench-declaration.schema.json`** — the stack-neutral vocabulary of the
+  `workbench.json` an app checks in to say which parts of its development loop a tool that
+  drives it relies on: the compose file, which service plays which role, the variable each
+  host port arrives through, where the API says it is ready, the variables through which the
+  source root and the framing grant reach the containers, and the commands of an app whose
+  loop is not the compose shape a tool assumes. Two readers had each written their own copy
+  of these words, with their own defaults, and they disagreed: a tool read and ran two
+  command slots (`containerLogs`, `recreate`) the gate's checker did not know, and the
+  checker held an `env` block of seam names that the tool never read, so an app that renamed
+  a seam passed its gate and then got the old name set. The words now have one owner.
+
+  It describes schemaVersion 1 as both readers read it: three states (absent, declared,
+  `{"unmanaged": true, "reason": "..."}`), open objects (a service it does not name, a role
+  nobody has heard of and a key it lacks are never refused), and nine command slots, any of
+  which means a `start` is declared. What changes for a file both readers accepted is a value
+  they used to coerce or skip in silence: a field of the wrong type, a blank command, a
+  control character, a string past its cap, a lower-case variable name. And one refusal is
+  new, because a reader puts every declared variable name into the environment of the
+  commands it runs: a `hostPortEnv` or seam named in the container toolchain's or the
+  dynamic loader's namespace (`$defs.reservedEnvironmentPrefixes`) or one the process
+  environment reads for itself, such as `PATH` or `HOME` (`$defs.reservedEnvironmentNames`),
+  is refused. The other refusals the keyword subset cannot state are named the same way: a
+  field resolved by role under a role no reader looks up (`roleResolvedFields`,
+  `knownRoles`), and a compose file named as a deployment profile
+  (`deploymentProfileMarkers`). A reader refuses a `schemaVersion` it does not know, and an
+  unreadable declaration is never read as an absent one.
+
+- **`workbench-declaration.fixtures.json`** — what every reader of the development-loop
+  declaration runs: 16 valid documents with what a reader resolves from each (the state, the
+  compose file, per known role the first entry's service and the first value of each field,
+  the seams and the command slots a reader knows), 46 invalid ones naming the field the
+  refusal is about and the values it allows, 8 of them marked as beyond the schema, and 2
+  texts that are not one JSON document.
+
+  A vocabulary, not a rule: no catalog entry realises it. Holding a file to the compose file
+  it names is the reference stack's check of its own development loop, which another stack
+  need not have in this shape; what every reader must agree on is how the file reads, and the
+  fixtures fix that. The spec suite reads every fixture with a reference reader of the `$defs`
+  lists, and lists by name the declaration vocabularies no rule realises, each of which must
+  ship its fixtures.
+
+- **`backend/personal_fields_are_declared`** — a model field named like personal data says
+  whether it holds personal data. Personal data has no shape a redactor can find, so a log, an
+  audit trail or an outbound payload can withhold an address only where the model holding it
+  declares the field personal, and the declaration is per field and per model: a schema that
+  redeclares a field without it has declared the field not personal. A field whose name is in a
+  short vocabulary (an email address, a phone number, a date of birth, a national identifier, a
+  person's name, a home address, matched against the name's last words, so `contact_email` is
+  in and `email_verified` is not) is declared personal on every model that declares it, or
+  carries a justified opt-out saying why it holds no person's data. The vocabulary is a
+  floor, not a definition: a postcode, a bare address or a bare name belongs to an
+  organisation as often as to a person. `static-portable`, `runtime.applicability:
+  not-applicable`: the running app can see a declared field, but not that a justified opt-out
+  was a decision rather than an oversight. 4 violations (a table, a schema that redeclares a
+  declared field plainly, the noun as the name's last words in an update schema, a model
+  through an app-owned base and a plain one) and 2 compliant cases (declared on the table and
+  the schema beside names outside the vocabulary; a dataclass, a plain class and function
+  parameters, none of them models). Two detector residuals are recorded: a model whose base
+  comes from another package under an unknown name, and a model built at runtime.
+
+- **Corpus for the declaration in two existing rules.** A field declared personal still caps
+  its length and still may not be a plain unique column on a soft-deletable table:
+  `input_str_fields_have_max_length` gains a violation and a compliant case, and
+  `no_unique_columns_on_soft_delete_models` a violation, so a declaration helper that forwards
+  the field's keywords is no way around either.
+
+### Changed
+
+- **`backend/no_adhoc_logging_config` no longer claims more than the redaction does.** Its
+  intent said the central filter redacts "secret/PII". It recognises secrets by name and by
+  shape, and personal data only where a model declares the field personal; the intent now says
+  so. Prose, no change to what the rule refuses.
+
+- **The spec suite's validator applies a keyword by the type of the instance**, as JSON Schema
+  specifies, rather than only when the schema also says `type`. Before, `{"required":
+  ["unmanaged"]}` constrained nothing, so an `if` written the ordinary way held for every
+  instance. It also compares by JSON value — `true` is not `1` — and gains the keywords the
+  declaration uses (`const`, `maxLength`, `maxItems`, `uniqueItems`, `patternProperties`,
+  `dependentRequired`, `if`/`then`/`else`, `number`, `exclusiveMinimum`, with `$defs` and
+  `default` as annotations), each with its negative case. No existing artifact changed verdict.
+
+- **`backend/no_destructive_migrations` reports renames, NOT NULL tightening and constraints
+  the existing rows may break.** The rule named drops and type changes and nothing else, so a
+  conformant checker passed two steps that break a deploy the same way. A rename of a table or
+  a column breaks the release still running, which reads the old name. Tightening an existing
+  column to NOT NULL fails on the first row that holds NULL. Neither shows on the empty
+  database a migration test upgrades. The intent now names five kinds of step: a drop, a
+  rename, a type change, a NOT NULL tightening, and a constraint added to an existing table
+  (unique, check, foreign key, primary key, a unique index, or the validation of one first
+  added without checking the existing rows). It also says what each finding tells the author
+  to do instead: expand, backfill the rows outside the upgrade, and contract in a later
+  release, where the contract step is the one the governed marker justifies. Two shapes are
+  not findings, because no existing row can break them. One is a step on a table the same upgrade creates. The other is a unique,
+  foreign-key or unique-index constraint on columns the same upgrade adds nullable with no
+  default, which is how a new reference column is usually written. Not being a finding does
+  not make either an expand step: whether the previous release keeps working after an
+  upgrade is a separate question, which this rule does not answer.
+
+  A changed contract: a conformant checker now reports steps it passed before, and one
+  published sample changes verdict. `compliant-01` tightened an existing column, so it now
+  restates a constraint the column already has, which is still compliant. Five violations are
+  new, each with its exact findings: renames, including an f-string and a statement run
+  through the driver (`violation-06`); NOT NULL tightening, including a column added,
+  back-filled and tightened in one release (`violation-07`); constraints, including a unique
+  constraint marked `NOT VALID`, which the qualifier does not apply to, and one on a new column
+  that carries a server default (`violation-08`); every kind on a batch block
+  (`violation-09`); and raw type changes, including a column named `type` (`violation-10`).
+  Three compliant cases are new: the expand halves and the statements that share a spelling
+  with a destructive one (`compliant-03`), a table the same upgrade creates (`compliant-04`),
+  and the batch spelling of a new reference column (`compliant-05`). `compliant-03` also
+  contracts a precision fix: `DROP NOT NULL` relaxes a column and is no drop. A checker that
+  knows only drops and type changes misses every finding in `violation-06`, `-07`, `-08` and
+  `-10` and four of six in `-09`, and it reports `compliant-03`. Three residuals are recorded
+  for the rule: a statement the source does not spell out, a constraint on a new nullable
+  column that the same upgrade fills first, and a constraint written inline in a raw column
+  addition.
+
+  The rule also reads what a migration runs beyond what its upgrade spells: a function of the
+  same revision that the upgrade calls, transitively and each once; an operation imported under
+  its own name or another, or looked up by a literal name; the function a top-level alias names
+  as the upgrade; a schema drop in a raw statement; each statement of a raw text that holds
+  several, split only where a statement ends; and every revision file the migration tool loads,
+  a name that begins with an underscore included. Seven violations hold those, each with its
+  exact findings: two helpers that call each other (`violation-11`), operations imported by name
+  (`violation-12`), the upgrade named through an alias (`violation-13`), operations looked up by
+  a literal name, on a batch block too (`violation-14`), schema drops (`violation-15`), two
+  statements in one text beside a quoted semicolon (`violation-16`), and a revision file whose
+  name begins with an underscore (`violation-17`). A checker that reads only what the upgrade
+  spells, in files whose names do not begin with an underscore, reports none of `-11` to `-15`
+  or `-17`, and one finding fewer in `-16`. `compliant-06` holds the boundary: a helper only the
+  downgrade calls, a dollar-quoted body whose semicolons end no statement, and a package marker
+  in the versions directory, which the migration tool never loads. Five residuals join the
+  three: an operation whose name is computed, a step reached other than by calling a top-level
+  function of the revision by name, an upgrade bound to anything else, rows deleted through an
+  object-relational session, and a revision file in a subdirectory the tool searches only when
+  configured to. The first residual now names a query-builder construct as well.
+
+- **`backend/not_null_columns_are_backfilled` says "tighten it in a later release"**, where it
+  said "a later revision": a later revision in the same release ships the contract step with
+  the expand step, and that release can no longer roll back without a restore. Prose only.
+
+- **`backend/migration_history_is_intact`'s runtime rationale describes the narrowed check.**
+  The reference stack's orphan check no longer refuses every revision the code does not
+  define: it admits one the migration record proves inside the schema window (one migration
+  run ahead, every revision of it expand-only, on the same framework version, walking back to
+  exactly the code head). A rewritten or deleted revision is still never inside it. Prose only.
+
+A changed contract, hence the minor: a new catalog field (`escape`), two new vocabularies
+(the deployment declaration and the workbench declaration), five new rules
+(`deployment_declaration_is_readable`, `deployment_declaration_tells_the_truth`,
+`deployment_generated_files_match_their_render`, `personal_fields_are_declared` and
+`expand_revisions_only_expand`), and a rule that reports more (`no_destructive_migrations`).
+`REFERENCE_SHA` names a reference commit that carries every one of them, so
+`certify-against-reference` holds this release whole.
+
+105 rules: 87 backend, 18 frontend.
+
 ## 0.39.0
 
 ### Changed
