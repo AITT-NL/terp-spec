@@ -114,17 +114,26 @@ def _beyond_schema(event: object) -> list[tuple[str, str]]:
         if _CONTROL.search(text)
     ]
     if isinstance(event, dict) and event.get("type") == "RUN_FINISHED":
-        outcome = event.get("outcome") if isinstance(event.get("outcome"), dict) else {}
-        for i, interrupt in enumerate(outcome.get("interrupts") or []):
-            terp = interrupt.get("metadata", {}).get("terp", {}) if isinstance(interrupt, dict) else {}
-            seen: set[object] = set()
-            for j, option in enumerate(terp.get("options") or []):
-                value = option.get("value") if isinstance(option, dict) else None
-                if value in seen:
+        for i, interrupt in enumerate(_member(_member(event, "outcome", dict), "interrupts", list)):
+            terp = _member(_member(interrupt, "metadata", dict), "terp", dict)
+            seen: set[str] = set()
+            for j, option in enumerate(_member(terp, "options", list)):
+                value = _member(option, "value", str)
+                if value is not None and value in seen:
                     refused.append((f"$.outcome.interrupts[{i}].metadata.terp.options[{j}].value",
                                     "option-values-are-distinct"))
                 seen.add(value)
     return refused
+
+
+def _member(value: object, key: str, kind: type):
+    """``value[key]`` when *value* is an object and the member is a *kind*: an empty one of
+    the kind otherwise, or ``None`` for a string. The event rules are read from events the
+    schema may also refuse, so nothing in them assumes a shape the schema has not checked."""
+    inner = value.get(key) if isinstance(value, dict) else None
+    if isinstance(inner, kind):
+        return inner
+    return None if kind is str else kind()
 
 
 def _refused_fields(event: object) -> set[str]:
@@ -518,6 +527,29 @@ def test_no_event_under_the_byte_cap_nests_deep_enough_to_crash_the_reader(where
     assert not _too_deep(event) and _refusal(event) is None
     event, _ = _holding(where, *_nested(at_the_bound + 1))
     assert _refusal(event) == "$"
+
+
+@pytest.mark.parametrize("outcome", [
+    {"type": "interrupt", "interrupts": [{"id": "i", "reason": "example.x", "metadata": "terp"}]},
+    {"type": "interrupt", "interrupts": [{"id": "i", "reason": "terp.question", "message": "Which?",
+                                          "metadata": {"terp": ["input"]}}]},
+    {"type": "interrupt", "interrupts": [{"id": "i", "reason": "terp.question", "message": "Which?",
+                                          "metadata": {"terp": {"input": "choice", "options": {"value": "a"}}}}]},
+    {"type": "interrupt", "interrupts": [{"id": "i", "reason": "terp.question", "message": "Which?",
+                                          "metadata": {"terp": {"input": "choice", "options": [
+                                              {"value": ["a"], "label": "A"}, {"value": ["a"], "label": "B"},
+                                              {"value": {"a": 1}, "label": "C"}, "a"]}}}]},
+    {"type": "interrupt", "interrupts": 7},
+    {"type": "interrupt", "interrupts": ["i"]},
+    ["interrupt"],
+])
+def test_the_event_rules_read_any_shape_the_schema_refuses(outcome: object) -> None:
+    """A reader applies the event rules beside the schema, so they meet every shape the
+    schema refuses, and a refusal never becomes a crash in the middle of a run."""
+    event = {"type": "RUN_FINISHED", "threadId": "c", "runId": "r", "outcome": outcome}
+    assert _beyond_schema(event) == []
+    assert _refused_fields(event)
+    assert _problem([_opening(), event])[1] == "events-are-valid"
 
 
 def test_a_later_version_is_refused_rather_than_read() -> None:
