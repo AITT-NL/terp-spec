@@ -359,7 +359,7 @@
                         "description": "The assistant's own sentence about what the call is for, shown beside the tool's name.",
                         "type": "string",
                         "maxLength": 160,
-                        "pattern": "^[^\\u0000-\\u001F\\u007F-\\u009F]*[^\\u0000-\\u0020\\u007F-\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF][^\\u0000-\\u001F\\u007F-\\u009F]*(?![\\u0000-\\uFFFF]|[^\\u0000-\\uFFFF])"
+                        "pattern": "^[^\\u0000-\\u001F\\u007F-\\u009F\\u2028\\u2029]*[^\\u0000-\\u0020\\u007F-\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF][^\\u0000-\\u001F\\u007F-\\u009F\\u2028\\u2029]*(?![\\u0000-\\uFFFF]|[^\\u0000-\\uFFFF])"
                       }
                     }
                   }
@@ -915,13 +915,13 @@
                                                     "description": "What the answer carries back to the run when this option is picked. Distinct across the options (option-values-are-distinct): two options carrying one value would leave the run unable to tell which was picked.",
                                                     "type": "string",
                                                     "maxLength": 200,
-                                                    "pattern": "^[^\\u0000-\\u001F\\u007F-\\u009F]*[^\\u0000-\\u0020\\u007F-\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF][^\\u0000-\\u001F\\u007F-\\u009F]*(?![\\u0000-\\uFFFF]|[^\\u0000-\\uFFFF])"
+                                                    "pattern": "^[^\\u0000-\\u001F\\u007F-\\u009F\\u2028\\u2029]*[^\\u0000-\\u0020\\u007F-\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF][^\\u0000-\\u001F\\u007F-\\u009F\\u2028\\u2029]*(?![\\u0000-\\uFFFF]|[^\\u0000-\\uFFFF])"
                                                   },
                                                   "label": {
                                                     "description": "What the option says to the person.",
                                                     "type": "string",
                                                     "maxLength": 200,
-                                                    "pattern": "^[^\\u0000-\\u001F\\u007F-\\u009F]*[^\\u0000-\\u0020\\u007F-\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF][^\\u0000-\\u001F\\u007F-\\u009F]*(?![\\u0000-\\uFFFF]|[^\\u0000-\\uFFFF])"
+                                                    "pattern": "^[^\\u0000-\\u001F\\u007F-\\u009F\\u2028\\u2029]*[^\\u0000-\\u0020\\u007F-\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF][^\\u0000-\\u001F\\u007F-\\u009F\\u2028\\u2029]*(?![\\u0000-\\uFFFF]|[^\\u0000-\\uFFFF])"
                                                   }
                                                 }
                                               }
@@ -1171,7 +1171,7 @@
                               "description": "What went wrong, for a person to read. Never the text of an exception: a producer writes the sentence.",
                               "type": "string",
                               "maxLength": 500,
-                              "pattern": "^[^\\u0000-\\u001F\\u007F-\\u009F]*[^\\u0000-\\u0020\\u007F-\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF][^\\u0000-\\u001F\\u007F-\\u009F]*(?![\\u0000-\\uFFFF]|[^\\u0000-\\uFFFF])"
+                              "pattern": "^[^\\u0000-\\u001F\\u007F-\\u009F\\u2028\\u2029]*[^\\u0000-\\u0020\\u007F-\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF][^\\u0000-\\u001F\\u007F-\\u009F\\u2028\\u2029]*(?![\\u0000-\\uFFFF]|[^\\u0000-\\uFFFF])"
                             },
                             "code": {
                               "description": "A stable code a client can act on.",

@@ -2521,6 +2521,17 @@
       },
       "field": "$.message",
       "allowed": "one sentence for a person, with something on the line besides white space"
+    },
+    {
+      "id": "event-invalid-87",
+      "expect": "invalid",
+      "about": "a failure over two lines, split by a line separator a person's screen breaks the line at",
+      "event": {
+        "type": "RUN_ERROR",
+        "message": "The order could not be saved.\u2028Try again."
+      },
+      "field": "$.message",
+      "allowed": "one line, without a line or paragraph separator"
     }
   ],
   "streams": [

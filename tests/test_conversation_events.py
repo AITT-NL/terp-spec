@@ -369,6 +369,7 @@ def _cases(section: str, expect: str) -> list[dict]:
 # the schema's own discipline                                                  #
 # --------------------------------------------------------------------------- #
 _CONTROLS = ("\u0000", "\u0007", "\u000a", "\u001b", "\u007f", "\u0085", "\u009b")
+_SEPARATORS = ("\u2028", "\u2029")
 
 
 def test_the_schema_is_a_draft_2020_12_schema_inside_the_validator_subset() -> None:
@@ -420,7 +421,8 @@ def test_every_string_is_capped_and_refuses_control_characters() -> None:
         assert pattern, f"{path}: a string needs a pattern that refuses control characters"
         is_prose = all(re.search(pattern, f"a{control}b") for control in _PROSE)
         prose += is_prose
-        for control in _CONTROLS:
+        # A line or paragraph separator is a line break to a reader, so one line refuses it.
+        for control in _CONTROLS + (() if is_prose else _SEPARATORS):
             if is_prose and control in _PROSE:
                 continue
             for probe in (f"a{control}", f"{control}a", f"a{control}b"):
