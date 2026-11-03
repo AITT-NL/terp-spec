@@ -35,19 +35,21 @@ against an earlier version reads this file to see exactly what changed since.
   it by. There is no secret input: an answer is stored as the next message of the
   conversation, and a secret does not belong in a transcript.
 
-  What is refused, and why. **Every object is closed and every string capped**, with control
-  characters refused except a prose string's tabs and line breaks; a one-line string refuses
-  the line and paragraph separators U+2028 and U+2029 too. Every pattern means the same in
-  Python and in ECMA-262, the engine the npm package is read with: it spells its classes out
-  rather than use `\s`, `\d` or `\w`, whose sets differ between the two (U+FEFF is white
-  space to one and not the other), and it ends in an explicit end of the input both read
-  alike. **An outcome is always stated**, although AG-UI reads an absent one as
-  success, and an interrupt outcome carries exactly one interrupt, because a conversation has
-  at most one open question. **A run error is a sentence**, one line, so a stack trace never
-  reaches a person. **Usage is counts**: a provider, a model and token figures, never content,
-  and every count and timestamp is bounded to the largest integer a JSON number survives a
-  round trip in, as AG-UI bounds them. An event is at most 64 KiB of compact UTF-8 JSON, which
-  a schema cannot count and every reader applies.
+  What is refused, and why. **Every object is closed but three, and every string capped.**
+  The three are carried opaquely, as AG-UI carries them: an interrupt's `responseSchema`, a
+  producer's own activity `content` and a `CUSTOM` event's `value`; the event rules below
+  reach inside them. Control characters are refused except a prose string's tabs and line
+  breaks, and a one-line string refuses the line and paragraph separators U+2028 and U+2029
+  too. Every pattern means the same in Python and in ECMA-262, the engine the npm package is
+  read with: it spells its classes out rather than use `\s`, `\d` or `\w`, whose sets differ
+  between the two (U+FEFF is white space to one and not the other), and it ends in an
+  explicit end of the input both read alike. **An outcome is always stated**, although AG-UI
+  reads an absent one as success, and an interrupt outcome carries exactly one interrupt,
+  because a conversation has at most one open question. **A run error is a sentence**, one
+  line, so a stack trace never reaches a person. **Usage is counts**: a provider, a model and
+  token figures, never content, and every count and timestamp is bounded to the largest
+  integer a JSON number survives a round trip in, as AG-UI bounds them. An event is at most
+  64 KiB of compact UTF-8 JSON, which a schema cannot count and every reader applies.
 
   A schema validates one event, and what one event keeps that a schema cannot state is four
   named **event rules** in `$defs.eventRules`: an interrupt's expiry names a day that exists,

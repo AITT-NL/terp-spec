@@ -411,6 +411,25 @@ def test_the_type_list_and_the_chain_name_the_same_events() -> None:
     assert not refused & set(_EVENTS), "the profile carries none of these in version 1"
 
 
+def test_three_objects_are_open_and_every_other_is_closed() -> None:
+    """The CHANGELOG and the README name the open objects, so the schema holds to the
+    list: an interrupt's responseSchema and a producer's own activity content are objects
+    with no shape of their own, a custom event's value is any JSON value, and every other
+    object is closed, itself or in each branch of its if/then/else."""
+    open_objects = set()
+    for path, schema in _subschemas(_SCHEMA):
+        if schema.get("type") != "object" or schema.get("additionalProperties") is False:
+            continue
+        if path == "#":  # the root only chooses the event's branch, and every branch is closed
+            continue
+        branches = [schema.get("then"), schema.get("else")]
+        if all(isinstance(branch, dict) and branch.get("additionalProperties") is False for branch in branches):
+            continue
+        open_objects.add(path.rsplit("/", 1)[-1])
+    assert open_objects == {"content", "responseSchema"}
+    assert "type" not in _EVENTS["CUSTOM"]["properties"]["value"], "a custom value is any JSON value"
+
+
 def test_every_shape_and_every_field_says_what_it_means() -> None:
     shapes = [(path, schema) for path, schema in _subschemas(_SCHEMA) if schema.get("type") == "object"]
     assert len(shapes) >= 20

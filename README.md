@@ -516,11 +516,14 @@ behind a Terp producer. The profile says three things AG-UI leaves open:
   events, state snapshots, reasoning, subagents and the convenience chunks are
   not in version 1.
 - **What every event must carry, and how long it may be** — every object is
-  closed, every string is capped and refuses control characters (prose keeps
-  its tabs and line breaks), an outcome is always stated, an interrupt outcome
-  carries exactly one interrupt because a conversation has at most one open
-  question, and an event is at most `maxEventBytes` of compact UTF-8 JSON and
-  `maxEventDepth` levels of objects and arrays.
+  closed but three, which AG-UI carries opaquely and the event rules reach
+  inside (an interrupt's `responseSchema`, a producer's own activity `content`
+  and a `CUSTOM` event's `value`), every string is capped and refuses control
+  characters (prose keeps its tabs and line breaks), an outcome is always
+  stated, an interrupt outcome carries exactly one interrupt because a
+  conversation has at most one open question, and an event is at most
+  `maxEventBytes` of compact UTF-8 JSON and `maxEventDepth` levels of objects
+  and arrays.
 - **What Terp adds where AG-UI leaves a name open** — `terp.compaction` as an
   activity type; `terp.context` (how full the assistant's memory is) and
   `terp.handoff` (another run follows, and which one when the producer knows)
