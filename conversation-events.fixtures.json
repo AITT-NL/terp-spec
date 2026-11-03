@@ -2510,6 +2510,17 @@
       "allowed": "text without control characters, in a key as in a value",
       "beyondSchema": true,
       "rule": "strings-hold-no-controls"
+    },
+    {
+      "id": "event-invalid-86",
+      "expect": "invalid",
+      "about": "a failure whose message is a lone zero-width no-break space, which ECMA-262's \\s calls blank and Python's does not",
+      "event": {
+        "type": "RUN_ERROR",
+        "message": "\ufeff"
+      },
+      "field": "$.message",
+      "allowed": "one sentence for a person, with something on the line besides white space"
     }
   ],
   "streams": [

@@ -36,8 +36,11 @@ against an earlier version reads this file to see exactly what changed since.
   conversation, and a secret does not belong in a transcript.
 
   What is refused, and why. **Every object is closed and every string capped**, with control
-  characters refused except a prose string's tabs and line breaks, and every pattern ends in
-  `(?![\s\S])`. **An outcome is always stated**, although AG-UI reads an absent one as
+  characters refused except a prose string's tabs and line breaks. Every pattern means the
+  same in Python and in ECMA-262, the engine the npm package is read with: it spells its
+  classes out rather than use `\s`, `\d` or `\w`, whose sets differ between the two (U+FEFF
+  is white space to one and not the other), and it ends in an explicit end of the input both
+  read alike. **An outcome is always stated**, although AG-UI reads an absent one as
   success, and an interrupt outcome carries exactly one interrupt, because a conversation has
   at most one open question. **A run error is a sentence**, one line, so a stack trace never
   reaches a person. **Usage is counts**: a provider, a model and token figures, never content,
@@ -63,7 +66,7 @@ against an earlier version reads this file to see exactly what changed since.
   nothing from the run, as the declarations' readers refuse a version they do not know.
 
   A vocabulary with readers and no catalog rule, so `REFERENCE_SHA` did not have to move. The
-  fixtures hold 27 valid and 85 refused events (nine of them refused by an event rule the
+  fixtures hold 27 valid and 86 refused events (nine of them refused by an event rule the
   schema alone passes) and 45 recorded runs, each valid run with what a reader resolves
   from it and each invalid one with the one rule it breaks and where, and the spec suite reads
   every one with a reference reader. The list of vocabularies no rule

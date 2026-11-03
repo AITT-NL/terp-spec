@@ -430,15 +430,71 @@ def test_every_string_is_capped_and_refuses_control_characters() -> None:
     assert prose == 4, "the deltas, a result and a question are prose; every other string is one line"
 
 
+#: The end of the input, spelled the same for every engine: nothing follows, neither a
+#: character of the Basic Multilingual Plane (a UTF-16 code unit, to an engine that reads
+#: code units) nor one beyond it (a code point, to an engine that reads code points).
+_END = "(?![\\u0000-\\uFFFF]|[^\\u0000-\\uFFFF])"
+#: A namespace test reads a prefix and nothing else, so it has no end to anchor.
+_PREFIX_TESTS = {"^terp\\."}
+#: The escapes a pattern may use: a code point, or a character that is otherwise syntax.
+_PORTABLE_ESCAPE = re.compile(r"\\(?:u[0-9A-Fa-f]{4}|[\^$\\.*+?()\[\]{}|/-])")
+
+
+def _patterns() -> list[str]:
+    return sorted({schema["pattern"] for _, schema in _subschemas(_SCHEMA) if "pattern" in schema})
+
+
 def test_every_pattern_ends_at_the_end_of_the_input() -> None:
-    """``$`` also matches before a final newline in Python; ``(?![\\s\\S])`` is the end
-    of the input in Python and ECMA-262 alike."""
-    patterns = {schema["pattern"] for _, schema in _subschemas(_SCHEMA) if "pattern" in schema}
-    assert patterns
-    for pattern in sorted(patterns):
-        assert pattern.startswith("^") and pattern.endswith("(?![\\s\\S])"), pattern
+    """``$`` also matches before a final newline in Python, so a pattern ends in an explicit
+    end of the input, which ``_END`` spells out for Python and ECMA-262 alike: an engine
+    that reads UTF-16 code units sees every unit in its first class, and one that reads
+    code points (Python, or ECMA-262 under the u flag) sees a character past U+FFFF in
+    its second, so an identifier never ends before an emoji."""
+    assert _patterns()
+    for pattern in _patterns():
+        assert pattern.startswith("^"), pattern
+        assert pattern.endswith(_END) or pattern in _PREFIX_TESTS, pattern
     identifier = _EVENTS["RUN_STARTED"]["properties"]["runId"]["pattern"]
-    assert re.search(identifier, "run-1") and not re.search(identifier, "run-1\n")
+    assert re.search(identifier, "run-1")
+    for tail in ("\n", "\u2028", "\ufeff", "\U0001f600", "\udcff"):
+        assert not re.search(identifier, f"run-1{tail}"), repr(tail)
+
+
+def test_every_pattern_means_the_same_in_python_and_ecma_262() -> None:
+    """A schema's patterns are ECMA-262 regular expressions: the npm package is read by
+    JavaScript, and this suite reads them in Python. A class escape is where the two
+    disagree: Python's ``\\s`` leaves U+FEFF out and ECMA-262's takes it in, so a run error
+    whose message was a lone U+FEFF passed one reader and failed the other; ``\\d`` and
+    ``\\w`` are Unicode-wide in Python and ASCII in ECMA-262, and ``.`` and ``$`` treat
+    line breaks differently. So a pattern spells every class out: its only escapes are a
+    code point or a character that is otherwise syntax, and ``.`` and ``$`` appear only
+    inside a class."""
+    for pattern in _patterns():
+        in_class, index = False, 0
+        while index < len(pattern):
+            char = pattern[index]
+            if char == "\\":
+                escape = _PORTABLE_ESCAPE.match(pattern, index)
+                assert escape, f"{pattern!r}: {pattern[index:index + 2]!r} differs between engines"
+                index = escape.end()
+                continue
+            if in_class:
+                in_class = char != "]"
+            elif char == "[":
+                in_class = True
+            else:
+                assert char not in ".$", f"{pattern!r}: {char!r} outside a class differs between engines"
+            index += 1
+    # Every character either engine's \s calls white space is blank to the schema too.
+    blank = "\t\n\v\f\r \u0085\u00a0\u1680\u2028\u2029\u202f\u205f\u3000\ufeff" + "".join(
+        chr(code) for code in range(0x2000, 0x200B))
+    message = _EVENTS["RUN_ERROR"]["properties"]["message"]["pattern"]
+    question = _EVENTS["RUN_FINISHED"]["properties"]["outcome"]["properties"]["interrupts"]["items"][
+        "properties"]["message"]["pattern"]
+    for pattern in (message, question):
+        assert re.search(pattern, "x") and re.search(pattern, "\U0001f600")
+        for space in blank:
+            assert not re.search(pattern, space * 2), (pattern, hex(ord(space)))
 
 
 def test_the_named_lists_are_sorted_described_and_coherent() -> None:
