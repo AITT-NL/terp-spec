@@ -549,6 +549,8 @@ named in `$defs.streamRules`, which every reader applies because a schema
 cannot state it. A reader that meets an event it cannot validate, or a run that
 breaks a rule, stops interpreting the run there: it keeps what it read before,
 reads the run as failed, and says so. It never guesses past a broken stream.
+Where one event breaks several rules, a reader reports the first of them in the
+list's order, so every reader names the same one.
 
 **An unreadable version is not an empty one.** `RUN_STARTED` carries
 `metadata.terp.schemaVersion`. A reader that does not know the version reads
@@ -564,7 +566,7 @@ at a named field (by the schema, or by the event rule the fixture names), and
 recorded runs, each valid one with what a reader resolves
 from it (`reads`: the transcript items in order, the outcome, the open
 question, the memory fill, the usage, the run that follows, the failure), each
-invalid one with the rule it breaks and the event where it breaks it. The spec
+invalid one with the one rule it breaks and the event where it breaks it. The spec
 suite reads every fixture with a reference reader of the stream rules.
 
 ## Corpus format

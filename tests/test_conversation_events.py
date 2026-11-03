@@ -17,6 +17,7 @@ reader shows from a valid run, and every fixture read as it says.
 
 from __future__ import annotations
 
+import dataclasses
 import json
 import re
 
@@ -34,6 +35,8 @@ _FIXTURES = json.loads(
 
 _DEFS = _SCHEMA["$defs"]
 _RULES = set(_DEFS["streamRules"]["enum"])
+#: The order a reader reports the rules one event breaks in: the order they are listed.
+_ORDER = _DEFS["streamRules"]["enum"]
 _EVENT_RULES = set(_DEFS["eventRules"]["enum"])
 #: The controls prose may hold: a reply has line breaks and an argument may be indented.
 _PROSE = ("\t", "\n", "\r")
@@ -161,94 +164,132 @@ def _refusal(event: object) -> str | None:
 # --------------------------------------------------------------------------- #
 # the reference reader                                                         #
 # --------------------------------------------------------------------------- #
-def _problem(events: list[dict]) -> tuple[int, str, str | None] | None:
-    """The first place *events* breaks a stream rule: ``(index, rule, field)``.
+@dataclasses.dataclass
+class _Run:
+    """What a reader has read of a run so far: all a stream rule needs to judge the next event."""
 
-    ``field`` is set only for ``events-are-valid``. ``None`` when the run is sound.
+    thread: str | None = None
+    run: str | None = None
+    kinds: dict[str, str] = dataclasses.field(default_factory=dict)  # id -> text | call | result | activity
+    open_text: set[str] = dataclasses.field(default_factory=set)
+    calls: dict[str, str] = dataclasses.field(default_factory=dict)  # toolCallId -> open | ended | answered
+    handoff: bool = False
+    finished: bool = False
+
+
+#: The events that give an id the thing it names, by the member that carries the id.
+_NAMING = {"TEXT_MESSAGE_START": ("messageId", "text"), "TOOL_CALL_START": ("toolCallId", "call"),
+           "TOOL_CALL_RESULT": ("messageId", "result"), "ACTIVITY_SNAPSHOT": ("messageId", "activity")}
+
+
+def _waiting(finish: dict) -> set[str]:
+    """The tool calls a RUN_FINISHED's interrupts name."""
+    return {interrupt["toolCallId"] for interrupt in finish["outcome"].get("interrupts", [])
+            if "toolCallId" in interrupt}
+
+
+def _broken(read: _Run, index: int, event: dict) -> set[str]:
+    """Every stream rule a valid *event* breaks at *index*, after what *read* holds.
+
+    Each rule is judged on its own, as its text in ``$defs.streamRules`` says, so an event
+    that breaks several shows them all.
     """
-    if not events:
-        return 0, "starts-with-run-started", None
-    thread = run = None
-    kinds: dict[str, str] = {}  # messageId or toolCallId -> text | call | result | activity
-    open_text: set[str] = set()
-    calls: dict[str, str] = {}  # toolCallId -> open | ended | answered
-    handoff = finished = False
+    kind = event["type"]
+    broken: set[str] = set()
+    if (index == 0) != (kind == "RUN_STARTED"):
+        broken.add("starts-with-run-started")
+    if read.finished:
+        broken.add("ends-with-one-terminal")
+    if read.handoff and kind not in _TERMINAL:
+        broken.add("handoff-precedes-the-terminal")
+    opened = {"threadId": read.thread, "runId": read.run}
+    if read.thread is not None and any(key in event and event[key] != value for key, value in opened.items()):
+        broken.add("one-run")
+    if kind in _NAMING:
+        key, thing = _NAMING[kind]
+        named = read.kinds.get(event[key])
+        # Opening a message or a call twice is its lifecycle's to judge; a result is named once.
+        if named is not None and (named != thing or thing == "result"):
+            broken.add("message-id-names-one-thing")
+    if kind == "TEXT_MESSAGE_START" and read.kinds.get(event["messageId"]) == "text":
+        broken.add("text-message-lifecycle")
+    if kind in {"TEXT_MESSAGE_CONTENT", "TEXT_MESSAGE_END"} and event["messageId"] not in read.open_text:
+        broken.add("text-message-lifecycle")
+    if kind == "TOOL_CALL_START" and event["toolCallId"] in read.calls:
+        broken.add("tool-call-lifecycle")
+    if kind in {"TOOL_CALL_ARGS", "TOOL_CALL_END"} and read.calls.get(event["toolCallId"]) != "open":
+        broken.add("tool-call-lifecycle")
+    if kind == "TOOL_CALL_RESULT" and read.calls.get(event["toolCallId"]) != "ended":
+        broken.add("tool-call-lifecycle")
+    parent = event.get("parentMessageId") if kind == "TOOL_CALL_START" else None
+    if parent is not None and read.kinds.get(parent) != "text":
+        broken.add("references-are-known")
+    if kind == "RUN_FINISHED":
+        waiting = _waiting(event)
+        if any(read.calls.get(call) != "ended" for call in waiting):
+            broken.add("references-are-known")
+        if read.open_text or any(
+            state != "answered" for call, state in read.calls.items() if call not in waiting
+        ):
+            broken.add("closed-before-finish")
+    return broken
+
+
+def _take(read: _Run, event: dict) -> None:
+    """What a valid *event* that breaks no rule adds to what a reader has read."""
+    kind = event["type"]
+    if kind == "RUN_STARTED":
+        read.thread, read.run = event["threadId"], event["runId"]
+    elif kind in _NAMING:
+        key, thing = _NAMING[kind]
+        read.kinds[event[key]] = thing
+    if kind == "TEXT_MESSAGE_START":
+        read.open_text.add(event["messageId"])
+    elif kind == "TEXT_MESSAGE_END":
+        read.open_text.discard(event["messageId"])
+    elif kind == "TOOL_CALL_START":
+        read.calls[event["toolCallId"]] = "open"
+    elif kind == "TOOL_CALL_END":
+        read.calls[event["toolCallId"]] = "ended"
+    elif kind == "TOOL_CALL_RESULT":
+        read.calls[event["toolCallId"]] = "answered"
+    elif kind == "CUSTOM" and event["name"] == "terp.handoff":
+        read.handoff = True
+    elif kind in _TERMINAL:
+        read.finished = True
+
+
+def _stop(events: list) -> tuple[int, dict[str, str | None]]:
+    """Where a reader stops reading *events*, and every rule broken there, each with its
+    field (set only for ``events-are-valid``). A sound run is read to its end and breaks
+    nothing: ``(len(events), {})``.
+
+    A reader reads nothing from an event that is not valid, so such an event breaks
+    ``events-are-valid`` and no other rule.
+    """
+    read = _Run()
     for index, event in enumerate(events):
         refused = _refusal(event)
         if refused is not None:
-            return index, "events-are-valid", refused
-        kind = event["type"]
-        if (index == 0) != (kind == "RUN_STARTED"):
-            return index, "starts-with-run-started", None
-        if finished:
-            return index, "ends-with-one-terminal", None
-        if handoff and kind not in _TERMINAL:
-            return index, "handoff-precedes-the-terminal", None
-        if kind == "RUN_STARTED":
-            thread, run = event["threadId"], event["runId"]
-            continue
-        if ("threadId" in event and event["threadId"] != thread) or (
-            "runId" in event and event["runId"] != run
-        ):
-            return index, "one-run", None
-        if kind == "TEXT_MESSAGE_START":
-            message = event["messageId"]
-            if kinds.get(message) == "text":
-                return index, "text-message-lifecycle", None
-            if message in kinds:
-                return index, "message-id-names-one-thing", None
-            kinds[message] = "text"
-            open_text.add(message)
-        elif kind in {"TEXT_MESSAGE_CONTENT", "TEXT_MESSAGE_END"}:
-            if event["messageId"] not in open_text:
-                return index, "text-message-lifecycle", None
-            if kind == "TEXT_MESSAGE_END":
-                open_text.discard(event["messageId"])
-        elif kind == "TOOL_CALL_START":
-            if event["toolCallId"] in calls:
-                return index, "tool-call-lifecycle", None
-            if event["toolCallId"] in kinds:
-                return index, "message-id-names-one-thing", None
-            parent = event.get("parentMessageId")
-            if parent is not None and kinds.get(parent) != "text":
-                return index, "references-are-known", None
-            kinds[event["toolCallId"]] = "call"
-            calls[event["toolCallId"]] = "open"
-        elif kind in {"TOOL_CALL_ARGS", "TOOL_CALL_END"}:
-            if calls.get(event["toolCallId"]) != "open":
-                return index, "tool-call-lifecycle", None
-            if kind == "TOOL_CALL_END":
-                calls[event["toolCallId"]] = "ended"
-        elif kind == "TOOL_CALL_RESULT":
-            if calls.get(event["toolCallId"]) != "ended":
-                return index, "tool-call-lifecycle", None
-            if event["messageId"] in kinds:
-                return index, "message-id-names-one-thing", None
-            kinds[event["messageId"]] = "result"
-            calls[event["toolCallId"]] = "answered"
-        elif kind == "ACTIVITY_SNAPSHOT":
-            if kinds.setdefault(event["messageId"], "activity") != "activity":
-                return index, "message-id-names-one-thing", None
-        elif kind == "CUSTOM" and event["name"] == "terp.handoff":
-            handoff = True
-        elif kind == "RUN_FINISHED":
-            waiting = {
-                interrupt["toolCallId"]
-                for interrupt in event["outcome"].get("interrupts", [])
-                if "toolCallId" in interrupt
-            }
-            if any(calls.get(call) not in {"open", "ended"} for call in waiting):
-                return index, "references-are-known", None
-            still_open = {call for call, state in calls.items() if state == "open"}
-            unanswered = {call for call, state in calls.items() if state == "ended"}
-            if open_text or still_open or unanswered - waiting:
-                return index, "closed-before-finish", None
-            finished = True
-        elif kind == "RUN_ERROR":
-            finished = True
-    if not finished:
-        return len(events), "ends-with-one-terminal", None
-    return None
+            return index, {"events-are-valid": refused}
+        broken = _broken(read, index, event)
+        if broken:
+            return index, dict.fromkeys(broken)
+        _take(read, event)
+    if not events:
+        return 0, {"starts-with-run-started": None}
+    return len(events), ({} if read.finished else {"ends-with-one-terminal": None})
+
+
+def _problem(events: list) -> tuple[int, str, str | None] | None:
+    """What a reader reports of *events*: ``(index, rule, field)`` at the first place a
+    rule is broken, and among the rules broken there the first in ``$defs.streamRules``'
+    order. ``None`` when the run is sound."""
+    index, broken = _stop(events)
+    if not broken:
+        return None
+    rule = min(broken, key=_ORDER.index)
+    return index, rule, broken[rule]
 
 
 def _reads(events: list[dict]) -> dict:
@@ -593,6 +634,52 @@ def test_a_valid_stream_reads_as_it_says(case: dict) -> None:
 def test_an_invalid_stream_breaks_its_rule_where_it_says(case: dict) -> None:
     expected = (case["at"], case["rule"], case.get("field"))
     assert _problem(case["events"]) == expected, case["about"]
+
+
+@pytest.mark.parametrize("case", _cases("streams", "invalid"), ids=lambda case: case["id"])
+def test_an_invalid_stream_breaks_no_other_rule_where_it_stops(case: dict) -> None:
+    """A fixture pins one rule, so it breaks one: every rule is judged on its own at the
+    event where the reader stops, and only the fixture's is broken there. A run that
+    broke two would hold a second implementation to this reader's order of checks rather
+    than to the rules' text. Where the broken rule is events-are-valid, the event is
+    refused at the fixture's field and no other."""
+    index, broken = _stop(case["events"])
+    assert (index, sorted(broken)) == (case["at"], [case["rule"]]), case["about"]
+    if case["rule"] == "events-are-valid":
+        assert _refused_fields(case["events"][index]) == {case["field"]}, case["about"]
+
+
+def test_a_run_that_breaks_several_rules_at_one_event_reports_the_first_listed() -> None:
+    """No fixture breaks two rules at once, and a run in the wild may: a reader then
+    reports the first event at which any rule is broken and, of the rules broken there,
+    the first in $defs.streamRules' order. An event that is not valid is not read, so it
+    breaks events-are-valid alone."""
+    call = {"type": "TOOL_CALL_START", "toolCallId": "call-1", "toolCallName": "delete_order"}
+    waits = {"type": "RUN_FINISHED", "threadId": "c", "runId": "r", "outcome": {
+        "type": "interrupt", "interrupts": [{"id": "ap-1", "reason": "example.approval", "toolCallId": "call-1"}]}}
+    text = {"type": "TEXT_MESSAGE_START", "messageId": "m", "role": "assistant"}
+    # A message still open, and an interrupt naming a call whose arguments never ended.
+    events = [_opening(), text, call, waits]
+    assert _stop(events) == (3, {"closed-before-finish": None, "references-are-known": None})
+    assert _problem(events) == (3, "closed-before-finish", None)
+    # A finish that opens the run, waiting on a call the run never made.
+    assert set(_stop([waits])[1]) == {"references-are-known", "starts-with-run-started"}
+    assert _problem([waits]) == (0, "references-are-known", None)
+    # Text after the run ended, for a message that was never opened.
+    late = {"type": "TEXT_MESSAGE_CONTENT", "messageId": "m", "delta": "more"}
+    events = [_opening(), {**waits, "outcome": {"type": "success"}}, late]
+    assert set(_stop(events)[1]) == {"ends-with-one-terminal", "text-message-lifecycle"}
+    assert _problem(events) == (2, "ends-with-one-terminal", None)
+    # An event the schema refuses is not read, whatever else it would break.
+    assert _stop([_opening(), {**late, "delta": "\u0000"}]) == (1, {"events-are-valid": "$.delta"})
+
+
+def test_the_stream_rules_are_stated_in_the_order_a_reader_reports_them() -> None:
+    """The order is the enum's, and the description states each rule in that order too."""
+    description = _DEFS["streamRules"]["description"]
+    positions = [description.index(f"{rule}:") for rule in _ORDER]
+    assert positions == sorted(positions)
+    assert "order" in description.split(_ORDER[0] + ":")[0], "the preamble says how several are reported"
 
 
 def test_the_fixtures_are_well_formed_and_cover_the_vocabulary() -> None:

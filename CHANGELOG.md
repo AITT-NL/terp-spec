@@ -55,14 +55,16 @@ against an earlier version reads this file to see exactly what changed since.
   in `$defs.streamRules` (opened once, closed once, everything used after it is opened and
   closed before the run finishes, every reference known, a message id and a tool call id one
   id space as they are to an AG-UI client), and a reader that meets a broken one stops
-  interpreting the run there rather than guessing past it.
+  interpreting the run there rather than guessing past it. Where one event breaks several, a
+  reader reports the first of them in the list's order, so two readers always name the same
+  rule; an event that is not valid is not read, and breaks that rule alone.
   `RUN_STARTED` carries `metadata.terp.schemaVersion`; a reader that does not know it reads
   nothing from the run, as the declarations' readers refuse a version they do not know.
 
   A vocabulary with readers and no catalog rule, so `REFERENCE_SHA` did not have to move. The
   fixtures hold 27 valid and 85 refused events (nine of them refused by an event rule the
   schema alone passes) and 44 recorded runs, each valid run with what a reader resolves
-  from it and each invalid one with the rule it breaks and where, and the spec suite reads
+  from it and each invalid one with the one rule it breaks and where, and the spec suite reads
   every one with a reference reader. The list of vocabularies no rule
   realises, by name, now holds it beside the development-loop declaration.
 

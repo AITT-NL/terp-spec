@@ -1,5 +1,5 @@
 {
-  "_comment": "The shared fixtures for conversation-events.schema.json, so every producer and every reader of a conversation stream runs the same ones. 'events' are single events: a valid one passes the schema, an invalid one names the 'field' the refusal is about and what that field 'allowed'; one marked 'beyondSchema' passes the schema and is refused by the event 'rule' it names, which every reader applies beside the schema. 'streams' are recorded runs: a valid one carries 'reads', what every reader must resolve from it, and an invalid one names the stream 'rule' it breaks and the index of the event it breaks it 'at' (the length of the stream when the end is what is missing), with the 'field' when the rule is events-are-valid. Every id, name and figure is invented.",
+  "_comment": "The shared fixtures for conversation-events.schema.json, so every producer and every reader of a conversation stream runs the same ones. 'events' are single events: a valid one passes the schema, an invalid one names the 'field' the refusal is about and what that field 'allowed'; one marked 'beyondSchema' passes the schema and is refused by the event 'rule' it names, which every reader applies beside the schema. 'streams' are recorded runs: a valid one carries 'reads', what every reader must resolve from it, and an invalid one names the one stream 'rule' it breaks and the index of the event it breaks it 'at' (the length of the stream when the end is what is missing), with the 'field' when the rule is events-are-valid. Every id, name and figure is invented.",
   "events": [
     {
       "id": "event-valid-01",
@@ -4438,7 +4438,7 @@
     {
       "id": "stream-invalid-26",
       "expect": "invalid",
-      "about": "a run that waits on a call whose arguments never ended",
+      "about": "a run that waits on a call whose arguments never ended, which is not yet a call the run can wait on",
       "events": [
         {
           "type": "RUN_STARTED",
@@ -4473,7 +4473,7 @@
         }
       ],
       "at": 2,
-      "rule": "closed-before-finish"
+      "rule": "references-are-known"
     },
     {
       "id": "stream-invalid-27",
