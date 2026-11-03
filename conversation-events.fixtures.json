@@ -4909,6 +4909,52 @@
       "at": 1,
       "rule": "events-are-valid",
       "field": "$"
+    },
+    {
+      "id": "stream-invalid-34",
+      "expect": "invalid",
+      "about": "one activity snapshotted under two activity types, which an AG-UI client replaces and a reader would keep",
+      "events": [
+        {
+          "type": "RUN_STARTED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "protocolVersion": "1.0",
+          "metadata": {
+            "terp": {
+              "schemaVersion": 1
+            }
+          }
+        },
+        {
+          "type": "ACTIVITY_SNAPSHOT",
+          "messageId": "act-1",
+          "activityType": "terp.compaction",
+          "content": {
+            "trigger": "auto",
+            "before": 182000,
+            "after": 41000
+          }
+        },
+        {
+          "type": "ACTIVITY_SNAPSHOT",
+          "messageId": "act-1",
+          "activityType": "example.notice",
+          "content": {
+            "note": "Memory compacted."
+          }
+        },
+        {
+          "type": "RUN_FINISHED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "outcome": {
+            "type": "success"
+          }
+        }
+      ],
+      "at": 2,
+      "rule": "message-id-names-one-thing"
     }
   ]
 }

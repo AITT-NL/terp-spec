@@ -544,13 +544,13 @@ objects included, holds a control character.
 The order a run keeps — opened by `RUN_STARTED`, closed by exactly one terminal
 event, every text message and tool call opened before it is used and closed
 before the run finishes, every reference to a message or a call known, a
-message id and a tool call id one id space as they are to an AG-UI client — is
-named in `$defs.streamRules`, which every reader applies because a schema
-cannot state it. A reader that meets an event it cannot validate, or a run that
-breaks a rule, stops interpreting the run there: it keeps what it read before,
-reads the run as failed, and says so. It never guesses past a broken stream.
-Where one event breaks several rules, a reader reports the first of them in the
-list's order, so every reader names the same one.
+message id and a tool call id one id space as they are to an AG-UI client, an
+activity keeping its type — is named in `$defs.streamRules`, which every reader
+applies because a schema cannot state it. A reader that meets an event it cannot
+validate, or a run that breaks a rule, stops interpreting the run there: it keeps
+what it read before, reads the run as failed, and says so. It never guesses past
+a broken stream. Where one event breaks several rules, a reader reports the
+first of them in the list's order, so every reader names the same one.
 
 **An unreadable version is not an empty one.** `RUN_STARTED` carries
 `metadata.terp.schemaVersion`. A reader that does not know the version reads

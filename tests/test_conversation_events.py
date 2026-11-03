@@ -173,6 +173,7 @@ class _Run:
     kinds: dict[str, str] = dataclasses.field(default_factory=dict)  # id -> text | call | result | activity
     open_text: set[str] = dataclasses.field(default_factory=set)
     calls: dict[str, str] = dataclasses.field(default_factory=dict)  # toolCallId -> open | ended | answered
+    activities: dict[str, str] = dataclasses.field(default_factory=dict)  # messageId -> activityType
     handoff: bool = False
     finished: bool = False
 
@@ -210,6 +211,10 @@ def _broken(read: _Run, index: int, event: dict) -> set[str]:
         named = read.kinds.get(event[key])
         # Opening a message or a call twice is its lifecycle's to judge; a result is named once.
         if named is not None and (named != thing or thing == "result"):
+            broken.add("message-id-names-one-thing")
+    if kind == "ACTIVITY_SNAPSHOT":
+        kept = read.activities.get(event["messageId"], event["activityType"])
+        if kept != event["activityType"]:  # an activity keeps its activityType
             broken.add("message-id-names-one-thing")
     if kind == "TEXT_MESSAGE_START" and read.kinds.get(event["messageId"]) == "text":
         broken.add("text-message-lifecycle")
@@ -253,6 +258,8 @@ def _take(read: _Run, event: dict) -> None:
         read.calls[event["toolCallId"]] = "ended"
     elif kind == "TOOL_CALL_RESULT":
         read.calls[event["toolCallId"]] = "answered"
+    elif kind == "ACTIVITY_SNAPSHOT":
+        read.activities[event["messageId"]] = event["activityType"]
     elif kind == "CUSTOM" and event["name"] == "terp.handoff":
         read.handoff = True
     elif kind in _TERMINAL:
