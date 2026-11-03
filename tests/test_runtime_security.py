@@ -66,6 +66,10 @@ def test_the_contract_covers_the_security_boundaries_it_claims() -> None:
         "webhooks.envelope", "jobs.atomicity", "files.binding",
         "permissions.floor-and-grant", "replay.current-authority",
         "streams.current-grants", "leases.protected-effects",
+        "sessions.rotation", "native.browser-refused",
+        "accounts.enumeration", "accounts.proof-of-address", "accounts.single-use",
+        "accounts.sealed-tokens", "accounts.expiry", "accounts.backoff",
+        "accounts.lowest-rank", "accounts.close",
     }
     readme = (ROOT / "README.md").read_text()
     assert "runtime-security.fixtures.json" in readme

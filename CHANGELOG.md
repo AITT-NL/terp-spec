@@ -7,6 +7,27 @@ fields and new rules also bump the minor; prose bumps the patch (see
 checked-in `VERSION` — held by `tests/test_changelog.py`. A checker certified
 against an earlier version reads this file to see exactly what changed since.
 
+## 0.43.0
+
+### Added
+
+- Ten runtime security scenarios for three capabilities. `refresh-sessions` gains
+  `sessions.rotation`: a refresh credential works once, and presenting a spent one revokes
+  every credential descended from the same sign-in, while another sign-in's keep working.
+  `native-clients` gains `native.browser-refused`: a route that returns a refresh credential
+  in its response body refuses any request that carries browser provenance, whether or not
+  the credential was valid. `self-service-accounts` gains eight. A request about an address
+  answers alike whether or not it has an account, and an account exists only once a mailed
+  token is redeemed. Tokens work once, cannot be altered or read without the
+  implementation's secret, travel only in a link's fragment, and expire within a day for a
+  reset and a week for a verification. Repeated requests back off and never lock out. A
+  self-registered account starts with the least authority, and closing an account needs the
+  password and ends every session.
+
+The scenario format, the catalog ids and the assurance lane vocabulary are unchanged. The
+new scenarios are new requirements for an implementation that offers those capabilities, so
+this bumps the minor.
+
 ## 0.42.0
 
 ### Added
