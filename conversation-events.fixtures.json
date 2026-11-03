@@ -590,6 +590,28 @@
       }
     },
     {
+      "id": "event-valid-28",
+      "expect": "valid",
+      "about": "an approval that expires on 29 February of a leap year, at the last millisecond of the day",
+      "event": {
+        "type": "RUN_FINISHED",
+        "threadId": "conv-1",
+        "runId": "run-1",
+        "outcome": {
+          "type": "interrupt",
+          "interrupts": [
+            {
+              "id": "ap-1",
+              "reason": "example.approval",
+              "message": "May I delete the order?",
+              "toolCallId": "call-1",
+              "expiresAt": "2028-02-29T23:59:59.999Z"
+            }
+          ]
+        }
+      }
+    },
+    {
       "id": "event-invalid-01",
       "expect": "invalid",
       "about": "a type the profile does not carry",
@@ -2532,6 +2554,108 @@
       },
       "field": "$.message",
       "allowed": "one line, without a line or paragraph separator"
+    },
+    {
+      "id": "event-invalid-88",
+      "expect": "invalid",
+      "about": "an expiry on 31 February, which one date parser rolls over into 3 March and another refuses",
+      "event": {
+        "type": "RUN_FINISHED",
+        "threadId": "conv-1",
+        "runId": "run-1",
+        "outcome": {
+          "type": "interrupt",
+          "interrupts": [
+            {
+              "id": "ap-1",
+              "reason": "example.approval",
+              "message": "May I delete the order?",
+              "toolCallId": "call-1",
+              "expiresAt": "2026-02-31T09:00:00Z"
+            }
+          ]
+        }
+      },
+      "field": "$.outcome.interrupts[0].expiresAt",
+      "allowed": "a day that exists, from the year 0001",
+      "beyondSchema": true,
+      "rule": "instants-are-real"
+    },
+    {
+      "id": "event-invalid-89",
+      "expect": "invalid",
+      "about": "an expiry on 29 February of a century year that is not a leap year",
+      "event": {
+        "type": "RUN_FINISHED",
+        "threadId": "conv-1",
+        "runId": "run-1",
+        "outcome": {
+          "type": "interrupt",
+          "interrupts": [
+            {
+              "id": "ap-1",
+              "reason": "example.approval",
+              "message": "May I delete the order?",
+              "toolCallId": "call-1",
+              "expiresAt": "2100-02-29T09:00:00Z"
+            }
+          ]
+        }
+      },
+      "field": "$.outcome.interrupts[0].expiresAt",
+      "allowed": "a day that exists, from the year 0001",
+      "beyondSchema": true,
+      "rule": "instants-are-real"
+    },
+    {
+      "id": "event-invalid-90",
+      "expect": "invalid",
+      "about": "an expiry in the year 0000, which one date parser reads and another refuses",
+      "event": {
+        "type": "RUN_FINISHED",
+        "threadId": "conv-1",
+        "runId": "run-1",
+        "outcome": {
+          "type": "interrupt",
+          "interrupts": [
+            {
+              "id": "ap-1",
+              "reason": "example.approval",
+              "message": "May I delete the order?",
+              "toolCallId": "call-1",
+              "expiresAt": "0000-01-01T00:00:00Z"
+            }
+          ]
+        }
+      },
+      "field": "$.outcome.interrupts[0].expiresAt",
+      "allowed": "a day that exists, from the year 0001",
+      "beyondSchema": true,
+      "rule": "instants-are-real"
+    },
+    {
+      "id": "event-invalid-91",
+      "expect": "invalid",
+      "about": "an expiry on a leap second, which most clocks cannot represent",
+      "event": {
+        "type": "RUN_FINISHED",
+        "threadId": "conv-1",
+        "runId": "run-1",
+        "outcome": {
+          "type": "interrupt",
+          "interrupts": [
+            {
+              "id": "ap-1",
+              "reason": "example.approval",
+              "message": "May I delete the order?",
+              "toolCallId": "call-1",
+              "expiresAt": "2026-12-31T23:59:60Z"
+            }
+          ]
+        }
+      },
+      "field": "$.outcome.interrupts[0].expiresAt",
+      "allowed": "a time of day from 00:00:00 to 23:59:59"
     }
   ],
   "streams": [

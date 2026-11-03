@@ -49,12 +49,14 @@ against an earlier version reads this file to see exactly what changed since.
   round trip in, as AG-UI bounds them. An event is at most 64 KiB of compact UTF-8 JSON, which
   a schema cannot count and every reader applies.
 
-  A schema validates one event, and what one event keeps that a schema cannot state is three
-  named **event rules** in `$defs.eventRules`: an event nests at most `maxEventDepth` (64)
-  levels of objects and arrays, which a reader measures without recursion before anything
-  walks the event, so no event under the byte cap can exhaust a reader's stack; no two
-  options of a question carry one value; and no string anywhere in the event, its object
-  keys and the open objects included, holds a control character.
+  A schema validates one event, and what one event keeps that a schema cannot state is four
+  named **event rules** in `$defs.eventRules`: an interrupt's expiry names a day that exists,
+  which a reader checks itself because date parsers disagree (one rolls 31 February over into
+  March); an event nests at most `maxEventDepth` (64) levels of objects and arrays, which a
+  reader measures without recursion before anything walks the event, so no event under the
+  byte cap can exhaust a reader's stack; no two options of a question carry one value; and no
+  string anywhere in the event, its object keys and the open objects included, holds a
+  control character.
   A run keeps an order a schema cannot state either. That order is ten named **stream rules**
   in `$defs.streamRules` (opened once, closed once, everything used after it is opened and
   closed before the run finishes, every reference known, a message id and a tool call id one
@@ -67,7 +69,7 @@ against an earlier version reads this file to see exactly what changed since.
   nothing from the run, as the declarations' readers refuse a version they do not know.
 
   A vocabulary with readers and no catalog rule, so `REFERENCE_SHA` did not have to move. The
-  fixtures hold 27 valid and 87 refused events (nine of them refused by an event rule the
+  fixtures hold 28 valid and 91 refused events (twelve of them refused by an event rule the
   schema alone passes) and 45 recorded runs, each valid run with what a reader resolves
   from it and each invalid one with the one rule it breaks and where, and the spec suite reads
   every one with a reference reader. The list of vocabularies no rule

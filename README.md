@@ -535,12 +535,13 @@ behind a Terp producer. The profile says three things AG-UI leaves open:
 | under `terp.` | reads it as this vocabulary says, and refuses one the vocabulary does not define: the namespace is closed |
 | any other | is the producer's own; a reader that does not know it shows nothing for it and acts on nothing |
 
-**One event, one schema and three rules; a run, ten rules.** The schema validates
+**One event, one schema and four rules; a run, ten rules.** The schema validates
 one event. What one event keeps that a schema cannot state is named in
-`$defs.eventRules`: an event nests no deeper than `maxEventDepth`, measured
-without recursion before anything walks it, no two options of a question carry
-one value, and no string anywhere in the event, its object keys and the open
-objects included, holds a control character.
+`$defs.eventRules`: an interrupt's expiry names a day that exists, which a reader
+checks itself because date parsers disagree, an event nests no deeper than
+`maxEventDepth`, measured without recursion before anything walks it, no two
+options of a question carry one value, and no string anywhere in the event, its
+object keys and the open objects included, holds a control character.
 The order a run keeps — opened by `RUN_STARTED`, closed by exactly one terminal
 event, every text message and tool call opened before it is used and closed
 before the run finishes, every reference to a message or a call known, a

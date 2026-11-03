@@ -118,6 +118,9 @@ def _beyond_schema(event: object) -> list[tuple[str, str]]:
     ]
     if isinstance(event, dict) and event.get("type") == "RUN_FINISHED":
         for i, interrupt in enumerate(_member(_member(event, "outcome", dict), "interrupts", list)):
+            expires = _member(interrupt, "expiresAt", str)
+            if expires is not None and not _real_day(expires):
+                refused.append((f"$.outcome.interrupts[{i}].expiresAt", "instants-are-real"))
             terp = _member(_member(interrupt, "metadata", dict), "terp", dict)
             seen: set[str] = set()
             for j, option in enumerate(_member(terp, "options", list)):
@@ -127,6 +130,20 @@ def _beyond_schema(event: object) -> list[tuple[str, str]]:
                                     "option-values-are-distinct"))
                 seen.add(value)
     return refused
+
+
+def _real_day(instant: str) -> bool:
+    """Does *instant* begin with a day that exists, from the year 0001? Checked by hand
+    rather than by a date parser, since parsers disagree: one rolls 2026-02-31 over into
+    March and one reads the year 0000. The schema's pattern holds the rest of the shape,
+    the time of day included."""
+    day = re.match(r"([0-9]{4})-([0-9]{2})-([0-9]{2})T", instant)
+    if day is None:
+        return False
+    year, month, date = (int(part) for part in day.groups())
+    leap = year % 4 == 0 and (year % 100 != 0 or year % 400 == 0)
+    days = (31, 29 if leap else 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
+    return year >= 1 and 1 <= month <= 12 and 1 <= date <= days[month - 1]
 
 
 def _member(value: object, key: str, kind: type):

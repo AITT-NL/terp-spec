@@ -13,8 +13,9 @@
       "const": 64
     },
     "eventRules": {
-      "description": "What a single event keeps that a schema cannot state, which every reader applies beside the schema. nesting-is-bounded: The event nests at most maxEventDepth levels of objects and arrays. A reader measures the depth before anything that walks the event, the schema and the byte count included, and without recursion, so no event can exhaust a reader's stack however deep it is; it refuses a deeper event as a whole, at $, and reads nothing else from it. A reader whose JSON parser recurses bounds the parser's depth the same way. option-values-are-distinct: No two options of a terp.question carry the same value, whatever their labels. strings-hold-no-controls: No string anywhere in the event holds a C0 or C1 control character other than tab, line feed and carriage return: not a value, not an object's key, and not one inside the open objects (an interrupt's responseSchema, a producer's own activity content and custom value). A key is refused at the path of the member it names.",
+      "description": "What a single event keeps that a schema cannot state, which every reader applies beside the schema. instants-are-real: An interrupt's expiresAt names an instant that exists: a day of the proleptic Gregorian calendar from the year 0001, so no 2026-02-31, no 29 February outside a leap year (2100 is not one) and no year 0000, at a time of day the pattern already holds to 00:00:00 through 23:59:59, with no leap second. A reader checks the day itself rather than trust a date parser to: some roll 2026-02-31 over into March, and some read the year 0000. nesting-is-bounded: The event nests at most maxEventDepth levels of objects and arrays. A reader measures the depth before anything that walks the event, the schema and the byte count included, and without recursion, so no event can exhaust a reader's stack however deep it is; it refuses a deeper event as a whole, at $, and reads nothing else from it. A reader whose JSON parser recurses bounds the parser's depth the same way. option-values-are-distinct: No two options of a terp.question carry the same value, whatever their labels. strings-hold-no-controls: No string anywhere in the event holds a C0 or C1 control character other than tab, line feed and carriage return: not a value, not an object's key, and not one inside the open objects (an interrupt's responseSchema, a producer's own activity content and custom value). A key is refused at the path of the member it names.",
       "enum": [
+        "instants-are-real",
         "nesting-is-bounded",
         "option-values-are-distinct",
         "strings-hold-no-controls"
@@ -869,10 +870,10 @@
                                       "type": "object"
                                     },
                                     "expiresAt": {
-                                      "description": "When the interrupt stops being answerable, as an ISO 8601 UTC instant.",
+                                      "description": "When the interrupt stops being answerable, as an ISO 8601 UTC instant that exists (instants-are-real): a real day, and no leap second.",
                                       "type": "string",
                                       "maxLength": 32,
-                                      "pattern": "^[0-9]{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12][0-9]|3[01])T(?:[01][0-9]|2[0-3]):[0-5][0-9]:(?:[0-5][0-9]|60)(?:\\.[0-9]{1,6})?Z(?![\\u0000-\\uFFFF]|[^\\u0000-\\uFFFF])"
+                                      "pattern": "^[0-9]{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12][0-9]|3[01])T(?:[01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](?:\\.[0-9]{1,6})?Z(?![\\u0000-\\uFFFF]|[^\\u0000-\\uFFFF])"
                                     },
                                     "metadata": {
                                       "description": "What a Terp reader needs to render the question. Required on a terp.question interrupt.",
