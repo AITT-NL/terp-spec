@@ -77,4 +77,5 @@ pull request.
 ## Reporting a vulnerability
 
 Do not open a public issue for a security problem. Report it privately through
-GitHub's security advisories for this repository.
+GitHub's security advisories for this repository. [SECURITY.md](SECURITY.md) says
+how, and how soon you hear back.
