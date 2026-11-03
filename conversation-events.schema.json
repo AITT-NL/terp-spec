@@ -1,0 +1,1256 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://terp.dev/spec/conversation-events.schema.json",
+  "title": "Terp Standard - the conversation event stream",
+  "description": "The normative, stack-neutral vocabulary of the events one run of a conversation streams to the people following it. It is a profile of AG-UI 1.0 (the Agent-User Interaction Protocol): every event is an AG-UI event, so an AG-UI client reads the stream unchanged, and the profile says which of AG-UI's events a Terp stream carries, which fields it requires, how long each string may be, and what Terp adds where AG-UI leaves a name open: CUSTOM events, activity types and interrupt reasons under terp., and a metadata.terp key on the events that need one. This schema validates one event. The order of a run's events is held by the stream rules named in $defs.streamRules, which a schema cannot state and every reader applies. Its readers are the producers that validate every event before they send it, and the clients that read the stream; neither imports the other, and both run conversation-events.fixtures.json.",
+  "$defs": {
+    "maxEventBytes": {
+      "description": "The largest an event may be, in bytes of its compact JSON (no whitespace between tokens) encoded as UTF-8. A schema cannot count bytes, so every reader applies it: a producer never sends a larger event, and a reader stops at one, as events-are-valid says.",
+      "const": 65536
+    },
+    "maxEventDepth": {
+      "description": "The deepest an event may nest, in levels of objects and arrays: the event itself is level 1, and an object or array inside another is one level deeper; a string, a number, a boolean or null adds no level. Only the open objects (an interrupt's responseSchema, a producer's own activity content and custom value) can nest far, and none needs more than a fraction of this. A schema cannot state it, so every reader applies it, as nesting-is-bounded says.",
+      "const": 64
+    },
+    "eventRules": {
+      "description": "What a single event keeps that a schema cannot state, which every reader applies beside the schema. instants-are-real: An interrupt's expiresAt names an instant that exists: a day of the proleptic Gregorian calendar from the year 0001, so no 2026-02-31, no 29 February outside a leap year (2100 is not one) and no year 0000, at a time of day the pattern already holds to 00:00:00 through 23:59:59, with no leap second. A reader checks the day itself rather than trust a date parser to: some roll 2026-02-31 over into March, and some read the year 0000. nesting-is-bounded: The event nests at most maxEventDepth levels of objects and arrays. A reader measures the depth before anything that walks the event, the schema and the byte count included, and without recursion, so no event can exhaust a reader's stack however deep it is; it refuses a deeper event as a whole, at $, and reads nothing else from it. A reader whose JSON parser recurses bounds the parser's depth the same way. option-values-are-distinct: No two options of a terp.question carry the same value, whatever their labels. strings-hold-no-controls: No string anywhere in the event holds a C0 or C1 control character other than tab, line feed and carriage return: not a value, not an object's key, and not one inside the open objects (an interrupt's responseSchema, a producer's own activity content and custom value). A key is refused at the path of the member it names.",
+      "enum": [
+        "instants-are-real",
+        "nesting-is-bounded",
+        "option-values-are-distinct",
+        "strings-hold-no-controls"
+      ]
+    },
+    "questionInputs": {
+      "description": "How a terp.question is answered.",
+      "enum": [
+        "buttons",
+        "choice",
+        "choices",
+        "text"
+      ]
+    },
+    "streamRules": {
+      "description": "The order a run's events keep, which every reader applies. A reader reads a run in order and stops at the first event that breaks a rule, or at the end of the run when what is broken is that the run ended there. It reads nothing from an event that breaks events-are-valid, so that event breaks no other rule; where an event breaks several other rules, a reader reports the first of them in the order they are listed here, which is the order of this enum. closed-before-finish: Before RUN_FINISHED every text message opened in the run has ended, and every tool call has ended and has its result, except the one call an interrupt of the outcome names, which references-are-known holds instead: it has ended and waits for the answer before it has one. A call the producer could not finish gets a result with status error. RUN_ERROR is exempt: a reader reads what was still open as unfinished. ends-with-one-terminal: Exactly one terminal event, RUN_FINISHED or RUN_ERROR, and it is the last event of the run. A run that stops without one breaks this rule at its end, one past its last event; a run with no events at all breaks starts-with-run-started instead. events-are-valid: Every event validates against this schema, is at most maxEventBytes once serialized, and keeps every rule in eventRules. A reader stops interpreting the run at the first event that does not, keeps what it read before it, and reads the run as failed; it reads nothing from that event. handoff-precedes-the-terminal: terp.handoff appears at most once, and only the terminal event may follow it. message-id-names-one-thing: The messageIds and toolCallIds of a run are one id space, as they are to an AG-UI client, which shows a tool call without a parent message under its own id, and an id names one thing in it. Four events give an id the thing it names: TEXT_MESSAGE_START a text message, TOOL_CALL_START a tool call, TOOL_CALL_RESULT (by its messageId) a tool result, and ACTIVITY_SNAPSHOT an activity of its activityType. An id that already names a thing is never given a thing of another kind by one of them, an activity keeps its activityType, and no two tool results share an id. A second TEXT_MESSAGE_START or TOOL_CALL_START for its own id breaks the lifecycle rule of its kind instead, and a second ACTIVITY_SNAPSHOT for the same activity, of the same activityType, replaces its content: a reader that kept the old content under a new type would show what an AG-UI client has already replaced. one-run: Every threadId and runId in the run equals the ones RUN_STARTED opened it with; until RUN_STARTED has opened the run there is nothing to compare them with. references-are-known: A parentMessageId names a text message opened earlier in the run, open or ended, and an interrupt's toolCallId names a tool call of the run that has ended and has no result yet: the one call the run waits on. starts-with-run-started: The first event is RUN_STARTED, and RUN_STARTED appears nowhere else. A run with no events has no first event, and breaks this rule. text-message-lifecycle: A text message is opened once, by TEXT_MESSAGE_START, so no later TEXT_MESSAGE_START names it, open or ended. TEXT_MESSAGE_CONTENT and TEXT_MESSAGE_END name a message that is open: never one not yet opened, and never one that has ended. Other events may name a message that has ended: a tool call's parentMessageId does, as references-are-known says. tool-call-lifecycle: A tool call is opened once by TOOL_CALL_START; TOOL_CALL_ARGS and TOOL_CALL_END name a call that is open; TOOL_CALL_RESULT comes after the call's end, at most once.",
+      "enum": [
+        "closed-before-finish",
+        "ends-with-one-terminal",
+        "events-are-valid",
+        "handoff-precedes-the-terminal",
+        "message-id-names-one-thing",
+        "one-run",
+        "references-are-known",
+        "starts-with-run-started",
+        "text-message-lifecycle",
+        "tool-call-lifecycle"
+      ]
+    },
+    "terpActivityTypes": {
+      "description": "The activity types this vocabulary defines. The terp. namespace is closed.",
+      "enum": [
+        "terp.compaction"
+      ]
+    },
+    "terpCustomEvents": {
+      "description": "The CUSTOM event names this vocabulary defines. The terp. namespace is closed.",
+      "enum": [
+        "terp.context",
+        "terp.handoff"
+      ]
+    },
+    "terpInterruptReasons": {
+      "description": "The interrupt reasons this vocabulary defines. The terp. namespace is closed.",
+      "enum": [
+        "terp.question"
+      ]
+    }
+  },
+  "type": "object",
+  "required": [
+    "type"
+  ],
+  "properties": {
+    "type": {
+      "description": "The AG-UI event type. A Terp stream carries these and no others.",
+      "enum": [
+        "ACTIVITY_SNAPSHOT",
+        "CUSTOM",
+        "RUN_ERROR",
+        "RUN_FINISHED",
+        "RUN_STARTED",
+        "TEXT_MESSAGE_CONTENT",
+        "TEXT_MESSAGE_END",
+        "TEXT_MESSAGE_START",
+        "TOOL_CALL_ARGS",
+        "TOOL_CALL_END",
+        "TOOL_CALL_RESULT",
+        "TOOL_CALL_START"
+      ]
+    }
+  },
+  "if": {
+    "required": [
+      "type"
+    ],
+    "properties": {
+      "type": {
+        "const": "RUN_STARTED"
+      }
+    }
+  },
+  "then": {
+    "description": "Opens a run: one assistant turn in one conversation.",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "type",
+      "threadId",
+      "runId",
+      "protocolVersion",
+      "metadata"
+    ],
+    "properties": {
+      "type": {
+        "description": "The AG-UI event type.",
+        "const": "RUN_STARTED"
+      },
+      "timestamp": {
+        "description": "When the producer created the event, in milliseconds since the Unix epoch. Optional, and nothing a reader does may depend on it: order is the order of the stream.",
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 9007199254740991
+      },
+      "threadId": {
+        "description": "The conversation the run belongs to.",
+        "type": "string",
+        "maxLength": 128,
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}(?![\\u0000-\\uFFFF]|[^\\u0000-\\uFFFF])"
+      },
+      "runId": {
+        "description": "Identifies the run. The client mints it, and a repeat of the same runId is the same request.",
+        "type": "string",
+        "maxLength": 128,
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}(?![\\u0000-\\uFFFF]|[^\\u0000-\\uFFFF])"
+      },
+      "protocolVersion": {
+        "description": "The AG-UI version the producer speaks.",
+        "const": "1.0"
+      },
+      "parentRunId": {
+        "description": "The run that spawned this one, when one run started another.",
+        "type": "string",
+        "maxLength": 128,
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}(?![\\u0000-\\uFFFF]|[^\\u0000-\\uFFFF])"
+      },
+      "metadata": {
+        "description": "Which version of this vocabulary the stream is written in.",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "terp"
+        ],
+        "properties": {
+          "terp": {
+            "description": "Terp's own keys.",
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "schemaVersion": {
+                "description": "The version of this vocabulary. A reader that does not know the version reads nothing from the stream and says it is from a newer version; it never guesses.",
+                "const": 1
+              }
+            },
+            "required": [
+              "schemaVersion"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "else": {
+    "if": {
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "const": "TEXT_MESSAGE_START"
+        }
+      }
+    },
+    "then": {
+      "description": "Opens a streamed text message from the assistant.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "messageId",
+        "role"
+      ],
+      "properties": {
+        "type": {
+          "description": "The AG-UI event type.",
+          "const": "TEXT_MESSAGE_START"
+        },
+        "timestamp": {
+          "description": "When the producer created the event, in milliseconds since the Unix epoch. Optional, and nothing a reader does may depend on it: order is the order of the stream.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "messageId": {
+          "description": "Identifies the message.",
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}(?![\\u0000-\\uFFFF]|[^\\u0000-\\uFFFF])"
+        },
+        "role": {
+          "description": "Who wrote it. A Terp stream carries the assistant's text only.",
+          "const": "assistant"
+        }
+      }
+    },
+    "else": {
+      "if": {
+        "required": [
+          "type"
+        ],
+        "properties": {
+          "type": {
+            "const": "TEXT_MESSAGE_CONTENT"
+          }
+        }
+      },
+      "then": {
+        "description": "Appends to an open text message.",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "type",
+          "messageId",
+          "delta"
+        ],
+        "properties": {
+          "type": {
+            "description": "The AG-UI event type.",
+            "const": "TEXT_MESSAGE_CONTENT"
+          },
+          "timestamp": {
+            "description": "When the producer created the event, in milliseconds since the Unix epoch. Optional, and nothing a reader does may depend on it: order is the order of the stream.",
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "messageId": {
+            "description": "The message this appends to.",
+            "type": "string",
+            "maxLength": 128,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}(?![\\u0000-\\uFFFF]|[^\\u0000-\\uFFFF])"
+          },
+          "delta": {
+            "description": "The fragment to append. May be empty: providers send empty deltas as keep-alives. Tab, line feed and carriage return are text; every other control character is refused.",
+            "type": "string",
+            "maxLength": 65536,
+            "pattern": "^[^\\u0000-\\u0008\\u000B\\u000C\\u000E-\\u001F\\u007F-\\u009F]*(?![\\u0000-\\uFFFF]|[^\\u0000-\\uFFFF])"
+          }
+        }
+      },
+      "else": {
+        "if": {
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "const": "TEXT_MESSAGE_END"
+            }
+          }
+        },
+        "then": {
+          "description": "Closes a text message.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "messageId"
+          ],
+          "properties": {
+            "type": {
+              "description": "The AG-UI event type.",
+              "const": "TEXT_MESSAGE_END"
+            },
+            "timestamp": {
+              "description": "When the producer created the event, in milliseconds since the Unix epoch. Optional, and nothing a reader does may depend on it: order is the order of the stream.",
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "messageId": {
+              "description": "The message this closes.",
+              "type": "string",
+              "maxLength": 128,
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}(?![\\u0000-\\uFFFF]|[^\\u0000-\\uFFFF])"
+            }
+          }
+        },
+        "else": {
+          "if": {
+            "required": [
+              "type"
+            ],
+            "properties": {
+              "type": {
+                "const": "TOOL_CALL_START"
+              }
+            }
+          },
+          "then": {
+            "description": "Opens a tool call: a row on the conversation's timeline.",
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "type",
+              "toolCallId",
+              "toolCallName"
+            ],
+            "properties": {
+              "type": {
+                "description": "The AG-UI event type.",
+                "const": "TOOL_CALL_START"
+              },
+              "timestamp": {
+                "description": "When the producer created the event, in milliseconds since the Unix epoch. Optional, and nothing a reader does may depend on it: order is the order of the stream.",
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "toolCallId": {
+                "description": "Identifies the call.",
+                "type": "string",
+                "maxLength": 128,
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}(?![\\u0000-\\uFFFF]|[^\\u0000-\\uFFFF])"
+              },
+              "toolCallName": {
+                "description": "The tool's name.",
+                "type": "string",
+                "maxLength": 128,
+                "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.:-]{0,127}(?![\\u0000-\\uFFFF]|[^\\u0000-\\uFFFF])"
+              },
+              "parentMessageId": {
+                "description": "The text message this call belongs to, when it belongs to one.",
+                "type": "string",
+                "maxLength": 128,
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}(?![\\u0000-\\uFFFF]|[^\\u0000-\\uFFFF])"
+              },
+              "metadata": {
+                "description": "Terp's note on the call.",
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "terp"
+                ],
+                "properties": {
+                  "terp": {
+                    "description": "Terp's own keys.",
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "subtitle": {
+                        "description": "The assistant's own sentence about what the call is for, shown beside the tool's name.",
+                        "type": "string",
+                        "maxLength": 160,
+                        "pattern": "^[^\\u0000-\\u001F\\u007F-\\u009F\\u2028\\u2029]*[^\\u0000-\\u0020\\u007F-\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF][^\\u0000-\\u001F\\u007F-\\u009F\\u2028\\u2029]*(?![\\u0000-\\uFFFF]|[^\\u0000-\\uFFFF])"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "else": {
+            "if": {
+              "required": [
+                "type"
+              ],
+              "properties": {
+                "type": {
+                  "const": "TOOL_CALL_ARGS"
+                }
+              }
+            },
+            "then": {
+              "description": "Appends to an open tool call's arguments, as they are generated.",
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "type",
+                "toolCallId",
+                "delta"
+              ],
+              "properties": {
+                "type": {
+                  "description": "The AG-UI event type.",
+                  "const": "TOOL_CALL_ARGS"
+                },
+                "timestamp": {
+                  "description": "When the producer created the event, in milliseconds since the Unix epoch. Optional, and nothing a reader does may depend on it: order is the order of the stream.",
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "toolCallId": {
+                  "description": "The call this appends to.",
+                  "type": "string",
+                  "maxLength": 128,
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}(?![\\u0000-\\uFFFF]|[^\\u0000-\\uFFFF])"
+                },
+                "delta": {
+                  "description": "The fragment of the arguments to append. May be empty.",
+                  "type": "string",
+                  "maxLength": 65536,
+                  "pattern": "^[^\\u0000-\\u0008\\u000B\\u000C\\u000E-\\u001F\\u007F-\\u009F]*(?![\\u0000-\\uFFFF]|[^\\u0000-\\uFFFF])"
+                }
+              }
+            },
+            "else": {
+              "if": {
+                "required": [
+                  "type"
+                ],
+                "properties": {
+                  "type": {
+                    "const": "TOOL_CALL_END"
+                  }
+                }
+              },
+              "then": {
+                "description": "Closes a tool call's arguments. Its result follows.",
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "type",
+                  "toolCallId"
+                ],
+                "properties": {
+                  "type": {
+                    "description": "The AG-UI event type.",
+                    "const": "TOOL_CALL_END"
+                  },
+                  "timestamp": {
+                    "description": "When the producer created the event, in milliseconds since the Unix epoch. Optional, and nothing a reader does may depend on it: order is the order of the stream.",
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "toolCallId": {
+                    "description": "The call this closes.",
+                    "type": "string",
+                    "maxLength": 128,
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}(?![\\u0000-\\uFFFF]|[^\\u0000-\\uFFFF])"
+                  }
+                }
+              },
+              "else": {
+                "if": {
+                  "required": [
+                    "type"
+                  ],
+                  "properties": {
+                    "type": {
+                      "const": "TOOL_CALL_RESULT"
+                    }
+                  }
+                },
+                "then": {
+                  "description": "What a tool call returned, as the conversation shows it.",
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "type",
+                    "messageId",
+                    "toolCallId",
+                    "content"
+                  ],
+                  "properties": {
+                    "type": {
+                      "description": "The AG-UI event type.",
+                      "const": "TOOL_CALL_RESULT"
+                    },
+                    "timestamp": {
+                      "description": "When the producer created the event, in milliseconds since the Unix epoch. Optional, and nothing a reader does may depend on it: order is the order of the stream.",
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    "messageId": {
+                      "description": "Identifies the result.",
+                      "type": "string",
+                      "maxLength": 128,
+                      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}(?![\\u0000-\\uFFFF]|[^\\u0000-\\uFFFF])"
+                    },
+                    "toolCallId": {
+                      "description": "The call this is the result of.",
+                      "type": "string",
+                      "maxLength": 128,
+                      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}(?![\\u0000-\\uFFFF]|[^\\u0000-\\uFFFF])"
+                    },
+                    "content": {
+                      "description": "The result as shown beside the conversation: progress information, not a transcript of the run. A producer clips a longer result and says so in the text.",
+                      "type": "string",
+                      "maxLength": 2000,
+                      "pattern": "^[^\\u0000-\\u0008\\u000B\\u000C\\u000E-\\u001F\\u007F-\\u009F]*(?![\\u0000-\\uFFFF]|[^\\u0000-\\uFFFF])"
+                    },
+                    "role": {
+                      "description": "AG-UI's role for a tool result.",
+                      "const": "tool"
+                    },
+                    "metadata": {
+                      "description": "Terp's note on how the call ended.",
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "terp"
+                      ],
+                      "properties": {
+                        "terp": {
+                          "description": "Terp's own keys.",
+                          "type": "object",
+                          "additionalProperties": false,
+                          "properties": {
+                            "status": {
+                              "description": "completed when absent; error when the call failed, which a reader shows as a failure.",
+                              "enum": [
+                                "completed",
+                                "error"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "else": {
+                  "if": {
+                    "required": [
+                      "type"
+                    ],
+                    "properties": {
+                      "type": {
+                        "const": "ACTIVITY_SNAPSHOT"
+                      }
+                    }
+                  },
+                  "then": {
+                    "description": "A row on the timeline that is not a tool call, such as the assistant compacting its memory. A later snapshot of the same activity carries the same activityType and replaces its content.",
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "type",
+                      "messageId",
+                      "activityType",
+                      "content"
+                    ],
+                    "properties": {
+                      "type": {
+                        "description": "The AG-UI event type.",
+                        "const": "ACTIVITY_SNAPSHOT"
+                      },
+                      "timestamp": {
+                        "description": "When the producer created the event, in milliseconds since the Unix epoch. Optional, and nothing a reader does may depend on it: order is the order of the stream.",
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      "messageId": {
+                        "description": "Identifies the activity.",
+                        "type": "string",
+                        "maxLength": 128,
+                        "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}(?![\\u0000-\\uFFFF]|[^\\u0000-\\uFFFF])"
+                      },
+                      "activityType": {
+                        "description": "What kind of activity this is. Types under terp. are this vocabulary's and closed; any other type is the producer's, and a reader that does not know it shows nothing for it. An activity keeps its type for the whole run (message-id-names-one-thing).",
+                        "type": "string",
+                        "maxLength": 64,
+                        "pattern": "^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*(?![\\u0000-\\uFFFF]|[^\\u0000-\\uFFFF])",
+                        "if": {
+                          "pattern": "^terp\\."
+                        },
+                        "then": {
+                          "enum": [
+                            "terp.compaction"
+                          ]
+                        }
+                      },
+                      "content": {
+                        "description": "The activity's content; its shape is the activity type's. Open for a producer's own type, so its strings are held by strings-hold-no-controls.",
+                        "type": "object"
+                      }
+                    },
+                    "if": {
+                      "required": [
+                        "activityType"
+                      ],
+                      "properties": {
+                        "activityType": {
+                          "const": "terp.compaction"
+                        }
+                      }
+                    },
+                    "then": {
+                      "description": "A compaction says what started it and how full the memory was before and after.",
+                      "properties": {
+                        "content": {
+                          "description": "The compaction's figures.",
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "trigger",
+                            "before",
+                            "after"
+                          ],
+                          "properties": {
+                            "trigger": {
+                              "description": "auto: the assistant compacted on its own; manual: the person asked for it.",
+                              "enum": [
+                                "auto",
+                                "manual"
+                              ]
+                            },
+                            "before": {
+                              "description": "Tokens in memory before the compaction.",
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 9007199254740991
+                            },
+                            "after": {
+                              "description": "Tokens in memory after it.",
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 9007199254740991
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "else": {
+                    "if": {
+                      "required": [
+                        "type"
+                      ],
+                      "properties": {
+                        "type": {
+                          "const": "CUSTOM"
+                        }
+                      }
+                    },
+                    "then": {
+                      "description": "An event AG-UI does not model. Names under terp. are this vocabulary's and closed; any other name is the producer's, and a reader that does not know it ignores it.",
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "type",
+                        "name",
+                        "value"
+                      ],
+                      "properties": {
+                        "type": {
+                          "description": "The AG-UI event type.",
+                          "const": "CUSTOM"
+                        },
+                        "timestamp": {
+                          "description": "When the producer created the event, in milliseconds since the Unix epoch. Optional, and nothing a reader does may depend on it: order is the order of the stream.",
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        "name": {
+                          "description": "The event's name.",
+                          "type": "string",
+                          "maxLength": 64,
+                          "pattern": "^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*(?![\\u0000-\\uFFFF]|[^\\u0000-\\uFFFF])",
+                          "if": {
+                            "pattern": "^terp\\."
+                          },
+                          "then": {
+                            "enum": [
+                              "terp.context",
+                              "terp.handoff"
+                            ]
+                          }
+                        },
+                        "value": {
+                          "description": "The event's value; its shape is the name's. Open for a producer's own name, so its strings are held by strings-hold-no-controls."
+                        }
+                      },
+                      "if": {
+                        "required": [
+                          "name"
+                        ],
+                        "properties": {
+                          "name": {
+                            "const": "terp.context"
+                          }
+                        }
+                      },
+                      "then": {
+                        "description": "How full the assistant's memory is.",
+                        "properties": {
+                          "value": {
+                            "description": "The memory at the run's last model call, not a sum over the run: what the assistant still holds, not what the run cost.",
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": [
+                              "usedTokens",
+                              "windowTokens"
+                            ],
+                            "properties": {
+                              "usedTokens": {
+                                "description": "Tokens the next model call starts from.",
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 9007199254740991
+                              },
+                              "windowTokens": {
+                                "description": "The model's context window. 0 when the producer does not know it, and a reader then shows tokens without a percentage.",
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 9007199254740991
+                              },
+                              "model": {
+                                "description": "The model the measurement was taken on: the window belongs to it.",
+                                "type": "string",
+                                "maxLength": 200,
+                                "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/@-]{0,199}(?![\\u0000-\\uFFFF]|[^\\u0000-\\uFFFF])"
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "else": {
+                        "if": {
+                          "required": [
+                            "name"
+                          ],
+                          "properties": {
+                            "name": {
+                              "const": "terp.handoff"
+                            }
+                          }
+                        },
+                        "then": {
+                          "description": "Another run follows this one in the same conversation, so a client keeps following instead of going idle.",
+                          "properties": {
+                            "value": {
+                              "description": "Which run follows, when the producer knows it. A producer that knows only that one follows sends an empty object, and the client finds the next run in the conversation itself.",
+                              "type": "object",
+                              "additionalProperties": false,
+                              "properties": {
+                                "nextRunId": {
+                                  "description": "The run that follows.",
+                                  "type": "string",
+                                  "maxLength": 128,
+                                  "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}(?![\\u0000-\\uFFFF]|[^\\u0000-\\uFFFF])"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "else": {
+                      "if": {
+                        "required": [
+                          "type"
+                        ],
+                        "properties": {
+                          "type": {
+                            "const": "RUN_FINISHED"
+                          }
+                        }
+                      },
+                      "then": {
+                        "description": "Closes a run that did not fail.",
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "type",
+                          "threadId",
+                          "runId",
+                          "outcome"
+                        ],
+                        "properties": {
+                          "type": {
+                            "description": "The AG-UI event type.",
+                            "const": "RUN_FINISHED"
+                          },
+                          "timestamp": {
+                            "description": "When the producer created the event, in milliseconds since the Unix epoch. Optional, and nothing a reader does may depend on it: order is the order of the stream.",
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                          },
+                          "threadId": {
+                            "description": "The conversation the run belongs to.",
+                            "type": "string",
+                            "maxLength": 128,
+                            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}(?![\\u0000-\\uFFFF]|[^\\u0000-\\uFFFF])"
+                          },
+                          "runId": {
+                            "description": "The run being closed.",
+                            "type": "string",
+                            "maxLength": 128,
+                            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}(?![\\u0000-\\uFFFF]|[^\\u0000-\\uFFFF])"
+                          },
+                          "outcome": {
+                            "description": "Why the run ended: success, interrupt (it waits for an answer), or cancelled (stopped by whoever ran it, and not failed). Required in this profile, although AG-UI reads an absent outcome as success: a Terp producer always says.",
+                            "type": "object",
+                            "required": [
+                              "type"
+                            ],
+                            "properties": {
+                              "type": {
+                                "description": "The outcome.",
+                                "enum": [
+                                  "cancelled",
+                                  "interrupt",
+                                  "success"
+                                ]
+                              },
+                              "interrupts": {
+                                "description": "What the run waits for. Exactly one: a conversation has at most one open question, so a run asks one thing and ends.",
+                                "type": "array",
+                                "minItems": 1,
+                                "maxItems": 1,
+                                "items": {
+                                  "description": "Something the run needs from the person before it can continue. The answer arrives as the resume entry of the next run, by this interrupt's id.",
+                                  "type": "object",
+                                  "additionalProperties": false,
+                                  "required": [
+                                    "id",
+                                    "reason"
+                                  ],
+                                  "properties": {
+                                    "id": {
+                                      "description": "Identifies the interrupt; a resume entry answers it by this id.",
+                                      "type": "string",
+                                      "maxLength": 128,
+                                      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}(?![\\u0000-\\uFFFF]|[^\\u0000-\\uFFFF])"
+                                    },
+                                    "reason": {
+                                      "description": "Why the run stopped. Names under terp. are this vocabulary's and closed; any other name is the producer's, and a reader that does not know it shows the message and answers nothing.",
+                                      "type": "string",
+                                      "maxLength": 64,
+                                      "pattern": "^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*(?![\\u0000-\\uFFFF]|[^\\u0000-\\uFFFF])",
+                                      "if": {
+                                        "pattern": "^terp\\."
+                                      },
+                                      "then": {
+                                        "enum": [
+                                          "terp.question"
+                                        ]
+                                      }
+                                    },
+                                    "message": {
+                                      "description": "The question, as the person reads it.",
+                                      "type": "string",
+                                      "maxLength": 2000,
+                                      "pattern": "^[^\\u0000-\\u0008\\u000B\\u000C\\u000E-\\u001F\\u007F-\\u009F]*[^\\u0000-\\u0020\\u007F-\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF][^\\u0000-\\u0008\\u000B\\u000C\\u000E-\\u001F\\u007F-\\u009F]*(?![\\u0000-\\uFFFF]|[^\\u0000-\\uFFFF])"
+                                    },
+                                    "toolCallId": {
+                                      "description": "The tool call this interrupt concerns, when it is a tool approval.",
+                                      "type": "string",
+                                      "maxLength": 128,
+                                      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}(?![\\u0000-\\uFFFF]|[^\\u0000-\\uFFFF])"
+                                    },
+                                    "responseSchema": {
+                                      "description": "A JSON Schema for the answer, offered to a generic AG-UI client that builds a form from it. Carried opaquely, as AG-UI carries it: a Terp reader renders from metadata.terp instead. Open, so its strings are held by strings-hold-no-controls rather than by a pattern.",
+                                      "type": "object"
+                                    },
+                                    "expiresAt": {
+                                      "description": "When the interrupt stops being answerable, as an ISO 8601 UTC instant that exists (instants-are-real): a real day, and no leap second.",
+                                      "type": "string",
+                                      "maxLength": 32,
+                                      "pattern": "^[0-9]{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12][0-9]|3[01])T(?:[01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](?:\\.[0-9]{1,6})?Z(?![\\u0000-\\uFFFF]|[^\\u0000-\\uFFFF])"
+                                    },
+                                    "metadata": {
+                                      "description": "What a Terp reader needs to render the question. Required on a terp.question interrupt.",
+                                      "type": "object",
+                                      "additionalProperties": false,
+                                      "required": [
+                                        "terp"
+                                      ],
+                                      "properties": {
+                                        "terp": {
+                                          "description": "The question's form, in Terp's own words.",
+                                          "type": "object",
+                                          "additionalProperties": false,
+                                          "properties": {
+                                            "input": {
+                                              "description": "How the person answers: buttons (pick one, shown as buttons), choice (pick one from a list), choices (pick any number from a list), or text (write a reply).",
+                                              "enum": [
+                                                "buttons",
+                                                "choice",
+                                                "choices",
+                                                "text"
+                                              ]
+                                            },
+                                            "options": {
+                                              "description": "The answers to pick from, for every input but text, in the order shown.",
+                                              "type": "array",
+                                              "minItems": 1,
+                                              "maxItems": 20,
+                                              "uniqueItems": true,
+                                              "items": {
+                                                "description": "One answer a person can pick.",
+                                                "type": "object",
+                                                "additionalProperties": false,
+                                                "required": [
+                                                  "value",
+                                                  "label"
+                                                ],
+                                                "properties": {
+                                                  "value": {
+                                                    "description": "What the answer carries back to the run when this option is picked. Distinct across the options (option-values-are-distinct): two options carrying one value would leave the run unable to tell which was picked.",
+                                                    "type": "string",
+                                                    "maxLength": 200,
+                                                    "pattern": "^[^\\u0000-\\u001F\\u007F-\\u009F\\u2028\\u2029]*[^\\u0000-\\u0020\\u007F-\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF][^\\u0000-\\u001F\\u007F-\\u009F\\u2028\\u2029]*(?![\\u0000-\\uFFFF]|[^\\u0000-\\uFFFF])"
+                                                  },
+                                                  "label": {
+                                                    "description": "What the option says to the person.",
+                                                    "type": "string",
+                                                    "maxLength": 200,
+                                                    "pattern": "^[^\\u0000-\\u001F\\u007F-\\u009F\\u2028\\u2029]*[^\\u0000-\\u0020\\u007F-\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF][^\\u0000-\\u001F\\u007F-\\u009F\\u2028\\u2029]*(?![\\u0000-\\uFFFF]|[^\\u0000-\\uFFFF])"
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          },
+                                          "required": [
+                                            "input"
+                                          ],
+                                          "if": {
+                                            "required": [
+                                              "input"
+                                            ],
+                                            "properties": {
+                                              "input": {
+                                                "enum": [
+                                                  "buttons",
+                                                  "choice",
+                                                  "choices"
+                                                ]
+                                              }
+                                            }
+                                          },
+                                          "then": {
+                                            "required": [
+                                              "options"
+                                            ]
+                                          },
+                                          "else": {
+                                            "description": "A text question carries no options.",
+                                            "properties": {
+                                              "options": {
+                                                "maxItems": 0
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "if": {
+                                    "required": [
+                                      "reason"
+                                    ],
+                                    "properties": {
+                                      "reason": {
+                                        "const": "terp.question"
+                                      }
+                                    }
+                                  },
+                                  "then": {
+                                    "description": "A Terp question says what it asks and how it is answered.",
+                                    "required": [
+                                      "message",
+                                      "metadata"
+                                    ]
+                                  },
+                                  "else": {
+                                    "description": "Under any other reason the metadata is not Terp's to read: a reader shows the message and answers nothing, so the question's form is refused there.",
+                                    "properties": {
+                                      "metadata": {
+                                        "description": "Nothing: metadata.terp belongs to terp.question.",
+                                        "type": "object",
+                                        "additionalProperties": false,
+                                        "properties": {}
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            "if": {
+                              "required": [
+                                "type"
+                              ],
+                              "properties": {
+                                "type": {
+                                  "const": "interrupt"
+                                }
+                              }
+                            },
+                            "then": {
+                              "description": "An interrupt outcome names what it waits for.",
+                              "additionalProperties": false,
+                              "required": [
+                                "interrupts"
+                              ],
+                              "properties": {
+                                "type": {},
+                                "interrupts": {}
+                              }
+                            },
+                            "else": {
+                              "description": "A success or a cancellation carries nothing else.",
+                              "additionalProperties": false,
+                              "properties": {
+                                "type": {}
+                              }
+                            }
+                          },
+                          "usage": {
+                            "description": "Token usage for the run, one entry per provider and model.",
+                            "type": "array",
+                            "maxItems": 16,
+                            "items": {
+                              "description": "Token counts for one provider and model, in AG-UI's accounting: inputTokens and outputTokens are totals, reasoningTokens, cachedInputTokens and cacheWriteInputTokens are parts of them, never additions to them. Never a prompt, a completion or an identifier.",
+                              "type": "object",
+                              "additionalProperties": false,
+                              "properties": {
+                                "provider": {
+                                  "description": "Which provider served the calls.",
+                                  "type": "string",
+                                  "maxLength": 64,
+                                  "pattern": "^[a-z][a-z0-9_.-]{0,63}(?![\\u0000-\\uFFFF]|[^\\u0000-\\uFFFF])"
+                                },
+                                "model": {
+                                  "description": "Which model served the calls.",
+                                  "type": "string",
+                                  "maxLength": 200,
+                                  "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/@-]{0,199}(?![\\u0000-\\uFFFF]|[^\\u0000-\\uFFFF])"
+                                },
+                                "inputTokens": {
+                                  "description": "Every prompt token the calls were charged for.",
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 9007199254740991
+                                },
+                                "outputTokens": {
+                                  "description": "Every generated token, reasoning included.",
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 9007199254740991
+                                },
+                                "totalTokens": {
+                                  "description": "inputTokens plus outputTokens.",
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 9007199254740991
+                                },
+                                "reasoningTokens": {
+                                  "description": "Output tokens spent on reasoning; part of outputTokens.",
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 9007199254740991
+                                },
+                                "cachedInputTokens": {
+                                  "description": "Input tokens read from a provider cache; part of inputTokens.",
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 9007199254740991
+                                },
+                                "cacheWriteInputTokens": {
+                                  "description": "Input tokens written to a provider cache; part of inputTokens.",
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 9007199254740991
+                                }
+                              }
+                            }
+                          },
+                          "metadata": {
+                            "description": "Terp's note on why a run ended the way it did.",
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": [
+                              "terp"
+                            ],
+                            "properties": {
+                              "terp": {
+                                "description": "Terp's own keys.",
+                                "type": "object",
+                                "additionalProperties": false,
+                                "properties": {
+                                  "reason": {
+                                    "description": "steered: the person sent a message that redirected the run, so it yielded at its next checkpoint. Only on a cancelled outcome.",
+                                    "enum": [
+                                      "steered"
+                                    ]
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "if": {
+                          "required": [
+                            "metadata"
+                          ],
+                          "properties": {
+                            "metadata": {
+                              "required": [
+                                "terp"
+                              ],
+                              "properties": {
+                                "terp": {
+                                  "required": [
+                                    "reason"
+                                  ]
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "then": {
+                          "description": "A steered run was cancelled to make way for the next message.",
+                          "properties": {
+                            "outcome": {
+                              "properties": {
+                                "type": {
+                                  "const": "cancelled"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "else": {
+                        "if": {
+                          "required": [
+                            "type"
+                          ],
+                          "properties": {
+                            "type": {
+                              "const": "RUN_ERROR"
+                            }
+                          }
+                        },
+                        "then": {
+                          "description": "Closes a run that failed.",
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "type",
+                            "message"
+                          ],
+                          "properties": {
+                            "type": {
+                              "description": "The AG-UI event type.",
+                              "const": "RUN_ERROR"
+                            },
+                            "timestamp": {
+                              "description": "When the producer created the event, in milliseconds since the Unix epoch. Optional, and nothing a reader does may depend on it: order is the order of the stream.",
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 9007199254740991
+                            },
+                            "message": {
+                              "description": "What went wrong, for a person to read. Never the text of an exception: a producer writes the sentence.",
+                              "type": "string",
+                              "maxLength": 500,
+                              "pattern": "^[^\\u0000-\\u001F\\u007F-\\u009F\\u2028\\u2029]*[^\\u0000-\\u0020\\u007F-\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF][^\\u0000-\\u001F\\u007F-\\u009F\\u2028\\u2029]*(?![\\u0000-\\uFFFF]|[^\\u0000-\\uFFFF])"
+                            },
+                            "code": {
+                              "description": "A stable code a client can act on.",
+                              "type": "string",
+                              "maxLength": 64,
+                              "pattern": "^[a-z][a-z0-9_.]{0,63}(?![\\u0000-\\uFFFF]|[^\\u0000-\\uFFFF])"
+                            },
+                            "usage": {
+                              "description": "Token usage for the calls the run made before it failed.",
+                              "type": "array",
+                              "maxItems": 16,
+                              "items": {
+                                "description": "Token counts for one provider and model, in AG-UI's accounting: inputTokens and outputTokens are totals, reasoningTokens, cachedInputTokens and cacheWriteInputTokens are parts of them, never additions to them. Never a prompt, a completion or an identifier.",
+                                "type": "object",
+                                "additionalProperties": false,
+                                "properties": {
+                                  "provider": {
+                                    "description": "Which provider served the calls.",
+                                    "type": "string",
+                                    "maxLength": 64,
+                                    "pattern": "^[a-z][a-z0-9_.-]{0,63}(?![\\u0000-\\uFFFF]|[^\\u0000-\\uFFFF])"
+                                  },
+                                  "model": {
+                                    "description": "Which model served the calls.",
+                                    "type": "string",
+                                    "maxLength": 200,
+                                    "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/@-]{0,199}(?![\\u0000-\\uFFFF]|[^\\u0000-\\uFFFF])"
+                                  },
+                                  "inputTokens": {
+                                    "description": "Every prompt token the calls were charged for.",
+                                    "type": "integer",
+                                    "minimum": 0,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "outputTokens": {
+                                    "description": "Every generated token, reasoning included.",
+                                    "type": "integer",
+                                    "minimum": 0,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "totalTokens": {
+                                    "description": "inputTokens plus outputTokens.",
+                                    "type": "integer",
+                                    "minimum": 0,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "reasoningTokens": {
+                                    "description": "Output tokens spent on reasoning; part of outputTokens.",
+                                    "type": "integer",
+                                    "minimum": 0,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "cachedInputTokens": {
+                                    "description": "Input tokens read from a provider cache; part of inputTokens.",
+                                    "type": "integer",
+                                    "minimum": 0,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "cacheWriteInputTokens": {
+                                    "description": "Input tokens written to a provider cache; part of inputTokens.",
+                                    "type": "integer",
+                                    "minimum": 0,
+                                    "maximum": 9007199254740991
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
