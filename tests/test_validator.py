@@ -82,6 +82,15 @@ def test_integer_minimum_is_enforced() -> None:
     assert _errors(1, {"type": "integer", "minimum": 1}) == []
 
 
+def test_integer_maximum_is_enforced() -> None:
+    """The conversation vocabulary bounds every count to the largest integer a JSON
+    number survives a round trip in, as AG-UI does; a validator without ``maximum``
+    would read that bound as decoration."""
+    assert _errors(9007199254740992, {"type": "integer", "maximum": 9007199254740991})
+    assert _errors(9007199254740991, {"type": "integer", "maximum": 9007199254740991}) == []
+    assert _errors(True, {"type": "integer", "maximum": 1}), "bool must not pass as integer"
+
+
 def test_a_boolean_is_never_a_number() -> None:
     """JSON equality, not Python's: ``True == 1`` in Python, never in JSON. Without this a
     boolean would pass an enum or const of numbers, and ``"schemaVersion": true`` would

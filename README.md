@@ -94,17 +94,23 @@ The artifacts:
    loop a tool that drives it relies on, and the fixtures every reader of it
    runs. A vocabulary with readers and no catalog rule; see "Development-loop
    declaration" below.
-10. **The residual ratchet** (`corpus/RESIDUALS.json`) — the statically-erased
+10. **The conversation event stream** (`conversation-events.schema.json`, with
+   `conversation-events.fixtures.json`) — the stack-neutral vocabulary of the
+   events one run of a conversation streams to the people following it: a
+   profile of AG-UI 1.0 and the names Terp adds where AG-UI leaves a name open,
+   with recorded runs every producer and reader runs. A vocabulary with readers
+   and no catalog rule; see "Conversation event stream" below.
+11. **The residual ratchet** (`corpus/RESIDUALS.json`) — the statically-erased
    or renamed forms deliberately outside the corpus contract, per rule, as
    shrink-only data (see "Detector boundaries" below).
-11. **The scorecard format** (`scorecard.schema.json`) — the machine-readable
+12. **The scorecard format** (`scorecard.schema.json`) — the machine-readable
    certification summary a conformant checker emits (spec version, per-rule
    verdicts over the corpus, residuals claimed), so "certified against spec
    X.Y.Z" is a verifiable artifact instead of a claim.
-12. **The changelog** (`CHANGELOG.md`) — the change history keyed to `VERSION`
+13. **The changelog** (`CHANGELOG.md`) — the change history keyed to `VERSION`
    (the top entry must match, held by the spec suite), so a checker certified
    against an earlier version can see exactly what changed since.
-13. **The rule pages** (`docs/rules/`) — plain-language documentation generated
+14. **The rule pages** (`docs/rules/`) — plain-language documentation generated
     from the catalog (`tools/generate_rule_docs.py`; regenerate-and-compare
     parity in the spec suite, so the pages cannot drift from the data).
 
@@ -541,6 +547,84 @@ reader resolves from them (`reads`), invalid ones with the field the refusal is
 about and the values it allows, and texts that are not one JSON document. The
 spec suite reads every fixture with a reference reader of the `$defs` lists, and
 holds the list of vocabularies no rule realises by name.
+
+## Conversation event stream
+
+An application that lets a person talk to an assistant streams each run of the
+assistant to the people following it: the reply as it is written, each tool
+call as a row on a timeline, a question the assistant asks before it can go on,
+and how the run ended. The producer that runs the assistant and the client that
+shows it are separate programs, often in separate stacks, and each wrote its own
+idea of the frames once; the words now live here, in
+`conversation-events.schema.json`.
+
+**It is a profile of AG-UI 1.0** (the Agent-User Interaction Protocol), not a
+protocol of its own: every event is an AG-UI event, so a client written for
+AG-UI reads a Terp stream unchanged, and an agent that speaks AG-UI can sit
+behind a Terp producer. The profile says three things AG-UI leaves open:
+
+- **Which events a Terp stream carries** — twelve, closed: `RUN_STARTED`, the
+  text message trio, the tool call quartet (start, args, end, result),
+  `ACTIVITY_SNAPSHOT`, `CUSTOM`, `RUN_FINISHED` and `RUN_ERROR`. Raw provider
+  events, state snapshots, reasoning, subagents and the convenience chunks are
+  not in version 1.
+- **What every event must carry, and how long it may be** — every object is
+  closed but three, which AG-UI carries opaquely and the event rules reach
+  inside (an interrupt's `responseSchema`, a producer's own activity `content`
+  and a `CUSTOM` event's `value`), every string is capped and refuses control
+  characters (prose keeps its tabs and line breaks), an outcome is always
+  stated, an interrupt outcome carries exactly one interrupt because a
+  conversation has at most one open question, and an event is at most
+  `maxEventBytes` of compact UTF-8 JSON and `maxEventDepth` levels of objects
+  and arrays.
+- **What Terp adds where AG-UI leaves a name open** — `terp.compaction` as an
+  activity type; `terp.context` (how full the assistant's memory is) and
+  `terp.handoff` (another run follows, and which one when the producer knows)
+  as custom events; `terp.question` as an interrupt reason, answered by
+  buttons, a choice, several choices or a text; and a `metadata.terp` key where
+  an event needs one: the vocabulary version on `RUN_STARTED`, the assistant's
+  own sentence about a tool call, a tool result's status, and `steered` on a
+  run cancelled for the next message.
+
+| Name | A reader |
+|---|---|
+| under `terp.` | reads it as this vocabulary says, and refuses one the vocabulary does not define: the namespace is closed |
+| any other | is the producer's own; a reader that does not know it shows nothing for it and acts on nothing |
+
+**One event, one schema and four rules; a run, ten rules.** The schema validates
+one event. What one event keeps that a schema cannot state is named in
+`$defs.eventRules`: an interrupt's expiry names a day that exists, which a reader
+checks itself because date parsers disagree, an event nests no deeper than
+`maxEventDepth`, measured without recursion before anything walks it, no two
+options of a question carry one value, and no string anywhere in the event, its
+object keys and the open objects included, holds a control character.
+The order a run keeps — opened by `RUN_STARTED`, closed by exactly one terminal
+event, every text message and tool call opened before it is used and closed
+before the run finishes, every reference to a message or a call known, a
+message id and a tool call id one id space as they are to an AG-UI client, an
+activity keeping its type — is named in `$defs.streamRules`, which every reader
+applies because a schema cannot state it. A reader that meets an event it cannot
+validate, or a run that breaks a rule, stops interpreting the run there: it keeps
+what it read before, reads the run as failed, and says so. It never guesses past
+a broken stream. Where one event breaks several rules, a reader reports the
+first of them in the list's order, so every reader names the same one.
+
+**An unreadable version is not an empty one.** `RUN_STARTED` carries
+`metadata.terp.schemaVersion`. A reader that does not know the version reads
+nothing from the run and says the stream is from a newer version; a producer
+writes a version only once the readers it serves read it — readers first,
+writers last, as for the declarations above.
+
+**A vocabulary, not a rule.** No catalog entry realises it: what a producer
+stores or how a client lays a conversation out is each stack's own. What every
+producer and reader must agree on is how a stream reads, and
+`conversation-events.fixtures.json` fixes that: single events, valid or refused
+at a named field (by the schema, or by the event rule the fixture names), and
+recorded runs, each valid one with what a reader resolves
+from it (`reads`: the transcript items in order, the outcome, the open
+question, the memory fill, the usage, the run that follows, the failure), each
+invalid one with the one rule it breaks and the event where it breaks it. The spec
+suite reads every fixture with a reference reader of the stream rules.
 
 ## Corpus format
 

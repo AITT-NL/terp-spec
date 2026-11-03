@@ -53,7 +53,10 @@ _DEFAULT_COMPOSE = _DECLARED["properties"]["compose"]["properties"]["file"]["def
 #: data joins the spec when something realises it: a rule, or - for a vocabulary whose
 #: point is that two readers read one file the same way - the fixtures every reader
 #: runs. Listed rather than inferred, so a schema cannot exempt itself.
-_VOCABULARIES_READ_BY_FIXTURES = {"workbench-declaration.schema.json"}
+_VOCABULARIES_READ_BY_FIXTURES = {
+    "conversation-events.schema.json",
+    "workbench-declaration.schema.json",
+}
 
 
 def _errors(document: object) -> list[str]:
@@ -333,7 +336,9 @@ def test_a_vocabulary_no_rule_realises_is_claimed_by_its_fixtures() -> None:
             for path in sorted((_SPEC / "catalog" / surface).glob("*.json"))
         )
     )
-    for schema in sorted(_SPEC.glob("*-declaration.schema.json")):
+    listed = {_SPEC / name for name in _VOCABULARIES_READ_BY_FIXTURES}
+    for schema in sorted(set(_SPEC.glob("*-declaration.schema.json")) | listed):
+        assert schema.is_file(), f"{schema.name}: listed as a vocabulary and not in the spec"
         if schema.name in _VOCABULARIES_READ_BY_FIXTURES:
             assert schema.name not in cited, f"{schema.name} is listed as rule-free and a rule cites it"
             fixtures = schema.with_name(schema.name.replace(".schema.json", ".fixtures.json"))

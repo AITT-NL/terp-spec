@@ -7,7 +7,7 @@ fields and new rules also bump the minor; prose bumps the patch (see
 checked-in `VERSION` — held by `tests/test_changelog.py`. A checker certified
 against an earlier version reads this file to see exactly what changed since.
 
-## 0.41.0
+## 0.42.0
 
 ### Added
 
@@ -23,6 +23,76 @@ against an earlier version reads this file to see exactly what changed since.
 The catalog ids and assurance lane vocabulary are unchanged. Implementations already
 certified for source detection retain that claim; the new scenarios govern their separate
 runtime security claims. This changes the behavioral contract and therefore bumps the minor.
+
+## 0.41.0
+
+### Added
+
+- **`conversation-events.schema.json`** — the normative, stack-neutral vocabulary of the
+  events one run of a conversation streams to the people following it, with
+  **`conversation-events.fixtures.json`**, which every producer and reader runs. An app that
+  lets a person talk to an assistant has two programs with an opinion about those events: the
+  one that runs the assistant and the one that shows it. Each wrote its own once, and the
+  shape that recurs is the one a second app has to reverse-engineer: which frame carries text,
+  which a tool call, whether a question travels in the stream or only in the record written
+  after it, whether "stopped" and "redirected" can be told apart.
+
+  It is a **profile of AG-UI 1.0**, not a protocol of its own, so an AG-UI client reads a Terp
+  stream unchanged and an AG-UI agent can sit behind a Terp producer. Twelve of AG-UI's event
+  types, closed: `RUN_STARTED`, the text message start/content/end, the tool call
+  start/args/end/result, `ACTIVITY_SNAPSHOT`, `CUSTOM`, `RUN_FINISHED`, `RUN_ERROR`. Raw
+  provider events are refused outright, because a provider's native event can carry anything
+  to every reader; so are the convenience chunks, state snapshots, reasoning and subagents,
+  which version 1 does not need.
+
+  Where AG-UI leaves a name open, Terp adds a closed namespace: `terp.compaction` (an activity
+  type), `terp.context` and `terp.handoff` (custom events), `terp.question` (an interrupt
+  reason, answered by buttons, a choice, several choices or a text), and `metadata.terp` on
+  the events that need it. A name outside `terp.` is the producer's own and a reader passes
+  it by. There is no secret input: an answer is stored as the next message of the
+  conversation, and a secret does not belong in a transcript.
+
+  What is refused, and why. **Every object is closed but three, and every string capped.**
+  The three are carried opaquely, as AG-UI carries them: an interrupt's `responseSchema`, a
+  producer's own activity `content` and a `CUSTOM` event's `value`; the event rules below
+  reach inside them. Control characters are refused except a prose string's tabs and line
+  breaks, and a one-line string refuses the line and paragraph separators U+2028 and U+2029
+  too. Every pattern means the same in Python and in ECMA-262, the engine the npm package is
+  read with: it spells its classes out rather than use `\s`, `\d` or `\w`, whose sets differ
+  between the two (U+FEFF is white space to one and not the other), and it ends in an
+  explicit end of the input both read alike. **An outcome is always stated**, although AG-UI
+  reads an absent one as success, and an interrupt outcome carries exactly one interrupt,
+  because a conversation has at most one open question. **A run error is a sentence**, one
+  line, so a stack trace never reaches a person. **Usage is counts**: a provider, a model and
+  token figures, never content, and every count and timestamp is bounded to the largest
+  integer a JSON number survives a round trip in, as AG-UI bounds them. An event is at most
+  64 KiB of compact UTF-8 JSON, which a schema cannot count and every reader applies.
+
+  A schema validates one event, and what one event keeps that a schema cannot state is four
+  named **event rules** in `$defs.eventRules`: an interrupt's expiry names a day that exists,
+  which a reader checks itself because date parsers disagree (one rolls 31 February over into
+  March); an event nests at most `maxEventDepth` (64) levels of objects and arrays, which a
+  reader measures without recursion before anything walks the event, so no event under the
+  byte cap can exhaust a reader's stack; no two options of a question carry one value; and no
+  string anywhere in the event, its object keys and the open objects included, holds a
+  control character.
+  A run keeps an order a schema cannot state either. That order is ten named **stream rules**
+  in `$defs.streamRules` (opened once, closed once, everything used after it is opened and
+  closed before the run finishes, every reference known, a message id and a tool call id one
+  id space as they are to an AG-UI client, an activity keeping its type), and a reader that
+  meets a broken one stops interpreting the run there rather than guessing past it. Where one
+  event breaks several, a reader reports the first of them in the list's order, so two readers
+  always name the same rule; an event that is not valid is not read, and breaks that rule
+  alone.
+  `RUN_STARTED` carries `metadata.terp.schemaVersion`; a reader that does not know it reads
+  nothing from the run, as the declarations' readers refuse a version they do not know.
+
+  A vocabulary with readers and no catalog rule, so `REFERENCE_SHA` did not have to move. The
+  fixtures hold 28 valid and 91 refused events (twelve of them refused by an event rule the
+  schema alone passes) and 45 recorded runs, each valid run with what a reader resolves
+  from it and each invalid one with the one rule it breaks and where, and the spec suite reads
+  every one with a reference reader. The list of vocabularies no rule
+  realises, by name, now holds it beside the development-loop declaration.
 
 ## 0.40.0
 

@@ -17,7 +17,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "terp-spec"
-version = "0.41.0"
+version = "0.42.0"
 description = "The Terp Standard — stack-neutral rule catalog, violation corpus, finding format, and refused-surface declaration (ADRs 0080/0081)."
 requires-python = ">=3.10"
 license = "Apache-2.0"
@@ -52,6 +52,8 @@ packages = ["terp_spec"]
 "deployment-declaration.fixtures.json" = "terp_spec/deployment-declaration.fixtures.json"
 "workbench-declaration.schema.json" = "terp_spec/workbench-declaration.schema.json"
 "workbench-declaration.fixtures.json" = "terp_spec/workbench-declaration.fixtures.json"
+"conversation-events.schema.json" = "terp_spec/conversation-events.schema.json"
+"conversation-events.fixtures.json" = "terp_spec/conversation-events.fixtures.json"
 "restricted-surface.json" = "terp_spec/restricted-surface.json"
 "catalog" = "terp_spec/catalog"
 "corpus" = "terp_spec/corpus"
