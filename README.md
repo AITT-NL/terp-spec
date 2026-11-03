@@ -534,10 +534,14 @@ behind a Terp producer. The profile says three things AG-UI leaves open:
 | under `terp.` | reads it as this vocabulary says, and refuses one the vocabulary does not define: the namespace is closed |
 | any other | is the producer's own; a reader that does not know it shows nothing for it and acts on nothing |
 
-**One event, one schema; a run, ten rules.** The schema validates one event.
+**One event, one schema and two rules; a run, ten rules.** The schema validates
+one event. What one event keeps that a schema cannot state is named in
+`$defs.eventRules`: no two options of a question carry one value, and no string
+anywhere in the event, the open objects included, holds a control character.
 The order a run keeps — opened by `RUN_STARTED`, closed by exactly one terminal
 event, every text message and tool call opened before it is used and closed
-before the run finishes, every reference to a message or a call known — is
+before the run finishes, every reference to a message or a call known, a
+message id and a tool call id one id space as they are to an AG-UI client — is
 named in `$defs.streamRules`, which every reader applies because a schema
 cannot state it. A reader that meets an event it cannot validate, or a run that
 breaks a rule, stops interpreting the run there: it keeps what it read before,
@@ -553,7 +557,8 @@ writers last, as for the declarations above.
 stores or how a client lays a conversation out is each stack's own. What every
 producer and reader must agree on is how a stream reads, and
 `conversation-events.fixtures.json` fixes that: single events, valid or refused
-at a named field, and recorded runs, each valid one with what a reader resolves
+at a named field (by the schema, or by the event rule the fixture names), and
+recorded runs, each valid one with what a reader resolves
 from it (`reads`: the transcript items in order, the outcome, the open
 question, the memory fill, the usage, the run that follows, the failure), each
 invalid one with the rule it breaks and the event where it breaks it. The spec

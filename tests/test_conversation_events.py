@@ -6,12 +6,13 @@ names Terp adds where AG-UI leaves a name open. It has two kinds of reader, the
 producers that validate every event before they send it and the clients that read the
 stream, and neither imports the other, which is why the words live here.
 
-It is a vocabulary with readers and no catalog rule. The schema validates one event;
-the order of a run's events is held by the stream rules the schema names in
-``$defs.streamRules``, because a schema cannot state them. This suite is the spec's
-half: the schema's own discipline, a small reference reader that applies the stream
-rules and resolves what a reader shows from a valid run, and every fixture read as it
-says.
+It is a vocabulary with readers and no catalog rule. The schema validates one event,
+and what a single event keeps that a schema cannot state (an option value carried once,
+no control character anywhere in an open object) is named in ``$defs.eventRules``; the
+order of a run's events is held by the stream rules the schema names in
+``$defs.streamRules``. This suite is the spec's half: the schema's own discipline, a
+small reference reader of the event rules and the stream rules that resolves what a
+reader shows from a valid run, and every fixture read as it says.
 """
 
 from __future__ import annotations
@@ -33,6 +34,10 @@ _FIXTURES = json.loads(
 
 _DEFS = _SCHEMA["$defs"]
 _RULES = set(_DEFS["streamRules"]["enum"])
+_EVENT_RULES = set(_DEFS["eventRules"]["enum"])
+#: The controls prose may hold: a reply has line breaks and an argument may be indented.
+_PROSE = ("\t", "\n", "\r")
+_CONTROL = re.compile("[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f-\u009f]")
 _MAX_EVENT_BYTES = _DEFS["maxEventBytes"]["const"]
 _TERMINAL = {"RUN_FINISHED", "RUN_ERROR"}
 
@@ -59,6 +64,44 @@ def _size(event: object) -> int:
     return len(json.dumps(event, ensure_ascii=False, separators=(",", ":")).encode("utf-8"))
 
 
+def _strings(value: object, path: str):
+    """Every string in *value*, with the JSON path it sits at."""
+    if isinstance(value, str):
+        yield path, value
+    elif isinstance(value, dict):
+        for key, inner in value.items():
+            yield from _strings(inner, f"{path}.{key}")
+    elif isinstance(value, list):
+        for index, inner in enumerate(value):
+            yield from _strings(inner, f"{path}[{index}]")
+
+
+def _beyond_schema(event: object) -> list[tuple[str, str]]:
+    """``(field, rule)`` for every refusal of *event* a reader makes from ``$defs.eventRules``:
+    what the schema describes and its keyword subset cannot state."""
+    refused = [
+        (path, "strings-hold-no-controls")
+        for path, text in _strings(event, "$")
+        if _CONTROL.search(text)
+    ]
+    if isinstance(event, dict) and event.get("type") == "RUN_FINISHED":
+        outcome = event.get("outcome") if isinstance(event.get("outcome"), dict) else {}
+        for i, interrupt in enumerate(outcome.get("interrupts") or []):
+            terp = interrupt.get("metadata", {}).get("terp", {}) if isinstance(interrupt, dict) else {}
+            seen: set[object] = set()
+            for j, option in enumerate(terp.get("options") or []):
+                value = option.get("value") if isinstance(option, dict) else None
+                if value in seen:
+                    refused.append((f"$.outcome.interrupts[{i}].metadata.terp.options[{j}].value",
+                                    "option-values-are-distinct"))
+                seen.add(value)
+    return refused
+
+
+def _refused_fields(event: object) -> set[str]:
+    return {_field(message) for message in _errors(event)} | {field for field, _ in _beyond_schema(event)}
+
+
 # --------------------------------------------------------------------------- #
 # the reference reader                                                         #
 # --------------------------------------------------------------------------- #
@@ -70,7 +113,7 @@ def _problem(events: list[dict]) -> tuple[int, str, str | None] | None:
     if not events:
         return 0, "starts-with-run-started", None
     thread = run = None
-    kinds: dict[str, str] = {}  # messageId -> text | result | activity
+    kinds: dict[str, str] = {}  # messageId or toolCallId -> text | call | result | activity
     open_text: set[str] = set()
     calls: dict[str, str] = {}  # toolCallId -> open | ended | answered
     handoff = finished = False
@@ -80,6 +123,9 @@ def _problem(events: list[dict]) -> tuple[int, str, str | None] | None:
             return index, "events-are-valid", _field(errors[0])
         if _size(event) > _MAX_EVENT_BYTES:
             return index, "events-are-valid", "$"
+        beyond = _beyond_schema(event)
+        if beyond:
+            return index, "events-are-valid", beyond[0][0]
         kind = event["type"]
         if (index == 0) != (kind == "RUN_STARTED"):
             return index, "starts-with-run-started", None
@@ -110,9 +156,12 @@ def _problem(events: list[dict]) -> tuple[int, str, str | None] | None:
         elif kind == "TOOL_CALL_START":
             if event["toolCallId"] in calls:
                 return index, "tool-call-lifecycle", None
+            if event["toolCallId"] in kinds:
+                return index, "message-id-names-one-thing", None
             parent = event.get("parentMessageId")
             if parent is not None and kinds.get(parent) != "text":
                 return index, "references-are-known", None
+            kinds[event["toolCallId"]] = "call"
             calls[event["toolCallId"]] = "open"
         elif kind in {"TOOL_CALL_ARGS", "TOOL_CALL_END"}:
             if calls.get(event["toolCallId"]) != "open":
@@ -137,10 +186,11 @@ def _problem(events: list[dict]) -> tuple[int, str, str | None] | None:
                 for interrupt in event["outcome"].get("interrupts", [])
                 if "toolCallId" in interrupt
             }
-            if waiting - set(calls):
+            if any(calls.get(call) not in {"open", "ended"} for call in waiting):
                 return index, "references-are-known", None
-            unanswered = {call for call, state in calls.items() if state != "answered"}
-            if open_text or unanswered - waiting:
+            still_open = {call for call, state in calls.items() if state == "open"}
+            unanswered = {call for call, state in calls.items() if state == "ended"}
+            if open_text or still_open or unanswered - waiting:
                 return index, "closed-before-finish", None
             finished = True
         elif kind == "RUN_ERROR":
@@ -220,8 +270,6 @@ def _cases(section: str, expect: str) -> list[dict]:
 # the schema's own discipline                                                  #
 # --------------------------------------------------------------------------- #
 _CONTROLS = ("\u0000", "\u0007", "\u000a", "\u001b", "\u007f", "\u0085", "\u009b")
-#: The controls prose may hold: a reply has line breaks and an argument may be indented.
-_PROSE = ("\t", "\n", "\r")
 
 
 def test_the_schema_is_a_draft_2020_12_schema_inside_the_validator_subset() -> None:
@@ -258,8 +306,11 @@ def test_every_shape_and_every_field_says_what_it_means() -> None:
 
 
 def test_every_string_is_capped_and_refuses_control_characters() -> None:
-    """A stream is shown to people and kept as a transcript: every string has a cap, and
-    no control character reaches a reader except the line breaks and tabs of prose."""
+    """A stream is shown to people and kept as a transcript: every string the schema
+    types has a cap, and no control character reaches a reader except the line breaks
+    and tabs of prose. The strings inside the open objects (a form schema, a producer's
+    own content and value) are held by the strings-hold-no-controls event rule instead,
+    and the reader test below proves that rule reaches them."""
     strings = [(path, schema) for path, schema in _subschemas(_SCHEMA) if schema.get("type") == "string"]
     assert len(strings) >= 30
     prose = 0
@@ -299,6 +350,9 @@ def test_the_named_lists_are_sorted_described_and_coherent() -> None:
             assert values and values == sorted(values) and len(values) == len(set(values)), name
     for rule in _RULES:
         assert f"{rule}:" in _DEFS["streamRules"]["description"], f"{rule}: the rule is stated"
+    for rule in _EVENT_RULES:
+        assert f"{rule}:" in _DEFS["eventRules"]["description"], f"{rule}: the rule is stated"
+    assert "eventRules" in _DEFS["streamRules"]["description"], "events-are-valid names the event rules"
     question = _EVENTS["RUN_FINISHED"]["properties"]["outcome"]["properties"]["interrupts"]["items"]
     terp = question["properties"]["metadata"]["properties"]["terp"]
     assert terp["properties"]["input"]["enum"] == _DEFS["questionInputs"]["enum"]
@@ -364,7 +418,6 @@ def test_the_byte_cap_is_held_at_the_byte_and_not_at_the_character() -> None:
 
 
 
-
 def test_a_later_version_is_refused_rather_than_read() -> None:
     """A reader that does not know a version reads nothing from the stream: an unreadable
     stream is not an empty one, and guessing past it would act on words it cannot read."""
@@ -384,11 +437,17 @@ def test_a_valid_event_passes(case: dict) -> None:
 
 @pytest.mark.parametrize("case", _cases("events", "invalid"), ids=lambda case: case["id"])
 def test_an_invalid_event_is_refused_at_its_field(case: dict) -> None:
-    fields = {_field(message) for message in _errors(case["event"])}
+    fields = _refused_fields(case["event"])
     assert case["field"] in fields, (
         f"{case['id']} ({case['about']}): refused at {sorted(fields)}, the fixture says {case['field']}"
     )
     assert case["allowed"].strip(), f"{case['id']}: say what the field allows"
+    schema_alone = _errors(case["event"])
+    if case.get("beyondSchema"):
+        assert schema_alone == [], f"{case['id']}: marked beyond the schema, and the schema refuses it"
+        assert (case["field"], case["rule"]) in _beyond_schema(case["event"]), case["id"]
+    else:
+        assert schema_alone, f"{case['id']}: the schema alone must refuse it"
 
 
 @pytest.mark.parametrize("case", _cases("streams", "valid"), ids=lambda case: case["id"])
@@ -407,8 +466,11 @@ def test_the_fixtures_are_well_formed_and_cover_the_vocabulary() -> None:
     ids = [case["id"] for section in ("events", "streams") for case in _FIXTURES[section]]
     assert len(ids) == len(set(ids))
     for case in _FIXTURES["events"]:
-        keys = {"id", "expect", "about", "event"} | ({"field", "allowed"} if case["expect"] == "invalid" else set())
+        keys = {"id", "expect", "about", "event"}
+        if case["expect"] == "invalid":
+            keys |= {"field", "allowed"} | ({"beyondSchema", "rule"} if "beyondSchema" in case else set())
         assert set(case) == keys, case["id"]
+        assert case.get("rule", next(iter(_EVENT_RULES))) in _EVENT_RULES, case["id"]
     for case in _FIXTURES["streams"]:
         keys = {"id", "expect", "about", "events"}
         keys |= {"reads"} if case["expect"] == "valid" else {"at", "rule"} | ({"field"} if "field" in case else set())
@@ -421,6 +483,9 @@ def test_the_fixtures_are_well_formed_and_cover_the_vocabulary() -> None:
     streamed = {event["type"] for case in _cases("streams", "valid") for event in case["events"]}
     assert streamed == set(_EVENTS), "every event type appears in a valid stream"
     assert {case["rule"] for case in _cases("streams", "invalid")} == _RULES, "every stream rule is broken once"
+    assert {case["rule"] for case in _cases("events", "invalid") if "rule" in case} == _EVENT_RULES, (
+        "every event rule is broken once"
+    )
 
     terp_names = {event.get("activityType") or event.get("name") for event in valid_events} | {
         interrupt["reason"]

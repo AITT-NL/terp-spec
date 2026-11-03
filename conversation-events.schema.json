@@ -8,6 +8,13 @@
       "description": "The largest an event may be, in bytes of its compact JSON (no whitespace between tokens) encoded as UTF-8. A schema cannot count bytes, so every reader applies it: a producer never sends a larger event, and a reader stops at one, as events-are-valid says.",
       "const": 65536
     },
+    "eventRules": {
+      "description": "What a single event keeps that a schema cannot state, which every reader applies beside the schema. option-values-are-distinct: No two options of a terp.question carry the same value, whatever their labels. strings-hold-no-controls: No string anywhere in the event, the open objects included (an interrupt's responseSchema, a producer's own activity content and custom value), holds a C0 or C1 control character other than tab, line feed and carriage return.",
+      "enum": [
+        "option-values-are-distinct",
+        "strings-hold-no-controls"
+      ]
+    },
     "questionInputs": {
       "description": "How a terp.question is answered.",
       "enum": [
@@ -18,7 +25,7 @@
       ]
     },
     "streamRules": {
-      "description": "The order a run's events keep, which every reader applies. closed-before-finish: Before RUN_FINISHED every text message opened in the run has ended and every tool call has its result, except the call an interrupt of the outcome names, which waits for the answer; a call the producer could not finish gets a result with status error. RUN_ERROR is exempt: a reader reads what was still open as unfinished. ends-with-one-terminal: Exactly one terminal event, RUN_FINISHED or RUN_ERROR, and it is the last event of the run. events-are-valid: Every event validates against this schema and is at most maxEventBytes once serialized. A reader stops interpreting the run at the first event that is not, keeps what it read before it, and reads the run as failed. handoff-precedes-the-terminal: terp.handoff appears at most once, and only the terminal event may follow it. message-id-names-one-thing: A messageId names one thing in a run: a text message, one tool result, or one activity. A second ACTIVITY_SNAPSHOT for the same activity replaces its content. one-run: Every threadId and runId in the run equals the ones RUN_STARTED opened it with. references-are-known: A parentMessageId names a text message opened earlier in the run, and an interrupt's toolCallId names a tool call of the run. starts-with-run-started: The first event is RUN_STARTED, and RUN_STARTED appears nowhere else. text-message-lifecycle: A text message is opened once by TEXT_MESSAGE_START; TEXT_MESSAGE_CONTENT and TEXT_MESSAGE_END name a message that is open, and nothing names it after its end. tool-call-lifecycle: A tool call is opened once by TOOL_CALL_START; TOOL_CALL_ARGS and TOOL_CALL_END name a call that is open; TOOL_CALL_RESULT comes after the call's end, at most once.",
+      "description": "The order a run's events keep, which every reader applies. closed-before-finish: Before RUN_FINISHED every text message opened in the run has ended, every tool call has ended, and every tool call has its result except the one call an interrupt of the outcome names, which has ended and waits for the answer before it has one; a call the producer could not finish gets a result with status error. RUN_ERROR is exempt: a reader reads what was still open as unfinished. ends-with-one-terminal: Exactly one terminal event, RUN_FINISHED or RUN_ERROR, and it is the last event of the run. events-are-valid: Every event validates against this schema, is at most maxEventBytes once serialized, and keeps every rule in eventRules. A reader stops interpreting the run at the first event that does not, keeps what it read before it, and reads the run as failed. handoff-precedes-the-terminal: terp.handoff appears at most once, and only the terminal event may follow it. message-id-names-one-thing: A messageId or a toolCallId names one thing in a run: a text message, a tool call, one tool result, or one activity. The two are one id space, as they are to an AG-UI client, which shows a tool call without a parent message under its own id. A second ACTIVITY_SNAPSHOT for the same activity replaces its content. one-run: Every threadId and runId in the run equals the ones RUN_STARTED opened it with. references-are-known: A parentMessageId names a text message opened earlier in the run, and an interrupt's toolCallId names a tool call of the run that has ended and has no result yet: the one call the run waits on. starts-with-run-started: The first event is RUN_STARTED, and RUN_STARTED appears nowhere else. text-message-lifecycle: A text message is opened once by TEXT_MESSAGE_START; TEXT_MESSAGE_CONTENT and TEXT_MESSAGE_END name a message that is open, and nothing names it after its end. tool-call-lifecycle: A tool call is opened once by TOOL_CALL_START; TOOL_CALL_ARGS and TOOL_CALL_END name a call that is open; TOOL_CALL_RESULT comes after the call's end, at most once.",
       "enum": [
         "closed-before-finish",
         "ends-with-one-terminal",
@@ -104,7 +111,8 @@
       "timestamp": {
         "description": "When the producer created the event, in milliseconds since the Unix epoch. Optional, and nothing a reader does may depend on it: order is the order of the stream.",
         "type": "integer",
-        "minimum": 0
+        "minimum": 0,
+        "maximum": 9007199254740991
       },
       "threadId": {
         "description": "The conversation the run belongs to.",
@@ -182,7 +190,8 @@
         "timestamp": {
           "description": "When the producer created the event, in milliseconds since the Unix epoch. Optional, and nothing a reader does may depend on it: order is the order of the stream.",
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "maximum": 9007199254740991
         },
         "messageId": {
           "description": "Identifies the message.",
@@ -224,7 +233,8 @@
           "timestamp": {
             "description": "When the producer created the event, in milliseconds since the Unix epoch. Optional, and nothing a reader does may depend on it: order is the order of the stream.",
             "type": "integer",
-            "minimum": 0
+            "minimum": 0,
+            "maximum": 9007199254740991
           },
           "messageId": {
             "description": "The message this appends to.",
@@ -267,7 +277,8 @@
             "timestamp": {
               "description": "When the producer created the event, in milliseconds since the Unix epoch. Optional, and nothing a reader does may depend on it: order is the order of the stream.",
               "type": "integer",
-              "minimum": 0
+              "minimum": 0,
+              "maximum": 9007199254740991
             },
             "messageId": {
               "description": "The message this closes.",
@@ -305,7 +316,8 @@
               "timestamp": {
                 "description": "When the producer created the event, in milliseconds since the Unix epoch. Optional, and nothing a reader does may depend on it: order is the order of the stream.",
                 "type": "integer",
-                "minimum": 0
+                "minimum": 0,
+                "maximum": 9007199254740991
               },
               "toolCallId": {
                 "description": "Identifies the call.",
@@ -378,7 +390,8 @@
                 "timestamp": {
                   "description": "When the producer created the event, in milliseconds since the Unix epoch. Optional, and nothing a reader does may depend on it: order is the order of the stream.",
                   "type": "integer",
-                  "minimum": 0
+                  "minimum": 0,
+                  "maximum": 9007199254740991
                 },
                 "toolCallId": {
                   "description": "The call this appends to.",
@@ -421,7 +434,8 @@
                   "timestamp": {
                     "description": "When the producer created the event, in milliseconds since the Unix epoch. Optional, and nothing a reader does may depend on it: order is the order of the stream.",
                     "type": "integer",
-                    "minimum": 0
+                    "minimum": 0,
+                    "maximum": 9007199254740991
                   },
                   "toolCallId": {
                     "description": "The call this closes.",
@@ -460,7 +474,8 @@
                     "timestamp": {
                       "description": "When the producer created the event, in milliseconds since the Unix epoch. Optional, and nothing a reader does may depend on it: order is the order of the stream.",
                       "type": "integer",
-                      "minimum": 0
+                      "minimum": 0,
+                      "maximum": 9007199254740991
                     },
                     "messageId": {
                       "description": "Identifies the result.",
@@ -539,7 +554,8 @@
                       "timestamp": {
                         "description": "When the producer created the event, in milliseconds since the Unix epoch. Optional, and nothing a reader does may depend on it: order is the order of the stream.",
                         "type": "integer",
-                        "minimum": 0
+                        "minimum": 0,
+                        "maximum": 9007199254740991
                       },
                       "messageId": {
                         "description": "Identifies the activity.",
@@ -562,7 +578,7 @@
                         }
                       },
                       "content": {
-                        "description": "The activity's content; its shape is the activity type's.",
+                        "description": "The activity's content; its shape is the activity type's. Open for a producer's own type, so its strings are held by strings-hold-no-controls.",
                         "type": "object"
                       }
                     },
@@ -599,12 +615,14 @@
                             "before": {
                               "description": "Tokens in memory before the compaction.",
                               "type": "integer",
-                              "minimum": 0
+                              "minimum": 0,
+                              "maximum": 9007199254740991
                             },
                             "after": {
                               "description": "Tokens in memory after it.",
                               "type": "integer",
-                              "minimum": 0
+                              "minimum": 0,
+                              "maximum": 9007199254740991
                             }
                           }
                         }
@@ -639,7 +657,8 @@
                         "timestamp": {
                           "description": "When the producer created the event, in milliseconds since the Unix epoch. Optional, and nothing a reader does may depend on it: order is the order of the stream.",
                           "type": "integer",
-                          "minimum": 0
+                          "minimum": 0,
+                          "maximum": 9007199254740991
                         },
                         "name": {
                           "description": "The event's name.",
@@ -657,7 +676,7 @@
                           }
                         },
                         "value": {
-                          "description": "The event's value; its shape is the name's."
+                          "description": "The event's value; its shape is the name's. Open for a producer's own name, so its strings are held by strings-hold-no-controls."
                         }
                       },
                       "if": {
@@ -685,12 +704,14 @@
                               "usedTokens": {
                                 "description": "Tokens the next model call starts from.",
                                 "type": "integer",
-                                "minimum": 0
+                                "minimum": 0,
+                                "maximum": 9007199254740991
                               },
                               "windowTokens": {
                                 "description": "The model's context window. 0 when the producer does not know it, and a reader then shows tokens without a percentage.",
                                 "type": "integer",
-                                "minimum": 0
+                                "minimum": 0,
+                                "maximum": 9007199254740991
                               },
                               "model": {
                                 "description": "The model the measurement was taken on: the window belongs to it.",
@@ -762,7 +783,8 @@
                           "timestamp": {
                             "description": "When the producer created the event, in milliseconds since the Unix epoch. Optional, and nothing a reader does may depend on it: order is the order of the stream.",
                             "type": "integer",
-                            "minimum": 0
+                            "minimum": 0,
+                            "maximum": 9007199254740991
                           },
                           "threadId": {
                             "description": "The conversation the run belongs to.",
@@ -838,14 +860,14 @@
                                       "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}(?![\\s\\S])"
                                     },
                                     "responseSchema": {
-                                      "description": "A JSON Schema for the answer, offered to a generic AG-UI client that builds a form from it. Carried opaquely, as AG-UI carries it: a Terp reader renders from metadata.terp instead.",
+                                      "description": "A JSON Schema for the answer, offered to a generic AG-UI client that builds a form from it. Carried opaquely, as AG-UI carries it: a Terp reader renders from metadata.terp instead. Open, so its strings are held by strings-hold-no-controls rather than by a pattern.",
                                       "type": "object"
                                     },
                                     "expiresAt": {
                                       "description": "When the interrupt stops being answerable, as an ISO 8601 UTC instant.",
                                       "type": "string",
                                       "maxLength": 32,
-                                      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\\.[0-9]{1,6})?Z(?![\\s\\S])"
+                                      "pattern": "^[0-9]{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12][0-9]|3[01])T(?:[01][0-9]|2[0-3]):[0-5][0-9]:(?:[0-5][0-9]|60)(?:\\.[0-9]{1,6})?Z(?![\\s\\S])"
                                     },
                                     "metadata": {
                                       "description": "What a Terp reader needs to render the question. Required on a terp.question interrupt.",
@@ -885,7 +907,7 @@
                                                 ],
                                                 "properties": {
                                                   "value": {
-                                                    "description": "What the answer carries back to the run when this option is picked.",
+                                                    "description": "What the answer carries back to the run when this option is picked. Distinct across the options (option-values-are-distinct): two options carrying one value would leave the run unable to tell which was picked.",
                                                     "type": "string",
                                                     "maxLength": 200,
                                                     "pattern": "^[^\\u0000-\\u001F\\u007F-\\u009F]*[^\\s\\u0000-\\u001F\\u007F-\\u009F][^\\u0000-\\u001F\\u007F-\\u009F]*(?![\\s\\S])"
@@ -950,6 +972,17 @@
                                       "message",
                                       "metadata"
                                     ]
+                                  },
+                                  "else": {
+                                    "description": "Under any other reason the metadata is not Terp's to read: a reader shows the message and answers nothing, so the question's form is refused there.",
+                                    "properties": {
+                                      "metadata": {
+                                        "description": "Nothing: metadata.terp belongs to terp.question.",
+                                        "type": "object",
+                                        "additionalProperties": false,
+                                        "properties": {}
+                                      }
+                                    }
                                   }
                                 }
                               }
@@ -1007,32 +1040,38 @@
                                 "inputTokens": {
                                   "description": "Every prompt token the calls were charged for.",
                                   "type": "integer",
-                                  "minimum": 0
+                                  "minimum": 0,
+                                  "maximum": 9007199254740991
                                 },
                                 "outputTokens": {
                                   "description": "Every generated token, reasoning included.",
                                   "type": "integer",
-                                  "minimum": 0
+                                  "minimum": 0,
+                                  "maximum": 9007199254740991
                                 },
                                 "totalTokens": {
                                   "description": "inputTokens plus outputTokens.",
                                   "type": "integer",
-                                  "minimum": 0
+                                  "minimum": 0,
+                                  "maximum": 9007199254740991
                                 },
                                 "reasoningTokens": {
                                   "description": "Output tokens spent on reasoning; part of outputTokens.",
                                   "type": "integer",
-                                  "minimum": 0
+                                  "minimum": 0,
+                                  "maximum": 9007199254740991
                                 },
                                 "cachedInputTokens": {
                                   "description": "Input tokens read from a provider cache; part of inputTokens.",
                                   "type": "integer",
-                                  "minimum": 0
+                                  "minimum": 0,
+                                  "maximum": 9007199254740991
                                 },
                                 "cacheWriteInputTokens": {
                                   "description": "Input tokens written to a provider cache; part of inputTokens.",
                                   "type": "integer",
-                                  "minimum": 0
+                                  "minimum": 0,
+                                  "maximum": 9007199254740991
                                 }
                               }
                             }
@@ -1120,7 +1159,8 @@
                             "timestamp": {
                               "description": "When the producer created the event, in milliseconds since the Unix epoch. Optional, and nothing a reader does may depend on it: order is the order of the stream.",
                               "type": "integer",
-                              "minimum": 0
+                              "minimum": 0,
+                              "maximum": 9007199254740991
                             },
                             "message": {
                               "description": "What went wrong, for a person to read. Never the text of an exception: a producer writes the sentence.",
@@ -1158,32 +1198,38 @@
                                   "inputTokens": {
                                     "description": "Every prompt token the calls were charged for.",
                                     "type": "integer",
-                                    "minimum": 0
+                                    "minimum": 0,
+                                    "maximum": 9007199254740991
                                   },
                                   "outputTokens": {
                                     "description": "Every generated token, reasoning included.",
                                     "type": "integer",
-                                    "minimum": 0
+                                    "minimum": 0,
+                                    "maximum": 9007199254740991
                                   },
                                   "totalTokens": {
                                     "description": "inputTokens plus outputTokens.",
                                     "type": "integer",
-                                    "minimum": 0
+                                    "minimum": 0,
+                                    "maximum": 9007199254740991
                                   },
                                   "reasoningTokens": {
                                     "description": "Output tokens spent on reasoning; part of outputTokens.",
                                     "type": "integer",
-                                    "minimum": 0
+                                    "minimum": 0,
+                                    "maximum": 9007199254740991
                                   },
                                   "cachedInputTokens": {
                                     "description": "Input tokens read from a provider cache; part of inputTokens.",
                                     "type": "integer",
-                                    "minimum": 0
+                                    "minimum": 0,
+                                    "maximum": 9007199254740991
                                   },
                                   "cacheWriteInputTokens": {
                                     "description": "Input tokens written to a provider cache; part of inputTokens.",
                                     "type": "integer",
-                                    "minimum": 0
+                                    "minimum": 0,
+                                    "maximum": 9007199254740991
                                   }
                                 }
                               }

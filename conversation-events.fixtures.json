@@ -1,5 +1,5 @@
 {
-  "_comment": "The shared fixtures for conversation-events.schema.json, so every producer and every reader of a conversation stream runs the same ones. 'events' are single events: a valid one passes the schema, an invalid one names the 'field' the refusal is about and what that field 'allowed'. 'streams' are recorded runs: a valid one carries 'reads', what every reader must resolve from it, and an invalid one names the stream 'rule' it breaks and the index of the event it breaks it 'at' (the length of the stream when the end is what is missing), with the 'field' when the rule is events-are-valid. Every id, name and figure is invented.",
+  "_comment": "The shared fixtures for conversation-events.schema.json, so every producer and every reader of a conversation stream runs the same ones. 'events' are single events: a valid one passes the schema, an invalid one names the 'field' the refusal is about and what that field 'allowed'; one marked 'beyondSchema' passes the schema and is refused by the event 'rule' it names, which every reader applies beside the schema. 'streams' are recorded runs: a valid one carries 'reads', what every reader must resolve from it, and an invalid one names the stream 'rule' it breaks and the index of the event it breaks it 'at' (the length of the stream when the end is what is missing), with the 'field' when the rule is events-are-valid. Every id, name and figure is invented.",
   "events": [
     {
       "id": "event-valid-01",
@@ -1138,7 +1138,7 @@
     {
       "id": "event-invalid-47",
       "expect": "invalid",
-      "about": "an interrupt outcome with nothing to answer",
+      "about": "an interrupt outcome with no interrupts at all",
       "event": {
         "type": "RUN_FINISHED",
         "threadId": "conv-1",
@@ -1152,6 +1152,119 @@
     },
     {
       "id": "event-invalid-48",
+      "expect": "invalid",
+      "about": "an interrupt outcome with nothing to answer",
+      "event": {
+        "type": "RUN_FINISHED",
+        "threadId": "conv-1",
+        "runId": "run-1",
+        "outcome": {
+          "type": "interrupt",
+          "interrupts": []
+        }
+      },
+      "field": "$.outcome.interrupts",
+      "allowed": "exactly one interrupt"
+    },
+    {
+      "id": "event-invalid-49",
+      "expect": "invalid",
+      "about": "a question's form under a producer's own reason, which a Terp reader would act on",
+      "event": {
+        "type": "RUN_FINISHED",
+        "threadId": "conv-1",
+        "runId": "run-1",
+        "outcome": {
+          "type": "interrupt",
+          "interrupts": [
+            {
+              "id": "q-1",
+              "reason": "example.own",
+              "message": "Which order do you mean?",
+              "metadata": {
+                "terp": {
+                  "input": "buttons",
+                  "options": [
+                    {
+                      "value": "42",
+                      "label": "Order 42"
+                    },
+                    {
+                      "value": "43",
+                      "label": "Order 43"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      },
+      "field": "$.outcome.interrupts[0].metadata.terp",
+      "allowed": "no metadata under a reason outside terp."
+    },
+    {
+      "id": "event-invalid-50",
+      "expect": "invalid",
+      "about": "an expiry on the 99th of a month",
+      "event": {
+        "type": "RUN_FINISHED",
+        "threadId": "conv-1",
+        "runId": "run-1",
+        "outcome": {
+          "type": "interrupt",
+          "interrupts": [
+            {
+              "id": "q-1",
+              "reason": "terp.question",
+              "message": "Which order do you mean?",
+              "metadata": {
+                "terp": {
+                  "input": "text"
+                }
+              },
+              "expiresAt": "2026-13-99T25:61:61Z"
+            }
+          ]
+        }
+      },
+      "field": "$.outcome.interrupts[0].expiresAt",
+      "allowed": "a real instant"
+    },
+    {
+      "id": "event-invalid-51",
+      "expect": "invalid",
+      "about": "a token count no JSON number survives a round trip in",
+      "event": {
+        "type": "RUN_FINISHED",
+        "threadId": "conv-1",
+        "runId": "run-1",
+        "outcome": {
+          "type": "success"
+        },
+        "usage": [
+          {
+            "inputTokens": 9007199254740992
+          }
+        ]
+      },
+      "field": "$.usage[0].inputTokens",
+      "allowed": "at most 9007199254740991"
+    },
+    {
+      "id": "event-invalid-52",
+      "expect": "invalid",
+      "about": "a timestamp no JSON number survives a round trip in",
+      "event": {
+        "type": "TEXT_MESSAGE_END",
+        "messageId": "msg-1",
+        "timestamp": 9007199254740992
+      },
+      "field": "$.timestamp",
+      "allowed": "at most 9007199254740991"
+    },
+    {
+      "id": "event-invalid-53",
       "expect": "invalid",
       "about": "two questions at once",
       "event": {
@@ -1188,7 +1301,7 @@
       "allowed": "exactly one interrupt"
     },
     {
-      "id": "event-invalid-49",
+      "id": "event-invalid-54",
       "expect": "invalid",
       "about": "a success that still waits for something",
       "event": {
@@ -1215,7 +1328,7 @@
       "allowed": "nothing beside the type"
     },
     {
-      "id": "event-invalid-50",
+      "id": "event-invalid-55",
       "expect": "invalid",
       "about": "frontend tool calls left for the client, which the profile does not have",
       "event": {
@@ -1233,7 +1346,7 @@
       "allowed": "nothing beside the type"
     },
     {
-      "id": "event-invalid-51",
+      "id": "event-invalid-56",
       "expect": "invalid",
       "about": "a Terp question that does not say how it is answered",
       "event": {
@@ -1255,7 +1368,7 @@
       "allowed": "metadata.terp.input"
     },
     {
-      "id": "event-invalid-52",
+      "id": "event-invalid-57",
       "expect": "invalid",
       "about": "a Terp question with no question in it",
       "event": {
@@ -1281,7 +1394,7 @@
       "allowed": "the question as the person reads it"
     },
     {
-      "id": "event-invalid-53",
+      "id": "event-invalid-58",
       "expect": "invalid",
       "about": "a secret asked for in a conversation, where the answer would be stored as a message",
       "event": {
@@ -1308,7 +1421,7 @@
       "allowed": "buttons, choice, choices or text"
     },
     {
-      "id": "event-invalid-54",
+      "id": "event-invalid-59",
       "expect": "invalid",
       "about": "a choice with nothing to choose from",
       "event": {
@@ -1335,7 +1448,7 @@
       "allowed": "at least one option"
     },
     {
-      "id": "event-invalid-55",
+      "id": "event-invalid-60",
       "expect": "invalid",
       "about": "a written answer offered options",
       "event": {
@@ -1372,7 +1485,7 @@
       "allowed": "no options for a text question"
     },
     {
-      "id": "event-invalid-56",
+      "id": "event-invalid-61",
       "expect": "invalid",
       "about": "the same option twice",
       "event": {
@@ -1409,7 +1522,7 @@
       "allowed": "distinct options"
     },
     {
-      "id": "event-invalid-57",
+      "id": "event-invalid-62",
       "expect": "invalid",
       "about": "an interrupt reason in terp. the vocabulary does not define",
       "event": {
@@ -1436,7 +1549,7 @@
       "allowed": "terp.question, or a reason outside terp."
     },
     {
-      "id": "event-invalid-58",
+      "id": "event-invalid-63",
       "expect": "invalid",
       "about": "an expiry with an offset instead of UTC",
       "event": {
@@ -1464,7 +1577,7 @@
       "allowed": "an ISO 8601 instant in UTC, ending in Z"
     },
     {
-      "id": "event-invalid-59",
+      "id": "event-invalid-64",
       "expect": "invalid",
       "about": "a subagent's interrupt, which the profile does not carry",
       "event": {
@@ -1492,7 +1605,7 @@
       "allowed": "no subagents in this version"
     },
     {
-      "id": "event-invalid-60",
+      "id": "event-invalid-65",
       "expect": "invalid",
       "about": "steered, on a run that completed",
       "event": {
@@ -1512,7 +1625,7 @@
       "allowed": "cancelled, for a steered run"
     },
     {
-      "id": "event-invalid-61",
+      "id": "event-invalid-66",
       "expect": "invalid",
       "about": "a reason of the producer's own",
       "event": {
@@ -1532,7 +1645,7 @@
       "allowed": "steered"
     },
     {
-      "id": "event-invalid-62",
+      "id": "event-invalid-67",
       "expect": "invalid",
       "about": "usage below zero",
       "event": {
@@ -1552,7 +1665,7 @@
       "allowed": "a whole number, zero or more"
     },
     {
-      "id": "event-invalid-63",
+      "id": "event-invalid-68",
       "expect": "invalid",
       "about": "usage that carries the prompt",
       "event": {
@@ -1573,7 +1686,7 @@
       "allowed": "counts, a provider and a model: never content"
     },
     {
-      "id": "event-invalid-64",
+      "id": "event-invalid-69",
       "expect": "invalid",
       "about": "a run's return value, which the profile does not carry",
       "event": {
@@ -1591,7 +1704,7 @@
       "allowed": "no result"
     },
     {
-      "id": "event-invalid-65",
+      "id": "event-invalid-70",
       "expect": "invalid",
       "about": "a failure with no message",
       "event": {
@@ -1602,7 +1715,7 @@
       "allowed": "one sentence for a person"
     },
     {
-      "id": "event-invalid-66",
+      "id": "event-invalid-71",
       "expect": "invalid",
       "about": "a failure that is a stack trace",
       "event": {
@@ -1613,7 +1726,7 @@
       "allowed": "one line, written by the producer"
     },
     {
-      "id": "event-invalid-67",
+      "id": "event-invalid-72",
       "expect": "invalid",
       "about": "a failure code in capitals",
       "event": {
@@ -1625,7 +1738,7 @@
       "allowed": "lower-case words joined by . or _"
     },
     {
-      "id": "event-invalid-68",
+      "id": "event-invalid-73",
       "expect": "invalid",
       "about": "a failure that names the conversation, which AG-UI's RUN_ERROR does not carry",
       "event": {
@@ -1637,7 +1750,7 @@
       "allowed": "message, code and usage"
     },
     {
-      "id": "event-invalid-69",
+      "id": "event-invalid-74",
       "expect": "invalid",
       "about": "a timestamp before the epoch",
       "event": {
@@ -1649,7 +1762,7 @@
       "allowed": "milliseconds since the epoch, zero or more"
     },
     {
-      "id": "event-invalid-70",
+      "id": "event-invalid-75",
       "expect": "invalid",
       "about": "a timestamp with a fraction",
       "event": {
@@ -1661,7 +1774,7 @@
       "allowed": "a whole number of milliseconds"
     },
     {
-      "id": "event-invalid-71",
+      "id": "event-invalid-76",
       "expect": "invalid",
       "about": "a timestamp written as true",
       "event": {
@@ -1671,6 +1784,116 @@
       },
       "field": "$.timestamp",
       "allowed": "a whole number"
+    },
+    {
+      "id": "event-invalid-77",
+      "expect": "invalid",
+      "about": "two options carrying one value under different labels",
+      "event": {
+        "type": "RUN_FINISHED",
+        "threadId": "conv-1",
+        "runId": "run-1",
+        "outcome": {
+          "type": "interrupt",
+          "interrupts": [
+            {
+              "id": "q-1",
+              "reason": "terp.question",
+              "message": "Which order do you mean?",
+              "metadata": {
+                "terp": {
+                  "input": "buttons",
+                  "options": [
+                    {
+                      "value": "a",
+                      "label": "Yes"
+                    },
+                    {
+                      "value": "a",
+                      "label": "No"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      },
+      "field": "$.outcome.interrupts[0].metadata.terp.options[1].value",
+      "allowed": "a value no other option carries",
+      "beyondSchema": true,
+      "rule": "option-values-are-distinct"
+    },
+    {
+      "id": "event-invalid-78",
+      "expect": "invalid",
+      "about": "a form schema for generic clients with a terminal escape in a title",
+      "event": {
+        "type": "RUN_FINISHED",
+        "threadId": "conv-1",
+        "runId": "run-1",
+        "outcome": {
+          "type": "interrupt",
+          "interrupts": [
+            {
+              "id": "q-1",
+              "reason": "terp.question",
+              "message": "Which order do you mean?",
+              "metadata": {
+                "terp": {
+                  "input": "text"
+                }
+              },
+              "responseSchema": {
+                "type": "string",
+                "title": "\u001b[31mred"
+              }
+            }
+          ]
+        }
+      },
+      "field": "$.outcome.interrupts[0].responseSchema.title",
+      "allowed": "text without control characters",
+      "beyondSchema": true,
+      "rule": "strings-hold-no-controls"
+    },
+    {
+      "id": "event-invalid-79",
+      "expect": "invalid",
+      "about": "a producer's own activity whose content carries a NUL",
+      "event": {
+        "type": "ACTIVITY_SNAPSHOT",
+        "messageId": "act-1",
+        "activityType": "example.notice",
+        "content": {
+          "note": "x\u0000y"
+        }
+      },
+      "field": "$.content.note",
+      "allowed": "text without control characters",
+      "beyondSchema": true,
+      "rule": "strings-hold-no-controls"
+    },
+    {
+      "id": "event-invalid-80",
+      "expect": "invalid",
+      "about": "a producer's own custom value with a C1 control deep inside",
+      "event": {
+        "type": "CUSTOM",
+        "name": "example.trace",
+        "value": [
+          {
+            "span": [
+              "a",
+              "b\u0085c"
+            ]
+          }
+        ]
+      },
+      "field": "$.value[0].span[1]",
+      "allowed": "text without control characters",
+      "beyondSchema": true,
+      "rule": "strings-hold-no-controls"
     }
   ],
   "streams": [
@@ -3599,6 +3822,238 @@
     {
       "id": "stream-invalid-26",
       "expect": "invalid",
+      "about": "a run that waits on a call whose arguments never ended",
+      "events": [
+        {
+          "type": "RUN_STARTED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "protocolVersion": "1.0",
+          "metadata": {
+            "terp": {
+              "schemaVersion": 1
+            }
+          }
+        },
+        {
+          "type": "TOOL_CALL_START",
+          "toolCallId": "call-1",
+          "toolCallName": "delete_order"
+        },
+        {
+          "type": "RUN_FINISHED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "outcome": {
+            "type": "interrupt",
+            "interrupts": [
+              {
+                "id": "ap-1",
+                "reason": "example.approval",
+                "toolCallId": "call-1"
+              }
+            ]
+          }
+        }
+      ],
+      "at": 2,
+      "rule": "closed-before-finish"
+    },
+    {
+      "id": "stream-invalid-27",
+      "expect": "invalid",
+      "about": "a run that waits on a call that already has its result",
+      "events": [
+        {
+          "type": "RUN_STARTED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "protocolVersion": "1.0",
+          "metadata": {
+            "terp": {
+              "schemaVersion": 1
+            }
+          }
+        },
+        {
+          "type": "TOOL_CALL_START",
+          "toolCallId": "call-1",
+          "toolCallName": "delete_order"
+        },
+        {
+          "type": "TOOL_CALL_END",
+          "toolCallId": "call-1"
+        },
+        {
+          "type": "TOOL_CALL_RESULT",
+          "messageId": "res-1",
+          "toolCallId": "call-1",
+          "content": "deleted"
+        },
+        {
+          "type": "RUN_FINISHED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "outcome": {
+            "type": "interrupt",
+            "interrupts": [
+              {
+                "id": "ap-1",
+                "reason": "example.approval",
+                "toolCallId": "call-1"
+              }
+            ]
+          }
+        }
+      ],
+      "at": 4,
+      "rule": "references-are-known"
+    },
+    {
+      "id": "stream-invalid-28",
+      "expect": "invalid",
+      "about": "a tool call under a text message's id",
+      "events": [
+        {
+          "type": "RUN_STARTED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "protocolVersion": "1.0",
+          "metadata": {
+            "terp": {
+              "schemaVersion": 1
+            }
+          }
+        },
+        {
+          "type": "TEXT_MESSAGE_START",
+          "messageId": "msg-1",
+          "role": "assistant"
+        },
+        {
+          "type": "TEXT_MESSAGE_END",
+          "messageId": "msg-1"
+        },
+        {
+          "type": "TOOL_CALL_START",
+          "toolCallId": "msg-1",
+          "toolCallName": "lookup_order"
+        },
+        {
+          "type": "TOOL_CALL_END",
+          "toolCallId": "msg-1"
+        },
+        {
+          "type": "TOOL_CALL_RESULT",
+          "messageId": "res-1",
+          "toolCallId": "msg-1",
+          "content": "ok"
+        },
+        {
+          "type": "RUN_FINISHED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "outcome": {
+            "type": "success"
+          }
+        }
+      ],
+      "at": 3,
+      "rule": "message-id-names-one-thing"
+    },
+    {
+      "id": "stream-invalid-29",
+      "expect": "invalid",
+      "about": "an activity under a tool call's id",
+      "events": [
+        {
+          "type": "RUN_STARTED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "protocolVersion": "1.0",
+          "metadata": {
+            "terp": {
+              "schemaVersion": 1
+            }
+          }
+        },
+        {
+          "type": "TOOL_CALL_START",
+          "toolCallId": "call-1",
+          "toolCallName": "a"
+        },
+        {
+          "type": "TOOL_CALL_END",
+          "toolCallId": "call-1"
+        },
+        {
+          "type": "TOOL_CALL_RESULT",
+          "messageId": "res-1",
+          "toolCallId": "call-1",
+          "content": "ok"
+        },
+        {
+          "type": "ACTIVITY_SNAPSHOT",
+          "messageId": "call-1",
+          "activityType": "terp.compaction",
+          "content": {
+            "trigger": "auto",
+            "before": 182000,
+            "after": 41000
+          }
+        },
+        {
+          "type": "RUN_FINISHED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "outcome": {
+            "type": "success"
+          }
+        }
+      ],
+      "at": 4,
+      "rule": "message-id-names-one-thing"
+    },
+    {
+      "id": "stream-invalid-30",
+      "expect": "invalid",
+      "about": "an event the schema accepts and an event rule refuses, inside a valid run",
+      "events": [
+        {
+          "type": "RUN_STARTED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "protocolVersion": "1.0",
+          "metadata": {
+            "terp": {
+              "schemaVersion": 1
+            }
+          }
+        },
+        {
+          "type": "ACTIVITY_SNAPSHOT",
+          "messageId": "act-1",
+          "activityType": "example.notice",
+          "content": {
+            "note": "x\u0000y"
+          }
+        },
+        {
+          "type": "RUN_FINISHED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "outcome": {
+            "type": "success"
+          }
+        }
+      ],
+      "at": 1,
+      "rule": "events-are-valid",
+      "field": "$.content.note"
+    },
+    {
+      "id": "stream-invalid-31",
+      "expect": "invalid",
       "about": "an event the schema refuses, inside a valid run",
       "events": [
         {
@@ -3640,7 +4095,7 @@
       "field": "$.delta"
     },
     {
-      "id": "stream-invalid-27",
+      "id": "stream-invalid-32",
       "expect": "invalid",
       "about": "an opening from a later version, which a reader reads nothing from",
       "events": [

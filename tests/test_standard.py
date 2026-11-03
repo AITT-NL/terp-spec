@@ -68,7 +68,7 @@ def _validate(instance: object, schema: dict, path: str) -> list[str]:
     """Validate *instance* against the JSON Schema subset the spec's schemas use.
 
     Deliberately minimal so the spec stays dependency-free: type / enum / const /
-    pattern / minLength / maxLength / minimum / exclusiveMinimum / minItems / maxItems
+    pattern / minLength / maxLength / minimum / maximum / exclusiveMinimum / minItems / maxItems
     / uniqueItems / required / dependentRequired / properties / patternProperties /
     additionalProperties / items / if-then-else, with ``$defs`` and ``default`` read as
     annotations. An unknown constraint keyword fails loudly rather than passing
@@ -81,7 +81,7 @@ def _validate(instance: object, schema: dict, path: str) -> list[str]:
     """
     _KNOWN = {
         "$schema", "$id", "$defs", "title", "description", "default",  # annotations
-        "type", "enum", "const", "pattern", "minLength", "maxLength", "minimum",
+        "type", "enum", "const", "pattern", "minLength", "maxLength", "minimum", "maximum",
         "exclusiveMinimum", "minItems", "maxItems", "uniqueItems", "required",
         "dependentRequired", "properties", "patternProperties", "additionalProperties",
         "items", "if", "then", "else",
@@ -162,6 +162,8 @@ def _validate(instance: object, schema: dict, path: str) -> list[str]:
     elif is_number:
         if instance < schema.get("minimum", instance):
             errors.append(f"{path}: below minimum {schema['minimum']}")
+        if instance > schema.get("maximum", instance):
+            errors.append(f"{path}: above maximum {schema['maximum']}")
         if "exclusiveMinimum" in schema and instance <= schema["exclusiveMinimum"]:
             errors.append(f"{path}: must be above {schema['exclusiveMinimum']}")
     if "if" in schema:
