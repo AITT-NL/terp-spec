@@ -539,8 +539,8 @@ behind a Terp producer. The profile says three things AG-UI leaves open:
 one event. What one event keeps that a schema cannot state is named in
 `$defs.eventRules`: an event nests no deeper than `maxEventDepth`, measured
 without recursion before anything walks it, no two options of a question carry
-one value, and no string anywhere in the event, the open objects included, holds
-a control character.
+one value, and no string anywhere in the event, its object keys and the open
+objects included, holds a control character.
 The order a run keeps — opened by `RUN_STARTED`, closed by exactly one terminal
 event, every text message and tool call opened before it is used and closed
 before the run finishes, every reference to a message or a call known, a

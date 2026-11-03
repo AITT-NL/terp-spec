@@ -2462,6 +2462,54 @@
       "allowed": "at most maxEventDepth (64) levels of objects and arrays",
       "beyondSchema": true,
       "rule": "nesting-is-bounded"
+    },
+    {
+      "id": "event-invalid-84",
+      "expect": "invalid",
+      "about": "a producer's own custom value with a control character in a key, not a value",
+      "event": {
+        "type": "CUSTOM",
+        "name": "example.note",
+        "value": {
+          "a\u0007b": 1
+        }
+      },
+      "field": "$.value.a\u0007b",
+      "allowed": "text without control characters, in a key as in a value",
+      "beyondSchema": true,
+      "rule": "strings-hold-no-controls"
+    },
+    {
+      "id": "event-invalid-85",
+      "expect": "invalid",
+      "about": "a form schema for generic clients that names a property with an escape character",
+      "event": {
+        "type": "RUN_FINISHED",
+        "threadId": "conv-1",
+        "runId": "run-1",
+        "outcome": {
+          "type": "interrupt",
+          "interrupts": [
+            {
+              "id": "ap-1",
+              "reason": "example.approval",
+              "message": "May I go on?",
+              "responseSchema": {
+                "type": "object",
+                "properties": {
+                  "na\u001bme": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "field": "$.outcome.interrupts[0].responseSchema.properties.na\u001bme",
+      "allowed": "text without control characters, in a key as in a value",
+      "beyondSchema": true,
+      "rule": "strings-hold-no-controls"
     }
   ],
   "streams": [

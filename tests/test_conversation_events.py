@@ -87,15 +87,17 @@ def _size(event: object) -> int:
 
 
 def _strings(event: object):
-    """Every string in *event*, with the JSON path it sits at, in document order. Walked
-    without recursion, as every walk of an event is."""
+    """Every string in *event*, object keys included, with the JSON path it sits at, in
+    document order: a key at the path of the member it names, just before its value.
+    Walked without recursion, as every walk of an event is."""
     stack: list[tuple[str, object]] = [("$", event)]
     while stack:
         path, value = stack.pop()
         if isinstance(value, str):
             yield path, value
         elif isinstance(value, dict):
-            stack.extend((f"{path}.{key}", inner) for key, inner in reversed(value.items()))
+            for key, inner in reversed(value.items()):
+                stack += [(f"{path}.{key}", inner), (f"{path}.{key}", key)]
         elif isinstance(value, list):
             stack.extend((f"{path}[{index}]", value[index]) for index in reversed(range(len(value))))
 
