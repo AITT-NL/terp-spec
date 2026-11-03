@@ -60,8 +60,12 @@ def _errors(event: object) -> list[str]:
 
 
 def _size(event: object) -> int:
-    """An event's size as the cap counts it: compact JSON, UTF-8."""
-    return len(json.dumps(event, ensure_ascii=False, separators=(",", ":")).encode("utf-8"))
+    """An event's size as the cap counts it: compact JSON, UTF-8. An event UTF-8 cannot
+    carry (a lone surrogate) is past every cap: no serialization of it exists to read."""
+    try:
+        return len(json.dumps(event, ensure_ascii=False, separators=(",", ":")).encode("utf-8"))
+    except UnicodeEncodeError:
+        return _MAX_EVENT_BYTES + 1
 
 
 def _strings(value: object, path: str):
@@ -416,6 +420,14 @@ def test_the_byte_cap_is_held_at_the_byte_and_not_at_the_character() -> None:
     assert _problem(too_big) == (2, "events-are-valid", "$")
     assert _problem(fits) == (3, "ends-with-one-terminal", None)
 
+
+
+def test_an_event_utf8_cannot_carry_is_refused_rather_than_crashing_the_reader() -> None:
+    """A lone surrogate is legal JSON syntax and no UTF-8 text: a reader that tried to
+    size it would raise in the middle of a run instead of ending the reading."""
+    events = [_opening(), {"type": "TEXT_MESSAGE_START", "messageId": "m", "role": "assistant"},
+              {"type": "TEXT_MESSAGE_CONTENT", "messageId": "m", "delta": "a\udcffb"}]
+    assert _problem(events) == (2, "events-are-valid", "$")
 
 
 def test_a_later_version_is_refused_rather_than_read() -> None:
