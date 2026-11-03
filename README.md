@@ -519,7 +519,8 @@ behind a Terp producer. The profile says three things AG-UI leaves open:
   closed, every string is capped and refuses control characters (prose keeps
   its tabs and line breaks), an outcome is always stated, an interrupt outcome
   carries exactly one interrupt because a conversation has at most one open
-  question, and an event is at most `maxEventBytes` of compact UTF-8 JSON.
+  question, and an event is at most `maxEventBytes` of compact UTF-8 JSON and
+  `maxEventDepth` levels of objects and arrays.
 - **What Terp adds where AG-UI leaves a name open** — `terp.compaction` as an
   activity type; `terp.context` (how full the assistant's memory is) and
   `terp.handoff` (another run follows, and which one when the producer knows)
@@ -534,10 +535,12 @@ behind a Terp producer. The profile says three things AG-UI leaves open:
 | under `terp.` | reads it as this vocabulary says, and refuses one the vocabulary does not define: the namespace is closed |
 | any other | is the producer's own; a reader that does not know it shows nothing for it and acts on nothing |
 
-**One event, one schema and two rules; a run, ten rules.** The schema validates
+**One event, one schema and three rules; a run, ten rules.** The schema validates
 one event. What one event keeps that a schema cannot state is named in
-`$defs.eventRules`: no two options of a question carry one value, and no string
-anywhere in the event, the open objects included, holds a control character.
+`$defs.eventRules`: an event nests no deeper than `maxEventDepth`, measured
+without recursion before anything walks it, no two options of a question carry
+one value, and no string anywhere in the event, the open objects included, holds
+a control character.
 The order a run keeps — opened by `RUN_STARTED`, closed by exactly one terminal
 event, every text message and tool call opened before it is used and closed
 before the run finishes, every reference to a message or a call known, a

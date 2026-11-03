@@ -45,9 +45,12 @@ against an earlier version reads this file to see exactly what changed since.
   round trip in, as AG-UI bounds them. An event is at most 64 KiB of compact UTF-8 JSON, which
   a schema cannot count and every reader applies.
 
-  A schema validates one event, and what one event keeps that a schema cannot state is two
-  named **event rules** in `$defs.eventRules`: no two options of a question carry one value,
-  and no string anywhere in the event, the open objects included, holds a control character.
+  A schema validates one event, and what one event keeps that a schema cannot state is three
+  named **event rules** in `$defs.eventRules`: an event nests at most `maxEventDepth` (64)
+  levels of objects and arrays, which a reader measures without recursion before anything
+  walks the event, so no event under the byte cap can exhaust a reader's stack; no two
+  options of a question carry one value; and no string anywhere in the event, the open
+  objects included, holds a control character.
   A run keeps an order a schema cannot state either. That order is ten named **stream rules**
   in `$defs.streamRules` (opened once, closed once, everything used after it is opened and
   closed before the run finishes, every reference known, a message id and a tool call id one
@@ -57,8 +60,8 @@ against an earlier version reads this file to see exactly what changed since.
   nothing from the run, as the declarations' readers refuse a version they do not know.
 
   A vocabulary with readers and no catalog rule, so `REFERENCE_SHA` did not have to move. The
-  fixtures hold 26 valid and 80 refused events (four of them refused by an event rule the
-  schema alone passes) and 43 recorded runs, each valid run with what a reader resolves
+  fixtures hold 27 valid and 83 refused events (seven of them refused by an event rule the
+  schema alone passes) and 44 recorded runs, each valid run with what a reader resolves
   from it and each invalid one with the rule it breaks and where, and the spec suite reads
   every one with a reference reader. The list of vocabularies no rule
   realises, by name, now holds it beside the development-loop declaration.

@@ -454,6 +454,142 @@
       }
     },
     {
+      "id": "event-valid-27",
+      "expect": "valid",
+      "about": "a producer's own value nested exactly to maxEventDepth: the event is level 1, and each object inside another one more",
+      "event": {
+        "type": "CUSTOM",
+        "name": "example.tree",
+        "value": {
+          "child": {
+            "child": {
+              "child": {
+                "child": {
+                  "child": {
+                    "child": {
+                      "child": {
+                        "child": {
+                          "child": {
+                            "child": {
+                              "child": {
+                                "child": {
+                                  "child": {
+                                    "child": {
+                                      "child": {
+                                        "child": {
+                                          "child": {
+                                            "child": {
+                                              "child": {
+                                                "child": {
+                                                  "child": {
+                                                    "child": {
+                                                      "child": {
+                                                        "child": {
+                                                          "child": {
+                                                            "child": {
+                                                              "child": {
+                                                                "child": {
+                                                                  "child": {
+                                                                    "child": {
+                                                                      "child": {
+                                                                        "child": {
+                                                                          "child": {
+                                                                            "child": {
+                                                                              "child": {
+                                                                                "child": {
+                                                                                  "child": {
+                                                                                    "child": {
+                                                                                      "child": {
+                                                                                        "child": {
+                                                                                          "child": {
+                                                                                            "child": {
+                                                                                              "child": {
+                                                                                                "child": {
+                                                                                                  "child": {
+                                                                                                    "child": {
+                                                                                                      "child": {
+                                                                                                        "child": {
+                                                                                                          "child": {
+                                                                                                            "child": {
+                                                                                                              "child": {
+                                                                                                                "child": {
+                                                                                                                  "child": {
+                                                                                                                    "child": {
+                                                                                                                      "child": {
+                                                                                                                        "child": {
+                                                                                                                          "child": {
+                                                                                                                            "child": {
+                                                                                                                              "child": {
+                                                                                                                                "child": {
+                                                                                                                                  "child": {
+                                                                                                                                    "child": {
+                                                                                                                                      "child": "leaf"
+                                                                                                                                    }
+                                                                                                                                  }
+                                                                                                                                }
+                                                                                                                              }
+                                                                                                                            }
+                                                                                                                          }
+                                                                                                                        }
+                                                                                                                      }
+                                                                                                                    }
+                                                                                                                  }
+                                                                                                                }
+                                                                                                              }
+                                                                                                            }
+                                                                                                          }
+                                                                                                        }
+                                                                                                      }
+                                                                                                    }
+                                                                                                  }
+                                                                                                }
+                                                                                              }
+                                                                                            }
+                                                                                          }
+                                                                                        }
+                                                                                      }
+                                                                                    }
+                                                                                  }
+                                                                                }
+                                                                              }
+                                                                            }
+                                                                          }
+                                                                        }
+                                                                      }
+                                                                    }
+                                                                  }
+                                                                }
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
       "id": "event-invalid-01",
       "expect": "invalid",
       "about": "a type the profile does not carry",
@@ -1894,6 +2030,438 @@
       "allowed": "text without control characters",
       "beyondSchema": true,
       "rule": "strings-hold-no-controls"
+    },
+    {
+      "id": "event-invalid-81",
+      "expect": "invalid",
+      "about": "a producer's own value nested one level past maxEventDepth, refused as a whole before anything walks it",
+      "event": {
+        "type": "CUSTOM",
+        "name": "example.tree",
+        "value": {
+          "child": {
+            "child": {
+              "child": {
+                "child": {
+                  "child": {
+                    "child": {
+                      "child": {
+                        "child": {
+                          "child": {
+                            "child": {
+                              "child": {
+                                "child": {
+                                  "child": {
+                                    "child": {
+                                      "child": {
+                                        "child": {
+                                          "child": {
+                                            "child": {
+                                              "child": {
+                                                "child": {
+                                                  "child": {
+                                                    "child": {
+                                                      "child": {
+                                                        "child": {
+                                                          "child": {
+                                                            "child": {
+                                                              "child": {
+                                                                "child": {
+                                                                  "child": {
+                                                                    "child": {
+                                                                      "child": {
+                                                                        "child": {
+                                                                          "child": {
+                                                                            "child": {
+                                                                              "child": {
+                                                                                "child": {
+                                                                                  "child": {
+                                                                                    "child": {
+                                                                                      "child": {
+                                                                                        "child": {
+                                                                                          "child": {
+                                                                                            "child": {
+                                                                                              "child": {
+                                                                                                "child": {
+                                                                                                  "child": {
+                                                                                                    "child": {
+                                                                                                      "child": {
+                                                                                                        "child": {
+                                                                                                          "child": {
+                                                                                                            "child": {
+                                                                                                              "child": {
+                                                                                                                "child": {
+                                                                                                                  "child": {
+                                                                                                                    "child": {
+                                                                                                                      "child": {
+                                                                                                                        "child": {
+                                                                                                                          "child": {
+                                                                                                                            "child": {
+                                                                                                                              "child": {
+                                                                                                                                "child": {
+                                                                                                                                  "child": {
+                                                                                                                                    "child": {
+                                                                                                                                      "child": {
+                                                                                                                                        "child": "leaf"
+                                                                                                                                      }
+                                                                                                                                    }
+                                                                                                                                  }
+                                                                                                                                }
+                                                                                                                              }
+                                                                                                                            }
+                                                                                                                          }
+                                                                                                                        }
+                                                                                                                      }
+                                                                                                                    }
+                                                                                                                  }
+                                                                                                                }
+                                                                                                              }
+                                                                                                            }
+                                                                                                          }
+                                                                                                        }
+                                                                                                      }
+                                                                                                    }
+                                                                                                  }
+                                                                                                }
+                                                                                              }
+                                                                                            }
+                                                                                          }
+                                                                                        }
+                                                                                      }
+                                                                                    }
+                                                                                  }
+                                                                                }
+                                                                              }
+                                                                            }
+                                                                          }
+                                                                        }
+                                                                      }
+                                                                    }
+                                                                  }
+                                                                }
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "field": "$",
+      "allowed": "at most maxEventDepth (64) levels of objects and arrays",
+      "beyondSchema": true,
+      "rule": "nesting-is-bounded"
+    },
+    {
+      "id": "event-invalid-82",
+      "expect": "invalid",
+      "about": "a producer's own activity whose content nests one level past maxEventDepth",
+      "event": {
+        "type": "ACTIVITY_SNAPSHOT",
+        "messageId": "act-1",
+        "activityType": "example.tree",
+        "content": {
+          "child": {
+            "child": {
+              "child": {
+                "child": {
+                  "child": {
+                    "child": {
+                      "child": {
+                        "child": {
+                          "child": {
+                            "child": {
+                              "child": {
+                                "child": {
+                                  "child": {
+                                    "child": {
+                                      "child": {
+                                        "child": {
+                                          "child": {
+                                            "child": {
+                                              "child": {
+                                                "child": {
+                                                  "child": {
+                                                    "child": {
+                                                      "child": {
+                                                        "child": {
+                                                          "child": {
+                                                            "child": {
+                                                              "child": {
+                                                                "child": {
+                                                                  "child": {
+                                                                    "child": {
+                                                                      "child": {
+                                                                        "child": {
+                                                                          "child": {
+                                                                            "child": {
+                                                                              "child": {
+                                                                                "child": {
+                                                                                  "child": {
+                                                                                    "child": {
+                                                                                      "child": {
+                                                                                        "child": {
+                                                                                          "child": {
+                                                                                            "child": {
+                                                                                              "child": {
+                                                                                                "child": {
+                                                                                                  "child": {
+                                                                                                    "child": {
+                                                                                                      "child": {
+                                                                                                        "child": {
+                                                                                                          "child": {
+                                                                                                            "child": {
+                                                                                                              "child": {
+                                                                                                                "child": {
+                                                                                                                  "child": {
+                                                                                                                    "child": {
+                                                                                                                      "child": {
+                                                                                                                        "child": {
+                                                                                                                          "child": {
+                                                                                                                            "child": {
+                                                                                                                              "child": {
+                                                                                                                                "child": {
+                                                                                                                                  "child": {
+                                                                                                                                    "child": {
+                                                                                                                                      "child": {
+                                                                                                                                        "child": "leaf"
+                                                                                                                                      }
+                                                                                                                                    }
+                                                                                                                                  }
+                                                                                                                                }
+                                                                                                                              }
+                                                                                                                            }
+                                                                                                                          }
+                                                                                                                        }
+                                                                                                                      }
+                                                                                                                    }
+                                                                                                                  }
+                                                                                                                }
+                                                                                                              }
+                                                                                                            }
+                                                                                                          }
+                                                                                                        }
+                                                                                                      }
+                                                                                                    }
+                                                                                                  }
+                                                                                                }
+                                                                                              }
+                                                                                            }
+                                                                                          }
+                                                                                        }
+                                                                                      }
+                                                                                    }
+                                                                                  }
+                                                                                }
+                                                                              }
+                                                                            }
+                                                                          }
+                                                                        }
+                                                                      }
+                                                                    }
+                                                                  }
+                                                                }
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "field": "$",
+      "allowed": "at most maxEventDepth (64) levels of objects and arrays",
+      "beyondSchema": true,
+      "rule": "nesting-is-bounded"
+    },
+    {
+      "id": "event-invalid-83",
+      "expect": "invalid",
+      "about": "a form schema for generic clients that nests one level past maxEventDepth",
+      "event": {
+        "type": "RUN_FINISHED",
+        "threadId": "conv-1",
+        "runId": "run-1",
+        "outcome": {
+          "type": "interrupt",
+          "interrupts": [
+            {
+              "id": "ap-1",
+              "reason": "example.approval",
+              "message": "May I go on?",
+              "responseSchema": {
+                "items": {
+                  "items": {
+                    "items": {
+                      "items": {
+                        "items": {
+                          "items": {
+                            "items": {
+                              "items": {
+                                "items": {
+                                  "items": {
+                                    "items": {
+                                      "items": {
+                                        "items": {
+                                          "items": {
+                                            "items": {
+                                              "items": {
+                                                "items": {
+                                                  "items": {
+                                                    "items": {
+                                                      "items": {
+                                                        "items": {
+                                                          "items": {
+                                                            "items": {
+                                                              "items": {
+                                                                "items": {
+                                                                  "items": {
+                                                                    "items": {
+                                                                      "items": {
+                                                                        "items": {
+                                                                          "items": {
+                                                                            "items": {
+                                                                              "items": {
+                                                                                "items": {
+                                                                                  "items": {
+                                                                                    "items": {
+                                                                                      "items": {
+                                                                                        "items": {
+                                                                                          "items": {
+                                                                                            "items": {
+                                                                                              "items": {
+                                                                                                "items": {
+                                                                                                  "items": {
+                                                                                                    "items": {
+                                                                                                      "items": {
+                                                                                                        "items": {
+                                                                                                          "items": {
+                                                                                                            "items": {
+                                                                                                              "items": {
+                                                                                                                "items": {
+                                                                                                                  "items": {
+                                                                                                                    "items": {
+                                                                                                                      "items": {
+                                                                                                                        "items": {
+                                                                                                                          "items": {
+                                                                                                                            "items": {
+                                                                                                                              "items": {
+                                                                                                                                "items": {
+                                                                                                                                  "items": {
+                                                                                                                                    "items": {
+                                                                                                                                      "items": {
+                                                                                                                                        "items": "string"
+                                                                                                                                      }
+                                                                                                                                    }
+                                                                                                                                  }
+                                                                                                                                }
+                                                                                                                              }
+                                                                                                                            }
+                                                                                                                          }
+                                                                                                                        }
+                                                                                                                      }
+                                                                                                                    }
+                                                                                                                  }
+                                                                                                                }
+                                                                                                              }
+                                                                                                            }
+                                                                                                          }
+                                                                                                        }
+                                                                                                      }
+                                                                                                    }
+                                                                                                  }
+                                                                                                }
+                                                                                              }
+                                                                                            }
+                                                                                          }
+                                                                                        }
+                                                                                      }
+                                                                                    }
+                                                                                  }
+                                                                                }
+                                                                              }
+                                                                            }
+                                                                          }
+                                                                        }
+                                                                      }
+                                                                    }
+                                                                  }
+                                                                }
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "field": "$",
+      "allowed": "at most maxEventDepth (64) levels of objects and arrays",
+      "beyondSchema": true,
+      "rule": "nesting-is-bounded"
     }
   ],
   "streams": [
@@ -4131,6 +4699,168 @@
       "at": 0,
       "rule": "events-are-valid",
       "field": "$.metadata.terp.schemaVersion"
+    },
+    {
+      "id": "stream-invalid-33",
+      "expect": "invalid",
+      "about": "an event nested past maxEventDepth, inside a valid run",
+      "events": [
+        {
+          "type": "RUN_STARTED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "protocolVersion": "1.0",
+          "metadata": {
+            "terp": {
+              "schemaVersion": 1
+            }
+          }
+        },
+        {
+          "type": "CUSTOM",
+          "name": "example.tree",
+          "value": {
+            "child": {
+              "child": {
+                "child": {
+                  "child": {
+                    "child": {
+                      "child": {
+                        "child": {
+                          "child": {
+                            "child": {
+                              "child": {
+                                "child": {
+                                  "child": {
+                                    "child": {
+                                      "child": {
+                                        "child": {
+                                          "child": {
+                                            "child": {
+                                              "child": {
+                                                "child": {
+                                                  "child": {
+                                                    "child": {
+                                                      "child": {
+                                                        "child": {
+                                                          "child": {
+                                                            "child": {
+                                                              "child": {
+                                                                "child": {
+                                                                  "child": {
+                                                                    "child": {
+                                                                      "child": {
+                                                                        "child": {
+                                                                          "child": {
+                                                                            "child": {
+                                                                              "child": {
+                                                                                "child": {
+                                                                                  "child": {
+                                                                                    "child": {
+                                                                                      "child": {
+                                                                                        "child": {
+                                                                                          "child": {
+                                                                                            "child": {
+                                                                                              "child": {
+                                                                                                "child": {
+                                                                                                  "child": {
+                                                                                                    "child": {
+                                                                                                      "child": {
+                                                                                                        "child": {
+                                                                                                          "child": {
+                                                                                                            "child": {
+                                                                                                              "child": {
+                                                                                                                "child": {
+                                                                                                                  "child": {
+                                                                                                                    "child": {
+                                                                                                                      "child": {
+                                                                                                                        "child": {
+                                                                                                                          "child": {
+                                                                                                                            "child": {
+                                                                                                                              "child": {
+                                                                                                                                "child": {
+                                                                                                                                  "child": {
+                                                                                                                                    "child": {
+                                                                                                                                      "child": {
+                                                                                                                                        "child": {
+                                                                                                                                          "child": "leaf"
+                                                                                                                                        }
+                                                                                                                                      }
+                                                                                                                                    }
+                                                                                                                                  }
+                                                                                                                                }
+                                                                                                                              }
+                                                                                                                            }
+                                                                                                                          }
+                                                                                                                        }
+                                                                                                                      }
+                                                                                                                    }
+                                                                                                                  }
+                                                                                                                }
+                                                                                                              }
+                                                                                                            }
+                                                                                                          }
+                                                                                                        }
+                                                                                                      }
+                                                                                                    }
+                                                                                                  }
+                                                                                                }
+                                                                                              }
+                                                                                            }
+                                                                                          }
+                                                                                        }
+                                                                                      }
+                                                                                    }
+                                                                                  }
+                                                                                }
+                                                                              }
+                                                                            }
+                                                                          }
+                                                                        }
+                                                                      }
+                                                                    }
+                                                                  }
+                                                                }
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "RUN_FINISHED",
+          "threadId": "conv-1",
+          "runId": "run-1",
+          "outcome": {
+            "type": "success"
+          }
+        }
+      ],
+      "at": 1,
+      "rule": "events-are-valid",
+      "field": "$"
     }
   ]
 }

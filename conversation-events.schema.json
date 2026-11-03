@@ -8,9 +8,14 @@
       "description": "The largest an event may be, in bytes of its compact JSON (no whitespace between tokens) encoded as UTF-8. A schema cannot count bytes, so every reader applies it: a producer never sends a larger event, and a reader stops at one, as events-are-valid says.",
       "const": 65536
     },
+    "maxEventDepth": {
+      "description": "The deepest an event may nest, in levels of objects and arrays: the event itself is level 1, and an object or array inside another is one level deeper; a string, a number, a boolean or null adds no level. Only the open objects (an interrupt's responseSchema, a producer's own activity content and custom value) can nest far, and none needs more than a fraction of this. A schema cannot state it, so every reader applies it, as nesting-is-bounded says.",
+      "const": 64
+    },
     "eventRules": {
-      "description": "What a single event keeps that a schema cannot state, which every reader applies beside the schema. option-values-are-distinct: No two options of a terp.question carry the same value, whatever their labels. strings-hold-no-controls: No string anywhere in the event, the open objects included (an interrupt's responseSchema, a producer's own activity content and custom value), holds a C0 or C1 control character other than tab, line feed and carriage return.",
+      "description": "What a single event keeps that a schema cannot state, which every reader applies beside the schema. nesting-is-bounded: The event nests at most maxEventDepth levels of objects and arrays. A reader measures the depth before anything that walks the event, the schema and the byte count included, and without recursion, so no event can exhaust a reader's stack however deep it is; it refuses a deeper event as a whole, at $, and reads nothing else from it. A reader whose JSON parser recurses bounds the parser's depth the same way. option-values-are-distinct: No two options of a terp.question carry the same value, whatever their labels. strings-hold-no-controls: No string anywhere in the event, the open objects included (an interrupt's responseSchema, a producer's own activity content and custom value), holds a C0 or C1 control character other than tab, line feed and carriage return.",
       "enum": [
+        "nesting-is-bounded",
         "option-values-are-distinct",
         "strings-hold-no-controls"
       ]

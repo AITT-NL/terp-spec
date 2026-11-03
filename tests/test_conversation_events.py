@@ -7,10 +7,10 @@ producers that validate every event before they send it and the clients that rea
 stream, and neither imports the other, which is why the words live here.
 
 It is a vocabulary with readers and no catalog rule. The schema validates one event,
-and what a single event keeps that a schema cannot state (an option value carried once,
-no control character anywhere in an open object) is named in ``$defs.eventRules``; the
-order of a run's events is held by the stream rules the schema names in
-``$defs.streamRules``. This suite is the spec's half: the schema's own discipline, a
+and what a single event keeps that a schema cannot state (a bounded depth, an option
+value carried once, no control character anywhere in an open object) is named in
+``$defs.eventRules``; the order of a run's events is held by the stream rules the schema
+names in ``$defs.streamRules``. This suite is the spec's half: the schema's own discipline, a
 small reference reader of the event rules and the stream rules that resolves what a
 reader shows from a valid run, and every fixture read as it says.
 """
@@ -39,6 +39,7 @@ _EVENT_RULES = set(_DEFS["eventRules"]["enum"])
 _PROSE = ("\t", "\n", "\r")
 _CONTROL = re.compile("[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f-\u009f]")
 _MAX_EVENT_BYTES = _DEFS["maxEventBytes"]["const"]
+_MAX_EVENT_DEPTH = _DEFS["maxEventDepth"]["const"]
 _TERMINAL = {"RUN_FINISHED", "RUN_ERROR"}
 
 
@@ -55,7 +56,24 @@ def _branches(schema: dict = _SCHEMA) -> dict[str, dict]:
 _EVENTS = _branches()
 
 
+def _too_deep(event: object) -> bool:
+    """Does *event* nest past maxEventDepth? Measured without recursion, so an event of any
+    depth is measured, and before anything that does recurse reads it."""
+    stack: list[tuple[object, int]] = [(event, 1)]
+    while stack:
+        value, level = stack.pop()
+        if isinstance(value, (dict, list)):
+            if level > _MAX_EVENT_DEPTH:
+                return True
+            inner = value.values() if isinstance(value, dict) else value
+            stack.extend((item, level + 1) for item in inner)
+    return False
+
+
 def _errors(event: object) -> list[str]:
+    """What the schema alone refuses in *event*. ``_validate`` recurses, so it never sees an
+    event past maxEventDepth: every caller measures the depth first."""
+    assert not _too_deep(event), "the schema is never run on an event past maxEventDepth"
     return _validate(event, _SCHEMA, "$")
 
 
@@ -68,24 +86,29 @@ def _size(event: object) -> int:
         return _MAX_EVENT_BYTES + 1
 
 
-def _strings(value: object, path: str):
-    """Every string in *value*, with the JSON path it sits at."""
-    if isinstance(value, str):
-        yield path, value
-    elif isinstance(value, dict):
-        for key, inner in value.items():
-            yield from _strings(inner, f"{path}.{key}")
-    elif isinstance(value, list):
-        for index, inner in enumerate(value):
-            yield from _strings(inner, f"{path}[{index}]")
+def _strings(event: object):
+    """Every string in *event*, with the JSON path it sits at, in document order. Walked
+    without recursion, as every walk of an event is."""
+    stack: list[tuple[str, object]] = [("$", event)]
+    while stack:
+        path, value = stack.pop()
+        if isinstance(value, str):
+            yield path, value
+        elif isinstance(value, dict):
+            stack.extend((f"{path}.{key}", inner) for key, inner in reversed(value.items()))
+        elif isinstance(value, list):
+            stack.extend((f"{path}[{index}]", value[index]) for index in reversed(range(len(value))))
 
 
 def _beyond_schema(event: object) -> list[tuple[str, str]]:
     """``(field, rule)`` for every refusal of *event* a reader makes from ``$defs.eventRules``:
-    what the schema describes and its keyword subset cannot state."""
+    what the schema describes and its keyword subset cannot state. An event past
+    maxEventDepth is refused as a whole, and nothing else is read from it."""
+    if _too_deep(event):
+        return [("$", "nesting-is-bounded")]
     refused = [
         (path, "strings-hold-no-controls")
-        for path, text in _strings(event, "$")
+        for path, text in _strings(event)
         if _CONTROL.search(text)
     ]
     if isinstance(event, dict) and event.get("type") == "RUN_FINISHED":
@@ -103,7 +126,25 @@ def _beyond_schema(event: object) -> list[tuple[str, str]]:
 
 
 def _refused_fields(event: object) -> set[str]:
-    return {_field(message) for message in _errors(event)} | {field for field, _ in _beyond_schema(event)}
+    beyond = {field for field, _ in _beyond_schema(event)}
+    if _too_deep(event):
+        return beyond
+    return {_field(message) for message in _errors(event)} | beyond
+
+
+def _refusal(event: object) -> str | None:
+    """The field at which a reader refuses *event*, checked in the order a reader checks
+    it: the depth before anything that walks the event, then the schema, the byte cap and
+    the other event rules. ``None`` when the event is valid."""
+    if _too_deep(event):
+        return "$"
+    errors = _errors(event)
+    if errors:
+        return _field(errors[0])
+    if _size(event) > _MAX_EVENT_BYTES:
+        return "$"
+    beyond = _beyond_schema(event)
+    return beyond[0][0] if beyond else None
 
 
 # --------------------------------------------------------------------------- #
@@ -122,14 +163,9 @@ def _problem(events: list[dict]) -> tuple[int, str, str | None] | None:
     calls: dict[str, str] = {}  # toolCallId -> open | ended | answered
     handoff = finished = False
     for index, event in enumerate(events):
-        errors = _errors(event)
-        if errors:
-            return index, "events-are-valid", _field(errors[0])
-        if _size(event) > _MAX_EVENT_BYTES:
-            return index, "events-are-valid", "$"
-        beyond = _beyond_schema(event)
-        if beyond:
-            return index, "events-are-valid", beyond[0][0]
+        refused = _refusal(event)
+        if refused is not None:
+            return index, "events-are-valid", refused
         kind = event["type"]
         if (index == 0) != (kind == "RUN_STARTED"):
             return index, "starts-with-run-started", None
@@ -357,6 +393,7 @@ def test_the_named_lists_are_sorted_described_and_coherent() -> None:
     for rule in _EVENT_RULES:
         assert f"{rule}:" in _DEFS["eventRules"]["description"], f"{rule}: the rule is stated"
     assert "eventRules" in _DEFS["streamRules"]["description"], "events-are-valid names the event rules"
+    assert "maxEventDepth" in _DEFS["eventRules"]["description"], "nesting-is-bounded names its bound"
     question = _EVENTS["RUN_FINISHED"]["properties"]["outcome"]["properties"]["interrupts"]["items"]
     terp = question["properties"]["metadata"]["properties"]["terp"]
     assert terp["properties"]["input"]["enum"] == _DEFS["questionInputs"]["enum"]
@@ -430,6 +467,57 @@ def test_an_event_utf8_cannot_carry_is_refused_rather_than_crashing_the_reader()
     assert _problem(events) == (2, "events-are-valid", "$")
 
 
+def _nested(levels: int) -> tuple[object, str]:
+    """A value of *levels* nested arrays around a 0, and its compact JSON, built without
+    recursion: json.dumps itself recurses, and would raise on what this test is about."""
+    value: object = 0
+    for _ in range(levels):
+        value = [value]
+    return value, "[" * levels + "0" + "]" * levels
+
+
+def _holding(where: str, value: object, text: str) -> tuple[dict, str]:
+    """An event that carries *value* in one of the three open objects, and its compact JSON."""
+    if where == "value":
+        return ({"type": "CUSTOM", "name": "example.deep", "value": value},
+                '{"type":"CUSTOM","name":"example.deep","value":' + text + "}")
+    if where == "content":
+        return ({"type": "ACTIVITY_SNAPSHOT", "messageId": "a-1", "activityType": "example.deep",
+                 "content": {"x": value}},
+                '{"type":"ACTIVITY_SNAPSHOT","messageId":"a-1","activityType":"example.deep",'
+                '"content":{"x":' + text + "}}")
+    return ({"type": "RUN_FINISHED", "threadId": "c", "runId": "r",
+             "outcome": {"type": "interrupt", "interrupts": [
+                 {"id": "i", "reason": "example.deep", "responseSchema": {"x": value}}]}},
+            '{"type":"RUN_FINISHED","threadId":"c","runId":"r","outcome":{"type":"interrupt",'
+            '"interrupts":[{"id":"i","reason":"example.deep","responseSchema":{"x":' + text + "}}]}}")
+
+
+@pytest.mark.parametrize("where", ["value", "content", "responseSchema"])
+def test_no_event_under_the_byte_cap_nests_deep_enough_to_crash_the_reader(where: str) -> None:
+    """An open object can nest as deep as its bytes allow: some 32 000 levels fit under
+    maxEventBytes, and a reader that recursed into them would exhaust its stack in the
+    middle of a run instead of ending the reading. The depth is measured first, without
+    recursion, so every such event is refused at the bound, and an event at the bound is
+    read as any other."""
+    skeleton = len(_holding(where, 0, "0")[1].encode("utf-8"))
+    for levels in (990, (_MAX_EVENT_BYTES - skeleton) // 2):
+        event, text = _holding(where, *_nested(levels))
+        assert len(text.encode("utf-8")) <= _MAX_EVENT_BYTES
+        assert _too_deep(event)
+        assert _beyond_schema(event) == [("$", "nesting-is-bounded")]
+        assert _refused_fields(event) == {"$"}
+        assert _problem([_opening(), event]) == (1, "events-are-valid", "$")
+    # The levels above the nested value: the event; the content; the outcome, the
+    # interrupts, the interrupt and the responseSchema.
+    above = {"value": 1, "content": 2, "responseSchema": 5}[where]
+    at_the_bound = _MAX_EVENT_DEPTH - above
+    event, _ = _holding(where, *_nested(at_the_bound))
+    assert not _too_deep(event) and _refusal(event) is None
+    event, _ = _holding(where, *_nested(at_the_bound + 1))
+    assert _refusal(event) == "$"
+
+
 def test_a_later_version_is_refused_rather_than_read() -> None:
     """A reader that does not know a version reads nothing from the stream: an unreadable
     stream is not an empty one, and guessing past it would act on words it cannot read."""
@@ -443,8 +531,7 @@ def test_a_later_version_is_refused_rather_than_read() -> None:
 # --------------------------------------------------------------------------- #
 @pytest.mark.parametrize("case", _cases("events", "valid"), ids=lambda case: case["id"])
 def test_a_valid_event_passes(case: dict) -> None:
-    assert _errors(case["event"]) == [], case["about"]
-    assert _size(case["event"]) <= _MAX_EVENT_BYTES
+    assert _refusal(case["event"]) is None, case["about"]
 
 
 @pytest.mark.parametrize("case", _cases("events", "invalid"), ids=lambda case: case["id"])
@@ -454,12 +541,12 @@ def test_an_invalid_event_is_refused_at_its_field(case: dict) -> None:
         f"{case['id']} ({case['about']}): refused at {sorted(fields)}, the fixture says {case['field']}"
     )
     assert case["allowed"].strip(), f"{case['id']}: say what the field allows"
-    schema_alone = _errors(case["event"])
     if case.get("beyondSchema"):
-        assert schema_alone == [], f"{case['id']}: marked beyond the schema, and the schema refuses it"
         assert (case["field"], case["rule"]) in _beyond_schema(case["event"]), case["id"]
+        if case["rule"] != "nesting-is-bounded":  # the schema never sees an event past the bound
+            assert _errors(case["event"]) == [], f"{case['id']}: marked beyond the schema, and the schema refuses it"
     else:
-        assert schema_alone, f"{case['id']}: the schema alone must refuse it"
+        assert _errors(case["event"]), f"{case['id']}: the schema alone must refuse it"
 
 
 @pytest.mark.parametrize("case", _cases("streams", "valid"), ids=lambda case: case["id"])
