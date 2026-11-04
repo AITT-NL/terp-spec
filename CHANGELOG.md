@@ -12,17 +12,20 @@ against an earlier version reads this file to see exactly what changed since.
 ### Added
 
 - Ten runtime security scenarios for three capabilities. `refresh-sessions` gains
-  `sessions.rotation`: a refresh credential works once, and presenting a spent one revokes
-  every credential descended from the same sign-in, while another sign-in's keep working.
-  `native-clients` gains `native.browser-refused`: a route that returns a refresh credential
-  in its response body refuses any request that carries browser provenance, whether or not
-  the credential was valid. `self-service-accounts` gains eight. A request about an address
-  answers alike whether or not it has an account, and an account exists only once a mailed
-  token is redeemed. Tokens work once, cannot be altered or read without the
-  implementation's secret, travel only in a link's fragment, and expire within a day for a
-  reset and a week for a verification. Repeated requests back off and never lock out. A
-  self-registered account starts with the least authority, and closing an account needs the
-  password and ends every session.
+  `sessions.rotation`: outside any grace period the implementation documents, a refresh
+  credential works once, and presenting a spent one revokes every refresh credential
+  descended from the same sign-in, while another sign-in's keep working. `native-clients`
+  gains `native.browser-refused`: a route that returns a refresh credential in its response
+  body refuses any request that carries browser provenance before it reads the credential,
+  alike for a valid, an invalid and a malformed one. `self-service-accounts` gains eight. A
+  request about an address answers alike, and sends that address exactly one message,
+  whether or not it has an account. An account exists only once a mailed token is redeemed,
+  and opens with the password given at redemption, so whoever asked cannot choose it. Tokens
+  work once, cannot be altered or read without the implementation's secret, travel only in a
+  link's fragment, and expire within a day for a reset and a week for a verification.
+  Repeated requests back off per caller and never lock out. A self-registered account starts
+  with the least authority, and closing an account needs the password and ends every
+  session.
 
 The scenario format, the catalog ids and the assurance lane vocabulary are unchanged. The
 new scenarios are new requirements for an implementation that offers those capabilities, so

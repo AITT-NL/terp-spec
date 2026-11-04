@@ -345,7 +345,7 @@
       "id": "sessions.rotation",
       "capability": "refresh-sessions",
       "rules": [],
-      "requirement": "A refresh credential works once, and presenting a spent one revokes every credential descended from the same sign-in.",
+      "requirement": "Outside any concurrent-refresh grace period the implementation documents, a refresh credential works once, and presenting a spent one revokes every refresh credential descended from the same sign-in.",
       "setup": [
         "Sign one active subject in twice through each refresh carrier the implementation supports, and keep every refresh credential."
       ],
@@ -355,38 +355,38 @@
       ],
       "expected": [
         "The spent credential is refused and yields no access credential.",
-        "The successor is refused too: reuse revokes every credential descended from that sign-in, not only the one presented."
+        "The successor is refused too: reuse revokes every refresh credential descended from that sign-in, not only the one presented."
       ],
       "controls": [
-        "Before the reuse, a live credential refreshes and its successor is accepted.",
-        "The second sign-in's credentials keep working after the first sign-in's are revoked."
+        "Before the reuse, the second sign-in refreshes, and the successor that refresh issued refreshes in turn.",
+        "After the first sign-in's refresh credentials are revoked, the second sign-in's latest one still refreshes."
       ]
     },
     {
       "id": "native.browser-refused",
       "capability": "native-clients",
       "rules": [],
-      "requirement": "A route that returns a refresh credential in its response body refuses every request that carries browser provenance.",
+      "requirement": "A route that returns a refresh credential in its response body refuses every request that carries browser provenance, before it reads the credential or checks its form.",
       "setup": [
         "Offer native clients, and hold a valid password and a live body-carried refresh credential for an active subject."
       ],
       "exercise": [
         "Sign in and refresh on the body-carrier routes with each browser provenance signal page script cannot remove, one at a time: an origin header and each fetch-metadata header.",
-        "Repeat carrying the cookie that holds a browser's refresh credential, and repeat every request with an invalid credential."
+        "Repeat carrying the cookie that holds a browser's refresh credential, and repeat every request with an invalid credential and with one of a form the route does not accept, such as an empty one or one longer than any it issues."
       ],
       "expected": [
         "Every such request is refused, and no response body carries an access or refresh credential.",
-        "The refusal does not depend on whether the presented credential was valid, and a refused refresh credential stays live."
+        "The refusal is the same whether the presented credential was valid, invalid or of a form the route does not accept, and a refused refresh credential stays live."
       ],
       "controls": [
-        "The same requests without browser provenance sign in and refresh."
+        "The same requests without browser provenance sign in and refresh, and the ones whose credential is of a form the route does not accept are refused as malformed."
       ]
     },
     {
       "id": "accounts.enumeration",
       "capability": "self-service-accounts",
       "rules": [],
-      "requirement": "A public request about an address answers identically whether or not an account exists for it.",
+      "requirement": "A public request about an address answers identically whether or not an account exists for it, and does the same observable work: it sends that address exactly one message, whatever kind of account it has.",
       "setup": [
         "Hold an address with an active password account, one with a deactivated account, one whose account signs in only through an identity provider, and one with no account."
       ],
@@ -394,8 +394,8 @@
         "From a caller the backoff has not slowed, ask to open an account and ask for a password reset for each address."
       ],
       "expected": [
-        "For each kind of request, every address receives the same status and the same body.",
-        "Only the address's own mailbox can tell the cases apart."
+        "For each kind of request, every address receives the same status, the same body and the same headers, apart from values that differ on every response, such as a request identifier.",
+        "Each request sends exactly one message, to the address it names, so neither the answer, nor a delivery failure, nor the work done tells whether an account exists."
       ],
       "controls": [
         "The address with no account receives a verification link, and the active password account a reset link."
@@ -405,19 +405,21 @@
       "id": "accounts.proof-of-address",
       "capability": "self-service-accounts",
       "rules": [],
-      "requirement": "An account opened through self-service exists, and can sign in, only after a token sent to its address is redeemed.",
+      "requirement": "An account opened through self-service exists, and can sign in, only after a token sent to its address is redeemed, and it opens with a password given at redemption, so whoever asked for it cannot choose it.",
       "setup": [
-        "Choose an address with no account and a password the implementation's policy accepts."
+        "Choose an address with no account, and two different passwords the implementation's policy accepts."
       ],
       "exercise": [
-        "Ask to open an account, sign in with the address and password before redeeming the mailed token, then redeem it and sign in again."
+        "Ask to open an account for the address, presenting the first password with the request if the request accepts one, and sign in with the address and each password before redeeming the mailed token.",
+        "Redeem the token with the second password, then sign in with each password."
       ],
       "expected": [
-        "Before redemption the sign-in is refused exactly as for an address with no account.",
+        "Before redemption every sign-in is refused exactly as for an address with no account.",
+        "A password presented with the request never signs in: the account opens with the password given at redemption.",
         "Where the implementation holds new accounts for approval, the redeemed account is inactive and still cannot sign in."
       ],
       "controls": [
-        "Without an approval step, the redeemed account signs in with the password given in the request."
+        "Without an approval step, the redeemed account signs in with the password given at redemption."
       ]
     },
     {
@@ -429,7 +431,7 @@
         "Obtain a verification token for a new address, and two reset tokens for one existing account."
       ],
       "exercise": [
-        "Redeem the verification token twice.",
+        "Redeem the verification token twice, each time with a password the policy accepts.",
         "Reset the password with the first reset token, redeem it again, then redeem the second reset token."
       ],
       "expected": [
@@ -472,31 +474,32 @@
       ],
       "exercise": [
         "Redeem a verification token and a reset token after their lifetimes.",
-        "Configure a verification lifetime longer than seven days and a reset lifetime longer than one day."
+        "Where the implementation lets the lifetimes be configured, configure a verification lifetime longer than seven days and a reset lifetime longer than one day."
       ],
       "expected": [
         "Both expired tokens are refused and change nothing.",
-        "Each lifetime beyond its bound is refused before any token is issued."
+        "Where the lifetimes are configurable, each lifetime beyond its bound is refused before any token is issued."
       ],
       "controls": [
-        "Tokens redeemed within their lifetimes succeed."
+        "A verification token and a reset token redeemed within their lifetimes succeed."
       ]
     },
     {
       "id": "accounts.backoff",
       "capability": "self-service-accounts",
       "rules": [],
-      "requirement": "Repeated public account requests are slowed down, never refused for good, and slowed alike whether or not the address has an account.",
+      "requirement": "Repeated public account requests are slowed down, never refused for good, and slowed alike whether or not the address has an account, and slowing one caller does not hold up another.",
       "setup": [
-        "Use one caller, an address with an account, an address without one, and the backoff schedule the implementation documents."
+        "Use two callers, an address with an account, an address without one, and the backoff schedule the implementation documents."
       ],
       "exercise": [
-        "Send requests about each address until one is refused as too frequent; wait out the documented backoff and send again.",
-        "Redeem invalid tokens from one caller until refused, then wait out the backoff and redeem a valid one."
+        "From the first caller, send requests about each address until one is refused as too frequent; while it is refused, send one request about the same address from the second caller; then wait out the documented backoff and send again from the first.",
+        "Redeem invalid tokens from the first caller until refused; while it is refused, redeem a valid token from the second caller; then wait out the backoff and redeem a valid token from the first."
       ],
       "expected": [
         "Both addresses are slowed alike: the same sequence of requests receives the same answers.",
         "A refusal tells the caller to wait, and never says that an account or an address is locked.",
+        "While the first caller is slowed, the second caller's request and redemption are answered on their merits. An implementation may also slow every caller once the requests about one address together reach a bound it documents; invalid tokens name no address, so they never slow another caller's redemption.",
         "After the backoff, a request is answered on its merits."
       ],
       "controls": [
@@ -509,17 +512,17 @@
       "rules": [],
       "requirement": "An account opened through self-service starts with the least authority the implementation grants a signed-in subject.",
       "setup": [
-        "Open and prove an account through self-service, with no approval step."
+        "Open and prove an account through self-service, with no approval step, and hold a subject with the next authority above the least."
       ],
       "exercise": [
-        "Sign in, read the subject's own profile, and attempt an operation reserved for administrators."
+        "Sign in, read the subject's own profile, and attempt an operation the next authority above the least may perform and the least may not."
       ],
       "expected": [
-        "The profile reports the lowest rank.",
-        "The administrative operation is refused."
+        "The profile reports the least authority the implementation grants a signed-in subject.",
+        "The operation is refused."
       ],
       "controls": [
-        "An administrator performs the same operation."
+        "The subject with the next authority performs the same operation."
       ]
     },
     {
