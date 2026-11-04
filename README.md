@@ -349,6 +349,59 @@ as passed. Each realised lane names the verification-check ids whose verdicts
 compose it, so a consumer can trace the claim into the toolchain's own
 verification envelope.
 
+## Runtime security conformance
+
+Source-corpus conformance establishes what a checker recognizes. It does not establish
+that a running implementation preserves the authority or transaction boundary described
+by a rule. An implementation claiming the standard's runtime security guarantees **MUST**
+also execute every applicable case in `runtime-security.fixtures.json`, whose format is
+`runtime-security.schema.json`. These scenarios are normative, stack-neutral inputs for an
+implementation's test adapter; their presence in a package is not execution evidence.
+
+Each case names the capability that makes it applicable, related source rules where they
+exist, setup and exercise steps, observable outcomes, and negative controls. A capability
+is applicable when the implementation exposes that behavior, including an optional
+capability in its supported configuration. A missing capability may be recorded as
+not-applicable with its reason; an implemented capability whose test was skipped, could
+not run or failed **MUST NOT** be recorded as passed. The case's expected outcomes are
+requirements, not an invitation to replace a difficult behavior with a source inspection.
+
+Evidence **MUST** identify the implementation revision, relevant dependency versions,
+database/transport used, the applicable case id, runnable test reference, observed verdict
+and any unsupported configuration. A security denial is tested at the externally visible
+boundary and, where relevant, against final persistent state: an exception followed by a
+later commit is one operation sequence. An interleaving may be scheduled deterministically,
+but it uses real persistence and service operations rather than mocking the authorization
+decision or successful commit. External providers may be simulated at their transport
+boundary. Every refusal case retains a valid control so rejecting all work cannot pass.
+
+The scenarios cover related-entity scope, rejected mutations, authority snapshots,
+browser-bound login, server-side logout, stale worker finalization, outbound budgets,
+rendered-log redaction, validated transport configuration, authenticated webhook metadata,
+promised job atomicity, file-reference binding, permission floors, replay authorization,
+live stream grants and fenced effects. An implementation that does not promise
+job-wide atomicity states its actual transaction and retry contract; it cannot claim that
+closing a session reverses writes already committed. A resolver that cannot be cancelled
+states that limitation instead of claiming a hard elapsed bound for resolution.
+Custody bookkeeping and destination fencing are separate claims: a lease token must be
+validated atomically at the protected transition, and a remote write needs a fence or
+equivalent serialization in that destination. Adopting lease metadata does not establish
+either guarantee for an application-specific transition or connector.
+
+This evidence is separate from the source checker's scorecard and from line coverage.
+The assurance lane vocabulary remains unchanged: the broader application workbench suite
+is still recommended, while a claim to an implemented runtime security guarantee requires
+the applicable cases above. A source-only scorecard must not be presented as evidence that
+those runtime cases ran.
+`REFERENCE_SHA` continues to identify the reference used for source-corpus certification;
+it is not a claim that the new runtime scenarios passed on that revision.
+
+Dependency-audit evidence likewise identifies the actual resolution audited and its
+applicability. Supported minimum versions are audited and tested alongside a current
+resolution; a clean current resolution does not make an affected lower bound safe.
+Unresolved applicable advisories require an owner, rationale and expiry in the evidence.
+Running a scanner without recording its findings and disposition is not a passing verdict.
+
 ## Deployment declaration
 
 A tool that deploys an app has to know which units exist, which one serves the

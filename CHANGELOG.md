@@ -7,6 +7,23 @@ fields and new rules also bump the minor; prose bumps the patch (see
 checked-in `VERSION` — held by `tests/test_changelog.py`. A checker certified
 against an earlier version reads this file to see exactly what changed since.
 
+## 0.42.0
+
+### Added
+
+- Normative runtime security scenarios and their schema, shipped in both distributions.
+  Runtime claims now require observable outcomes and valid controls for every applicable
+  scenario, including cross-tenant relationship reads, denied writes followed by another
+  commit, authority changes during token issuance and stale worker finalization. Evidence
+  identifies the implementation, environment, runnable tests and actual verdicts; source
+  corpus conformance or line coverage alone cannot substantiate a runtime claim.
+- Dependency-audit evidence distinguishes the installed or resolved tree from the supported
+  minimum versions and records the ownership and expiry of unresolved applicable advisories.
+
+The catalog ids and assurance lane vocabulary are unchanged. Implementations already
+certified for source detection retain that claim; the new scenarios govern their separate
+runtime security claims. This changes the behavioral contract and therefore bumps the minor.
+
 ## 0.41.0
 
 ### Added
