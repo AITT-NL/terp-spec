@@ -1,7 +1,7 @@
 {
   "name": "@terpjs/spec",
-  "version": "0.42.0",
-  "description": "The Terp Standard — stack-neutral rule catalog, violation corpus, finding format, and refused-surface declaration (ADRs 0080/0081; packaged per ADR 0082, published per ADR 0086). Data only: consumers resolve the spec root via require.resolve('@terpjs/spec/package.json').",
+  "version": "0.42.1",
+  "description": "The Terp Standard — Terp's rule catalog, violation corpus, finding and check-report formats, and the declaration contracts Terp's programs read (ADRs 0080/0081; packaged per ADR 0082, published per ADR 0086). Data only: consumers resolve the spec root via require.resolve('@terpjs/spec/package.json').",
   "files": [
     "VERSION",
     "findings.schema.json",

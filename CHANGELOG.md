@@ -7,6 +7,20 @@ fields and new rules also bump the minor; prose bumps the patch (see
 checked-in `VERSION` — held by `tests/test_changelog.py`. A checker certified
 against an earlier version reads this file to see exactly what changed since.
 
+## 0.42.1
+
+### Changed
+
+- **The prose stops calling the rules stack-neutral.** No rule, schema shape, corpus case or
+  fixture changes. The rules are written against Terp's architecture, the reference
+  implementation is their only one, and the corpus is written against its API, so "what any
+  other stack would implement" described a standard that does not exist. The README's
+  introduction, catalog format, enforcement layers, escape-hatch and finding-format wording
+  say so now, and its scorecard and conformance-level sections are marked as proposed for
+  withdrawal by framework ADR 0203. `catalog/schema.json`'s field descriptions, `AGENTS.md`,
+  `CONTRIBUTING.md` and both package descriptions follow. The declaration contracts keep
+  their wording: more than one program reads them, which is where neutrality is real.
+
 ## 0.42.0
 
 ### Added
