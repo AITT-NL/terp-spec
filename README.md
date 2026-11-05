@@ -76,8 +76,8 @@ The artifacts:
    format plus the run's own evaluated-rule inventory, spec version, checker
    identity and verdict, so a driving tool can join per-rule verdicts to the
    catalog fail-closed.
-6. **The refused surface** (`restricted-surface.json`) — the stack-neutral,
-   normative declaration of the raw frontend primitives an app module must not
+6. **The refused surface** (`restricted-surface.json`) — the normative
+   declaration, in browser terms rather than one component library's, of the raw frontend primitives an app module must not
    author (elements, attributes, egress globals/member calls, stylesheet
    extensions, deep-import segments). The portable prohibition rules cite it
    structurally (the `restricted_surface` catalog field); which sanctioned
@@ -182,7 +182,7 @@ symbol and still presuppose Terp's architecture, and most of them do.
 | `surface` | `backend` or `frontend`. |
 | `title` | One-line statement of the invariant. |
 | `intent` | Why the rule exists — the drift or threat it prevents. |
-| `layer` | An estimate of the rule's porting cost to another stack (none exists or is planned): see below. |
+| `layer` | An estimate of the rule's porting cost to another stack (none exists): see below. |
 | `enforcement` | How the reference implementation enforces it (first entry: the `build-time` check). A `runtime` entry names the fail-closed runtime control pairing with it (the two-layer discipline's runtime half, for the rules that require it); a `black-box` entry names the `@terpjs/conformance` probe title. For frontend rules, `reported_as` is the ESLint rule id violations surface as — several catalog rules share one core rule id, so the adapter publishes a `catalogRuleId()` mapping and findings are attributed through it. |
 | `runtime` | **Mandatory.** The rule's runtime-applicability classification (`required` / `not-applicable` / `deferred`) plus a `rationale` (mandatory for exemptions) and, for `deferred`, a `tracking` reference naming where the deferral is tracked — see “Runtime applicability” below. |
 | `restricted_surface` | Frontend prohibition rules only: the `restricted-surface.json` keys the rule realises — the structural citation the spec suite resolves (every key must be claimed by some rule; a prose mention in `intent` must agree with the field). |
@@ -207,8 +207,7 @@ symbol and still presuppose Terp's architecture, and most of them do.
 
 The classification is a judgment about *porting cost*, recorded as data, not a
 limit on the reference implementation — every rule is enforced by `terp.arch`
-or `@terpjs/eslint-boundaries` regardless of layer. No second stack exists or
-is planned.
+or `@terpjs/eslint-boundaries` regardless of layer. No second stack exists.
 
 ### Runtime applicability (the two-layer discipline, per rule)
 
@@ -374,7 +373,7 @@ Source-corpus conformance establishes what a checker recognizes. It does not est
 that a running implementation preserves the authority or transaction boundary described
 by a rule. An implementation claiming the standard's runtime security guarantees **MUST**
 also execute every applicable case in `runtime-security.fixtures.json`, whose format is
-`runtime-security.schema.json`. These scenarios are normative, stack-neutral inputs for an
+`runtime-security.schema.json`. These scenarios are normative inputs for an
 implementation's test adapter; their presence in a package is not execution evidence.
 
 Each case names the capability that makes it applicable, related source rules where they
@@ -755,8 +754,8 @@ rule can ship with its gap explicit and reviewed.
 ## Conformance levels
 
 > Proposed for withdrawal (framework ADR 0203). No implementation other than
-> the reference one exists or is planned, and an app's assurance comes from its
-> own per-release evidence, not from a level.
+> the reference one exists, and the proposal is that an app's assurance comes
+> from its own per-release evidence, not from a level.
 
 - **Level 1 — black-box:** the app passes the runnable conformance suite
   (`@terpjs/conformance`) for the capabilities it claims, including the
@@ -783,9 +782,12 @@ rule can ship with its gap explicit and reviewed.
   the harness picks the cases up by convention. Ship an `expected-findings.json`
   when the violating lines are pinned. Closing a documented detector residual
   also deletes its `corpus/RESIDUALS.json` entry.
-- **Another stack** → none exists or is planned (framework ADR 0203,
-  proposed). The corpus is written in the reference stack's languages against
-  its API, so it is not an acceptance test another stack could run as it is.
+- **New stack** → implement the `static-portable` rules however you like; the
+  corpus is the acceptance test, findings must attribute to catalog ids, and
+  the certification summary is a scorecard (`scorecard.schema.json`).
+  Framework ADR 0203 (proposed) withdraws this route. The corpus is written in
+  the reference stack's languages against its API, so another stack would have
+  to translate it before it could serve as an acceptance test.
 - **Format change** → bump `VERSION` and add the matching `CHANGELOG.md` entry
   (the suite holds the top entry to the version). Pre-1.0, a **changed
   contract** — a new mandatory catalog field (0.5.0's `runtime` block), a

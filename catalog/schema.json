@@ -16,7 +16,7 @@
     "title": { "type": "string", "minLength": 1 },
     "intent": { "type": "string", "minLength": 1 },
     "layer": {
-      "description": "An estimate of the rule's porting cost to another stack (none exists or is planned): black-box (probe a running app), static-portable (generic source patterns), static-bespoke (needs deep framework knowledge).",
+      "description": "An estimate of the rule's porting cost to another stack (none exists): black-box (probe a running app), static-portable (generic source patterns), static-bespoke (needs deep framework knowledge).",
       "enum": ["black-box", "static-portable", "static-bespoke"]
     },
     "enforcement": {

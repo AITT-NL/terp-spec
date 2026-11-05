@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://terp.dev/spec/findings.schema.json",
   "title": "Terp Standard finding",
-  "description": "The machine-readable finding a conformant checker emits: an array of these objects per checked tree. The corpus contract is stated over this shape — for a rule under test, every violation-* case yields at least one finding whose `rule` is the catalog id, and every compliant-* case yields none for that rule. Findings are attributed to the stack-neutral catalog id, never a tool-internal rule id.",
+  "description": "The machine-readable finding a conformant checker emits: an array of these objects per checked tree. The corpus contract is stated over this shape — for a rule under test, every violation-* case yields at least one finding whose `rule` is the catalog id, and every compliant-* case yields none for that rule. Findings are attributed to the catalog id, never a tool-internal rule id.",
   "type": "array",
   "items": {
     "type": "object",

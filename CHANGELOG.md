@@ -14,12 +14,17 @@ against an earlier version reads this file to see exactly what changed since.
 - **The prose stops calling the rules stack-neutral.** No rule, schema shape, corpus case or
   fixture changes. The rules are written against Terp's architecture, the reference
   implementation is their only one, and the corpus is written against its API, so "what any
-  other stack would implement" described a standard that does not exist. The README's
-  introduction, catalog format, enforcement layers, escape-hatch and finding-format wording
-  say so now, and its scorecard and conformance-level sections are marked as proposed for
-  withdrawal by framework ADR 0203. `catalog/schema.json`'s field descriptions, `AGENTS.md`,
-  `CONTRIBUTING.md` and both package descriptions follow. The declaration contracts keep
-  their wording: more than one program reads them, which is where neutrality is real.
+  other stack would implement" described a standard that does not exist. Changed:
+  - the README's introduction, catalog format, enforcement layers, escape-hatch and
+    finding-format wording, the refused surface's entry and the runtime security section;
+  - the README's scorecard and conformance-level sections, and its "New stack" route for a
+    new checker, which stay and are marked as proposed for withdrawal by framework ADR 0203;
+  - the descriptions in `catalog/schema.json`, `restricted-surface.json` and
+    `findings.schema.json`, `AGENTS.md`, `CONTRIBUTING.md` and both package descriptions.
+
+  The declaration contracts keep their wording: more than one program reads them, which is
+  where neutrality is real. The generated rule pages still end their reference text with
+  "another stack ships its own realisation" until they are regenerated where the rules land.
 
 ## 0.42.0
 
