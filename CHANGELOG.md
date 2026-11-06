@@ -7,7 +7,29 @@ fields and new rules also bump the minor; prose bumps the patch (see
 checked-in `VERSION` — held by `tests/test_changelog.py`. A checker certified
 against an earlier version reads this file to see exactly what changed since.
 
-## 0.42.1
+## 0.43.0
+
+### Added
+
+- Ten runtime security scenarios for three capabilities. `refresh-sessions` gains
+  `sessions.rotation`: outside any grace period the implementation documents, a refresh
+  credential works once, and presenting a spent one revokes every refresh credential
+  descended from the same sign-in, while another sign-in's keep working. `native-clients`
+  gains `native.browser-refused`: a route that returns a refresh credential in its response
+  body refuses any request that carries browser provenance before it reads the credential,
+  alike for a valid, an invalid and a malformed one. `self-service-accounts` gains eight. A
+  request about an address answers alike, and sends that address exactly one message,
+  whether or not it has an account. An account exists only once a mailed token is redeemed,
+  and opens with the password given at redemption, so whoever asked cannot choose it. Tokens
+  work once, cannot be altered or read without the implementation's secret, travel only in a
+  link's fragment, and expire within a day for a reset and a week for a verification.
+  Repeated requests back off per caller and never lock out. A self-registered account starts
+  with the least authority, and closing an account needs the password and ends every
+  session.
+
+The scenario format, the catalog ids and the assurance lane vocabulary are unchanged. The
+new scenarios are new requirements for an implementation that offers those capabilities, so
+this bumps the minor.
 
 ### Changed
 
@@ -18,7 +40,8 @@ against an earlier version reads this file to see exactly what changed since.
   - the README's introduction, catalog format, enforcement layers, escape-hatch and
     finding-format wording, the refused surface's entry and the runtime security section;
   - the README's scorecard and conformance-level sections, and its "New stack" route for a
-    new checker, which stay and are marked as proposed for withdrawal by framework ADR 0203;
+    new checker, which stay until the rules move and are marked as withdrawn by framework
+    ADR 0203, accepted on 2026-11-06;
   - the descriptions in `catalog/schema.json`, `restricted-surface.json` and
     `findings.schema.json`, `AGENTS.md`, `CONTRIBUTING.md` and both package descriptions.
 

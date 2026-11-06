@@ -3,7 +3,7 @@
 This repository is the **specification** of Terp's secure-by-default rules,
 and of the declaration contracts Terp's programs read. The rules are written
 against Terp's architecture, and `terp-framework` is their only
-implementation; framework ADR 0203 (proposed) moves them there. It is
+implementation; framework ADR 0203 (accepted) moves them there. It is
 deliberately self-contained — plain JSON and sample files, no `terp.*` imports.
 
 ## This repository is public

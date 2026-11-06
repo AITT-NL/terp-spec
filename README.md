@@ -15,12 +15,12 @@ standard another stack can adopt as written. The repository is deliberately
 self-contained (no `terp.*` imports, plain JSON + sample files) and consumed
 as a **package**, never a repo path (ADR 0082).
 
-> **Proposed direction.** Framework ADR 0203 (proposed) moves the rules into
-> terp-framework and keeps this package for the contracts more than one
-> program reads (the deployment, workbench and layout declarations, the
+> **Accepted direction.** Framework ADR 0203, accepted on 2026-11-06, moves the
+> rules into terp-framework and keeps this package for the contracts more than
+> one program reads (the deployment, workbench and layout declarations, the
 > check-report and findings formats, and the conversation event stream),
 > renamed `terp-contracts`. It also withdraws the scorecard and the
-> conformance levels. Until it is accepted, this README describes the
+> conformance levels. Until the rules move, this README describes the
 > repository as it is.
 
 ## The package seam (ADR 0082)
@@ -308,9 +308,9 @@ consumer merges reports through their inventories.
 
 ## Scorecard format
 
-> Proposed for withdrawal with the conformance levels (framework ADR 0203). A
-> scorecard certifies a checker against the corpus, not an app, and the only
-> checker is the reference implementation's.
+> Withdrawn with the conformance levels by framework ADR 0203, and removed when
+> the rules move. A scorecard certifies a checker against the corpus, not an
+> app, and the only checker is the reference implementation's.
 
 A checker claiming certification emits a scorecard (`scorecard.schema.json`):
 the spec version it certified against, the checker's identity, and one entry
@@ -397,7 +397,12 @@ The scenarios cover related-entity scope, rejected mutations, authority snapshot
 browser-bound login, server-side logout, stale worker finalization, outbound budgets,
 rendered-log redaction, validated transport configuration, authenticated webhook metadata,
 promised job atomicity, file-reference binding, permission floors, replay authorization,
-live stream grants and fenced effects. An implementation that does not promise
+live stream grants and fenced effects. They also cover refresh rotation whose reuse revokes
+the sign-in, and body-carried refresh credentials that a browser cannot obtain. For
+self-service accounts they cover answers and work that do not disclose an account, proof of
+address with the password chosen when the mailed token is redeemed, tokens that work once,
+are sealed and expire, backoff per caller without lockout, the lowest starting authority,
+and closing an account. An implementation that does not promise
 job-wide atomicity states its actual transaction and retry contract; it cannot claim that
 closing a session reverses writes already committed. A resolver that cannot be cancelled
 states that limitation instead of claiming a hard elapsed bound for resolution.
@@ -753,9 +758,9 @@ rule can ship with its gap explicit and reviewed.
 
 ## Conformance levels
 
-> Proposed for withdrawal (framework ADR 0203). No implementation other than
-> the reference one exists, and the proposal is that an app's assurance comes
-> from its own per-release evidence, not from a level.
+> Withdrawn by framework ADR 0203, and removed when the rules move. No
+> implementation other than the reference one exists, and an app's assurance
+> comes from its own per-release evidence, not from a level.
 
 - **Level 1 — black-box:** the app passes the runnable conformance suite
   (`@terpjs/conformance`) for the capabilities it claims, including the
@@ -785,7 +790,7 @@ rule can ship with its gap explicit and reviewed.
 - **New stack** → implement the `static-portable` rules however you like; the
   corpus is the acceptance test, findings must attribute to catalog ids, and
   the certification summary is a scorecard (`scorecard.schema.json`).
-  Framework ADR 0203 (proposed) withdraws this route. The corpus is written in
+  Framework ADR 0203 withdraws this route. The corpus is written in
   the reference stack's languages against its API, so another stack would have
   to translate it before it could serve as an acceptance test.
 - **Format change** → bump `VERSION` and add the matching `CHANGELOG.md` entry
