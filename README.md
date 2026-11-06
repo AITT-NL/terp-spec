@@ -379,7 +379,12 @@ The scenarios cover related-entity scope, rejected mutations, authority snapshot
 browser-bound login, server-side logout, stale worker finalization, outbound budgets,
 rendered-log redaction, validated transport configuration, authenticated webhook metadata,
 promised job atomicity, file-reference binding, permission floors, replay authorization,
-live stream grants and fenced effects. An implementation that does not promise
+live stream grants and fenced effects. They also cover refresh rotation whose reuse revokes
+the sign-in, and body-carried refresh credentials that a browser cannot obtain. For
+self-service accounts they cover answers and work that do not disclose an account, proof of
+address with the password chosen when the mailed token is redeemed, tokens that work once,
+are sealed and expire, backoff per caller without lockout, the lowest starting authority,
+and closing an account. An implementation that does not promise
 job-wide atomicity states its actual transaction and retry contract; it cannot claim that
 closing a session reverses writes already committed. A resolver that cannot be cancelled
 states that limitation instead of claiming a hard elapsed bound for resolution.
