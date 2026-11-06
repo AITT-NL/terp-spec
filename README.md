@@ -5,13 +5,23 @@
 
 # The Terp Standard — rule catalog + violation corpus
 
-This repository is the **stack-neutral specification** of Terp's
-secure-by-default rules (ADR 0080, made consumable by ADR 0081). The framework
-([terp-framework](https://github.com/AITT-NL/terp-framework)) is the
-**reference implementation**; this spec is what any other stack would
-implement and be verified against. It is deliberately self-contained (no
-`terp.*` imports, plain JSON + sample files) and consumed as a **package**,
-never a repo path (ADR 0082).
+This repository specifies Terp's secure-by-default rules (ADR 0080, made
+consumable by ADR 0081) and the declaration contracts Terp's programs read.
+The rules are written against Terp's architecture, and the framework
+([terp-framework](https://github.com/AITT-NL/terp-framework)) is their only
+implementation: most of them presuppose its module manifests, policies and
+write path, and the corpus is written against its API. They are not a
+standard another stack can adopt as written. The repository is deliberately
+self-contained (no `terp.*` imports, plain JSON + sample files) and consumed
+as a **package**, never a repo path (ADR 0082).
+
+> **Accepted direction.** Framework ADR 0203, accepted on 2026-11-06, moves the
+> rules into terp-framework and keeps this package for the contracts more than
+> one program reads (the deployment, workbench and layout declarations, the
+> check-report and findings formats, and the conversation event stream),
+> renamed `terp-contracts`. It also withdraws the scorecard and the
+> conformance levels. Until the rules move, this README describes the
+> repository as it is.
 
 ## The package seam (ADR 0082)
 
@@ -66,8 +76,8 @@ The artifacts:
    format plus the run's own evaluated-rule inventory, spec version, checker
    identity and verdict, so a driving tool can join per-rule verdicts to the
    catalog fail-closed.
-6. **The refused surface** (`restricted-surface.json`) — the stack-neutral,
-   normative declaration of the raw frontend primitives an app module must not
+6. **The refused surface** (`restricted-surface.json`) — the normative
+   declaration, in browser terms rather than one component library's, of the raw frontend primitives an app module must not
    author (elements, attributes, egress globals/member calls, stylesheet
    extensions, deep-import segments). The portable prohibition rules cite it
    structurally (the `restricted_surface` catalog field); which sanctioned
@@ -156,13 +166,15 @@ machine-consumes it, not before.
 
 `catalog/<surface>/<rule>.json`, validated against `catalog/schema.json` (the
 schema is normative and travels with the spec). The normative statement of a
-rule is its `title` + `intent`, and that prose is **stack-neutral by
-construction**: plain prose, no docstring markup, no reference-implementation
-symbols, package paths, marker spellings, or repo-internal pointers (sibling
-rules are cited by catalog rule name). The reference realisation lives in the
-non-normative fields (`enforcement`, `reference`, `opt_out`, `guide_topic`).
-The standalone suite enforces the split
-(`test_normative_prose_is_stack_neutral`).
+rule is its `title` + `intent`, and that prose is **free of the reference
+implementation's vocabulary by construction**: plain prose, no docstring
+markup, no reference-implementation symbols, package paths, marker spellings,
+or repo-internal pointers (sibling rules are cited by catalog rule name). The
+reference realisation lives in the non-normative fields (`enforcement`,
+`reference`, `opt_out`, `guide_topic`). The standalone suite enforces the split
+(`test_normative_prose_is_stack_neutral`, whose name is older than this
+wording). It checks words, not portability: a rule can avoid every framework
+symbol and still presuppose Terp's architecture, and most of them do.
 
 | Field | Meaning |
 |---|---|
@@ -170,30 +182,32 @@ The standalone suite enforces the split
 | `surface` | `backend` or `frontend`. |
 | `title` | One-line statement of the invariant. |
 | `intent` | Why the rule exists — the drift or threat it prevents. |
-| `layer` | Cheapest faithful verification for a *new* stack: see below. |
-| `enforcement` | How the reference implementation enforces it (first entry: the `build-time` check). A `runtime` entry names the fail-closed runtime control pairing with it (the two-layer discipline a Level 3 stack must reproduce for the rules that require it); a `black-box` entry names the `@terpjs/conformance` probe title. For frontend rules, `reported_as` is the ESLint rule id violations surface as — several catalog rules share one core rule id, so the adapter publishes a `catalogRuleId()` mapping and findings are attributed through it. |
+| `layer` | An estimate of the rule's porting cost to another stack (none exists): see below. |
+| `enforcement` | How the reference implementation enforces it (first entry: the `build-time` check). A `runtime` entry names the fail-closed runtime control pairing with it (the two-layer discipline's runtime half, for the rules that require it); a `black-box` entry names the `@terpjs/conformance` probe title. For frontend rules, `reported_as` is the ESLint rule id violations surface as — several catalog rules share one core rule id, so the adapter publishes a `catalogRuleId()` mapping and findings are attributed through it. |
 | `runtime` | **Mandatory.** The rule's runtime-applicability classification (`required` / `not-applicable` / `deferred`) plus a `rationale` (mandatory for exemptions) and, for `deferred`, a `tracking` reference naming where the deferral is tracked — see “Runtime applicability” below. |
 | `restricted_surface` | Frontend prohibition rules only: the `restricted-surface.json` keys the rule realises — the structural citation the spec suite resolves (every key must be claimed by some rule; a prose mention in `intent` must agree with the field). |
 | `opt_out` | The *reference realisation* of the abstract escape-hatch contract (see below). |
 | `escape` | **Normative**, in place of `opt_out`, only for a rule whose subject is a checked-in declaration that cannot carry an inline marker: the declared state that is its one governed way out (see below). |
-| `reference` | Optional reference-implementation metadata: the compliant realisation the reference stack offers (component / helper names). **Not normative** — the `title` and `intent` state the stack-neutral invariant; another stack ships its own realisation. |
-| `guide_topic` | Reference-implementation metadata (backend only): the `terp guide` topic teaching the compliant pattern. Not normative for other stacks. |
+| `reference` | Optional reference-implementation metadata: the compliant realisation the reference stack offers (component / helper names). **Not normative** — the `title` and `intent` state the invariant. |
+| `guide_topic` | Reference-implementation metadata (backend only): the `terp guide` topic teaching the compliant pattern. Not normative. |
 | `corpus` | Whether `corpus/<id>/` cases exist yet (the parity test holds this flag to the directory truth; a covered rule needs at least one `violation-*` **and** one `compliant-*` case). |
 
 ### Enforcement layers
 
 - **`black-box`** — the invariant is observable by probing a *running* app
-  (no source access needed). Portable to any stack via a conformance suite;
-  each such rule names its probe in a `black-box` enforcement entry
-  (`packages/frontend/conformance/tests/standard.spec.ts`).
+  (no source access needed). Each such rule names its probe in a `black-box`
+  enforcement entry (`packages/frontend/conformance/tests/standard.spec.ts`);
+  the probes as written sign in and read through the reference
+  implementation's own routes.
 - **`static-portable`** — expressible as source patterns a generic engine
-  (Semgrep/ast-grep-class) can realise per language from this spec.
+  (Semgrep/ast-grep-class) can match. Matching is portable; adopting the rule
+  is not, when it presupposes Terp's architecture, as about half of these do.
 - **`static-bespoke`** — needs deep framework knowledge (traits, `ModuleSpec`,
-  archetype slots); built per officially certified stack only.
+  archetype slots).
 
-The classification is a judgment about *porting cost*, not a limit on the
-reference implementation — today every rule is enforced by `terp.arch` or
-`@terpjs/eslint-boundaries` regardless of layer.
+The classification is a judgment about *porting cost*, recorded as data, not a
+limit on the reference implementation — every rule is enforced by `terp.arch`
+or `@terpjs/eslint-boundaries` regardless of layer. No second stack exists.
 
 ### Runtime applicability (the two-layer discipline, per rule)
 
@@ -234,14 +248,14 @@ The `opt_out` field records the reference realisation's concrete spelling
 in TypeScript) — the spelling is derived from the rule id, and the spec suite
 holds the derivation. The escape-hatch **governance rules themselves** (the
 budget ratchet, the ungoverned-marker condition) carry no `opt_out`:
-governance cannot be waived by the mechanism it governs. Another stack
-implements the same contract with its own comment syntax.
+governance cannot be waived by the mechanism it governs. Each surface
+realises the same contract in its own comment syntax.
 
 A rule whose subject is a checked-in declaration that **cannot carry a marker**
 — a JSON document has no comments — has no marker spelling to record, and a
 recorded one would send a reader looking for a syntax the file does not have.
 Its one governed way out is a *state of the declaration itself*, stated
-stack-neutrally in the entry's `escape` field in place of `opt_out` (the
+in the entry's `escape` field in place of `opt_out` (the
 deployment declaration's three rules: opting the whole file out with a reason a
 tool then reports, or, for the render rule, declaring the build files the app's
 own; a marker in a file a generator rewrites would be erased by the next render). Such a rule is listed by name in the spec suite, as the
@@ -264,7 +278,7 @@ A conformant checker emits an array of findings per checked tree, shaped by
 consumers acting on findings without re-reading the catalog), and a
 `fingerprint` (a stable, checker-chosen per-instance identifier so a finding
 can be tracked across line-shifting edits). Attribution is always to the
-stack-neutral catalog id — the reference ESLint adapter, whose core rule ids
+catalog id — the reference ESLint adapter, whose core rule ids
 are shared between several catalog rules, publishes this mapping as
 `catalogRuleId()` in `@terpjs/eslint-boundaries`.
 
@@ -293,6 +307,10 @@ green. A multi-surface toolchain emits one report per checker run and a
 consumer merges reports through their inventories.
 
 ## Scorecard format
+
+> Withdrawn with the conformance levels by framework ADR 0203, and removed when
+> the rules move. A scorecard certifies a checker against the corpus, not an
+> app, and the only checker is the reference implementation's.
 
 A checker claiming certification emits a scorecard (`scorecard.schema.json`):
 the spec version it certified against, the checker's identity, and one entry
@@ -355,7 +373,7 @@ Source-corpus conformance establishes what a checker recognizes. It does not est
 that a running implementation preserves the authority or transaction boundary described
 by a rule. An implementation claiming the standard's runtime security guarantees **MUST**
 also execute every applicable case in `runtime-security.fixtures.json`, whose format is
-`runtime-security.schema.json`. These scenarios are normative, stack-neutral inputs for an
+`runtime-security.schema.json`. These scenarios are normative inputs for an
 implementation's test adapter; their presence in a package is not execution evidence.
 
 Each case names the capability that makes it applicable, related source rules where they
@@ -740,6 +758,10 @@ rule can ship with its gap explicit and reviewed.
 
 ## Conformance levels
 
+> Withdrawn by framework ADR 0203, and removed when the rules move. No
+> implementation other than the reference one exists, and an app's assurance
+> comes from its own per-release evidence, not from a level.
+
 - **Level 1 — black-box:** the app passes the runnable conformance suite
   (`@terpjs/conformance`) for the capabilities it claims, including the
   `standard:` probes the `black-box` catalog entries name.
@@ -768,6 +790,9 @@ rule can ship with its gap explicit and reviewed.
 - **New stack** → implement the `static-portable` rules however you like; the
   corpus is the acceptance test, findings must attribute to catalog ids, and
   the certification summary is a scorecard (`scorecard.schema.json`).
+  Framework ADR 0203 withdraws this route. The corpus is written in
+  the reference stack's languages against its API, so another stack would have
+  to translate it before it could serve as an acceptance test.
 - **Format change** → bump `VERSION` and add the matching `CHANGELOG.md` entry
   (the suite holds the top entry to the version). Pre-1.0, a **changed
   contract** — a new mandatory catalog field (0.5.0's `runtime` block), a

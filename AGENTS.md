@@ -40,11 +40,14 @@ naming someone, it is not general enough to belong in a specification.
 
 ## What this repository is
 
-The **stack-neutral specification** of Terp's secure-by-default rules (ADR 0080,
-made consumable by ADR 0081). `terp-framework` is the reference implementation;
-this is what any other stack would implement and be verified against. It is
-deliberately self-contained — plain JSON and sample files, no `terp.*` imports —
-and is consumed as a **package**, never a repo path (ADR 0082).
+The specification of Terp's secure-by-default rules (ADR 0080, made consumable
+by ADR 0081), and the declaration contracts Terp's programs read. It is **not
+stack-neutral**: the rules are written against Terp's architecture, and
+`terp-framework` is their only implementation. Framework ADR 0203 (accepted)
+moves the rules into the framework and keeps this package for the contracts,
+renamed `terp-contracts`. It is deliberately self-contained — plain JSON and
+sample files, no `terp.*` imports — and is consumed as a **package**, never a
+repo path (ADR 0082).
 
 ## The ratchets — every one of them only shrinks
 

@@ -31,6 +31,24 @@ The scenario format, the catalog ids and the assurance lane vocabulary are uncha
 new scenarios are new requirements for an implementation that offers those capabilities, so
 this bumps the minor.
 
+### Changed
+
+- **The prose stops calling the rules stack-neutral.** No rule, schema shape, corpus case or
+  fixture changes. The rules are written against Terp's architecture, the reference
+  implementation is their only one, and the corpus is written against its API, so "what any
+  other stack would implement" described a standard that does not exist. Changed:
+  - the README's introduction, catalog format, enforcement layers, escape-hatch and
+    finding-format wording, the refused surface's entry and the runtime security section;
+  - the README's scorecard and conformance-level sections, and its "New stack" route for a
+    new checker, which stay until the rules move and are marked as withdrawn by framework
+    ADR 0203, accepted on 2026-11-06;
+  - the descriptions in `catalog/schema.json`, `restricted-surface.json` and
+    `findings.schema.json`, `AGENTS.md`, `CONTRIBUTING.md` and both package descriptions.
+
+  The declaration contracts keep their wording: more than one program reads them, which is
+  where neutrality is real. The generated rule pages still end their reference text with
+  "another stack ships its own realisation" until they are regenerated where the rules land.
+
 ## 0.42.0
 
 ### Added
