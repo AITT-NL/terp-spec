@@ -48,6 +48,13 @@ this bumps the minor.
   The declaration contracts keep their wording: more than one program reads them, which is
   where neutrality is real. The generated rule pages still end their reference text with
   "another stack ships its own realisation" until they are regenerated where the rules land.
+- **`backend/reads_use_base_query` describes its runtime backstop as it now is.** Its intent
+  and its runtime rationale said the request session re-applies the scope to single-entity
+  reads. Since terp-framework 0.36.0 the session applies it to every ORM read, as loader
+  criteria on each mapped entity a statement reaches, aggregates included. A read that
+  reaches a scoped table only through its Core table names no mapped entity, so the
+  build-time check is its only control, and only where the source names the model. The
+  classification stays `required`, and the rule page is regenerated.
 
 ## 0.42.0
 
