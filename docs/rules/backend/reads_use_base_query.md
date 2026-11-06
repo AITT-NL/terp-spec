@@ -8,7 +8,7 @@
 
 ## Why this rule exists
 
-A model that mixes a soft-delete or tenant-scope trait carries row scope. A bespoke read that queries the model directly — instead of building on the composed scoped query — drops that scope, leaking soft-deleted or cross-tenant rows (closing the composition point to overrides did not close a new read method that never calls it). Build reads on the scoped query and the declared filter seam; the request session re-applies the scope to single-entity reads as the runtime backstop, and this rule is the build-time early warning. The one sanctioned raw query — the scoped composition point itself — lives in the framework, not a module, so it is never scanned here.
+A model that mixes a soft-delete or tenant-scope trait carries row scope. A bespoke read that queries the model directly — instead of building on the composed scoped query — drops that scope, leaking soft-deleted or cross-tenant rows (closing the composition point to overrides did not close a new read method that never calls it). Build reads on the scoped query and the declared filter seam; the request session applies the scope to every ORM read as the runtime backstop (the mapped entities a statement reaches through its columns, joins, predicates and nested selects, aggregates included), and this rule is the build-time early warning. A read that names a scoped table only through its Core table reaches no mapped entity for the session to scope, so this rule is the only control for it, and only where the source names the model. The one sanctioned raw query — the scoped composition point itself — lives in the framework, not a module, so it is never scanned here.
 
 ## How the reference stack realises this
 
