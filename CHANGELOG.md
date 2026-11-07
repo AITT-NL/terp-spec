@@ -18,8 +18,11 @@ what the package carries, so this bumps the minor.
 No contract changes shape. The deployment, workbench, layout and conversation-event
 schemas, their fixtures, the finding format and the assurance profile are byte for byte
 those of 0.43.0, so a reader that mirrors one moves its pin without touching anything
-else. The check-report schema changes one description only: its `checker` field no
-longer cites the removed scorecard.
+else. The check-report schema changes three descriptions and nothing else. Its
+`checker` field no longer cites the removed scorecard. Its `spec_version` and its own
+description now say what has been true since the rules moved: `spec_version` names
+the check-report format a report follows, and the rule ids resolve against the catalog
+of the checker named in `checker`.
 The package keeps its name: `terp-spec` on PyPI and `@terpjs/spec` on npm. ADR 0203
 proposed `terp-contracts`, which sits one letter from the framework's `@terpjs/contract`
 design-token package, so the owner kept the existing name.
@@ -57,7 +60,8 @@ design-token package, so the owner kept the existing name.
   was the only control for a read that reaches a scoped table through its Core table. That
   stopped being true in terp-framework 0.37.0, which refuses such a statement when it
   executes (framework ADR 0204, decision 6). The rule now lives in terp-framework's
-  catalog, which is where its text is corrected.
+  catalog. At this release, that entry still carries the 0.43.0 sentence, and its
+  correction belongs there.
 
 ## 0.43.0
 

@@ -11,9 +11,11 @@ useDefault = true
 # the sample existed to catch. The corpus moved to terp-framework (its ADR 0203), but
 # CI scans every commit, and the commits before the move still hold those samples.
 #
-# So this allowlist covers history only: nothing at that path exists any more, and
-# test_supply_chain.py refuses a tree that brings it back, holds the allowlist to this
-# one path, and refuses an allowance by value, by commit or for a chosen rule.
+# Nothing at that path exists any more. test_supply_chain.py refuses a tree that brings
+# it back, holds the allowlist to this one path, and refuses an allowance by value, by
+# commit or for a chosen rule. The allowance is still by path in every commit, so a
+# branch that added a file there and deleted it before merging would pass the history
+# scan; review of the branch is what catches that.
 [[allowlists]]
 description = "the credential rule's violation samples in history are invented (AGENTS.md)"
 paths = ['''^corpus/backend/no_hardcoded_credentials/violation-''']

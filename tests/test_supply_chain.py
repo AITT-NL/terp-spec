@@ -105,8 +105,12 @@ def test_the_secret_scan_is_narrowed_only_where_a_match_cannot_be_real() -> None
     ``[extend]`` keeps the default ruleset on and disables none of it; nothing else is
     declared at the top level; each allowlist carries only a description and paths,
     so nothing is allowed by value, by commit or for a chosen rule; the paths are exactly
-    the one sanctioned prefix; and no file at that path exists, so the allowance cannot
-    hide a literal committed from now on.
+    the one sanctioned prefix; and no file at that path exists at HEAD.
+
+    What this cannot see: the allowance is by path in every commit, so a branch that
+    added a file under that path and deleted it again before merging would pass the
+    history scan. Review of the branch is what catches that; gitleaks offers no way to
+    bound a path allowance to commits before a given one.
     """
     config = _ROOT / ".gitleaks.toml"
     assert config.is_file(), (

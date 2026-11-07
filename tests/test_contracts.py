@@ -108,14 +108,14 @@ def test_the_findings_schema_is_checked_in() -> None:
 
 
 def test_the_layout_declaration_schema_is_well_formed() -> None:
-    """The document an app checks in to declare its layout, held to the same
-    discipline as the refused-surface file: sorted, unique, non-empty enums, and
-    nothing outside the validator subset this spec ships.
+    """The document an app checks in to declare its layout: sorted, unique,
+    non-empty enums, and nothing outside the validator subset this package ships.
 
     The subset check is not pedantry. This schema exists to be applied by a
-    consumer, and the smallest consumer available is the validator in this file —
-    so if the schema reaches for a keyword that validator cannot honour, the
-    schema is unusable by exactly the audience it was written for. Exercised by
+    consumer, and the smallest consumer available is the validator in
+    ``schema_subset.py`` — so if the schema reaches for a keyword that validator
+    cannot honour, the schema is unusable by exactly the audience it was written
+    for. Exercised by
     validating documents through it rather than by inspecting its keys, which is
     the only form that proves both at once."""
     schema = json.loads((_SPEC / "layout-declaration.schema.json").read_text(encoding="utf-8"))
