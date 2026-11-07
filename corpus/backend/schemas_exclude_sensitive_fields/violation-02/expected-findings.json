@@ -1,7 +1,0 @@
-[
-  {
-    "rule": "backend/schemas_exclude_sensitive_fields",
-    "path": "modules/connectors/router.py",
-    "line": 3
-  }
-]

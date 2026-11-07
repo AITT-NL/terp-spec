@@ -1,6 +1,0 @@
-.env
-.env.*
-!.env.example
-.app.env
-.app.*.env
-__pycache__/

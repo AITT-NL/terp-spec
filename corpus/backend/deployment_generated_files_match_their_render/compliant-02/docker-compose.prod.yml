@@ -1,6 +1,0 @@
-name: demo-prod
-
-services:
-  api:
-    image: demo-backend-prod
-    build: .

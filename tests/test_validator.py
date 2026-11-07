@@ -1,16 +1,16 @@
 """The minimal schema validator is itself tested (negative-case coverage).
 
-``tests/test_standard.py`` ships a deliberately minimal, dependency-free JSON
-Schema subset validator and every catalog entry passes through it — so the
-validator is load-bearing spec infrastructure. These negative cases prove it
-actually REJECTS malformed data (a validator that accepts everything would
-pass the whole catalog suite silently), and that it fails loudly on schema
+``tests/schema_subset.py`` is a deliberately minimal, dependency-free JSON
+Schema subset validator, and every contract suite passes its documents through
+it — so the validator is load-bearing infrastructure. These negative cases prove
+it actually REJECTS malformed data (a validator that accepts everything would
+pass every contract suite silently), and that it fails loudly on schema
 constructs outside its supported subset instead of skipping them.
 """
 
 from __future__ import annotations
 
-from test_standard import _validate
+from schema_subset import _validate
 
 
 def _errors(instance: object, schema: dict) -> list[str]:

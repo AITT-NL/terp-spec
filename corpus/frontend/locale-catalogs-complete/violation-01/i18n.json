@@ -1,7 +1,0 @@
-{
-  "sourceLocale": "en",
-  "locales": {
-    "en": { "label": "English" },
-    "nl": { "label": "Nederlands", "messages": {} }
-  }
-}

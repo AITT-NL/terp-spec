@@ -5,7 +5,7 @@ claim a toolchain emits from its release verification profile (see the
 README's assurance-profile section — the lane vocabulary and each lane's
 requirement level are normative and live in the spec, never in the document).
 These assertions hold the checked-in schema to its own contract with the same
-minimal validator the catalog suite uses, and pin the normative vocabulary so
+minimal validator every contract suite uses, and pin the normative vocabulary so
 it cannot drift silently between the schema and the README.
 """
 
@@ -15,7 +15,7 @@ import json
 
 from terp_spec import spec_dir, spec_version
 
-from test_standard import _validate
+from schema_subset import _validate
 
 _SPEC = spec_dir()
 

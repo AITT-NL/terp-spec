@@ -1,8 +1,0 @@
-{
-  "schemaVersion": 1,
-  "build": "own",
-  "compose": {
-    "file": "docker-compose.prod.yml"
-  },
-  "units": []
-}

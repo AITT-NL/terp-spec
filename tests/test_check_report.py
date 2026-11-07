@@ -3,12 +3,13 @@
 ``app-check-report.schema.json`` is the complete result of one checker
 invocation over one application tree: the evaluated-rule inventory, the spec
 version the rule ids resolve against, the checker's identity, and the findings
-— everything a driving tool needs to join per-rule verdicts to the catalog
+— everything a driving tool needs to join per-rule verdicts to the rule catalog
 fail-closed (a rule the run did not publish as evaluated can never render as
 passing). These assertions hold the checked-in schema to its own contract (it
 validates representative reports, rejects malformed ones, and its embedded
 finding shape is exactly the finding format), using the same minimal validator
-the catalog suite uses.
+every contract suite uses. The catalog the rule ids resolve against ships with the
+framework's checkers (terp-framework ADR 0203).
 """
 
 from __future__ import annotations
@@ -17,7 +18,7 @@ import json
 
 from terp_spec import spec_dir, spec_version
 
-from test_standard import _validate
+from schema_subset import _validate
 
 _SPEC = spec_dir()
 
@@ -126,20 +127,3 @@ def test_the_embedded_finding_shape_is_the_finding_format() -> None:
         "app-check-report.schema.json findings items must equal "
         "findings.schema.json items verbatim"
     )
-
-
-def test_sample_rule_ids_resolve_against_the_catalog() -> None:
-    """The documented samples name real catalog rules, so the reference shape
-    a checker implements from this suite is itself coherent."""
-    catalog = {
-        f"{surface}/{path.stem}"
-        for surface in ("backend", "frontend")
-        for path in (_SPEC / "catalog" / surface).glob("*.json")
-    }
-    sample = _sample()
-    for rule_id in (
-        *sample["rules"],
-        *sample["not_applicable"],
-        *(finding["rule"] for finding in sample["findings"]),
-    ):
-        assert rule_id in catalog, f"sample names an uncatalogued rule: {rule_id}"

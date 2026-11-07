@@ -1,9 +1,8 @@
-"""The workflows that publish the standard are held to the bar the standard sets.
+"""The workflows that publish the contracts are held to the bar the framework sets.
 
-This repository declares Terp's secure-by-default bar and holds OIDC publishing
-rights to two registries. The reference implementation installs the published
-``terp-spec``/``@terpjs/spec``, so every consumer's gate resolves an artifact these
-workflows produce. That made it the least-hardened repository in the platform while
+This repository holds OIDC publishing rights to two registries. The framework
+installs the published ``terp-spec``/``@terpjs/spec``, so every consumer's gate
+resolves an artifact these workflows produce. That made it the least-hardened repository in the platform while
 being the one that defines hardening: sixteen of seventeen ``uses:`` were floating
 tags, several of them inside ``environment: release`` jobs holding ``id-token:
 write``, and there was no updater, no workflow audit and no secret scan.
@@ -20,6 +19,7 @@ from __future__ import annotations
 
 import pathlib
 import re
+import tomllib
 
 _ROOT = pathlib.Path(__file__).resolve().parents[1]
 _WORKFLOWS = _ROOT / ".github" / "workflows"
@@ -29,8 +29,10 @@ _WORKFLOWS = _ROOT / ".github" / "workflows"
 _PINNED = re.compile(r"uses:\s*\S+@[0-9a-f]{40}\b")
 _ANY_USES = re.compile(r"^\s*(?:-\s*)?uses:\s*(\S+)", re.M)
 
-#: The commit of the reference implementation this standard certifies against.
-_REFERENCE_SHA = _ROOT / "REFERENCE_SHA"
+#: The one path the secret scan steps aside for, and only in history: the credential
+#: rule's violation samples, invented by construction, before the corpus moved to the
+#: framework in 0.44.0.
+_HISTORY_ONLY_PATHS = frozenset({"^corpus/backend/no_hardcoded_credentials/violation-"})
 
 
 def _workflows() -> list[pathlib.Path]:
@@ -92,51 +94,55 @@ def test_the_downloaded_scanner_is_checksum_verified() -> None:
         "the gitleaks download must be verified against a pinned SHA256 before it runs"
     )
 def test_the_secret_scan_is_narrowed_only_where_a_match_cannot_be_real() -> None:
-    """`corpus/` is the one tree whose files must carry credential-shaped literals.
+    """The scan steps aside for one path, and only for commits from before the corpus left.
 
-    A violation sample for ``backend/no_hardcoded_credentials`` that holds no
-    credential-shaped literal is a broken sample — the checker it exists to contract
-    would have nothing to flag. So the scan finds four there today and would find one
-    more with every sample added, and a per-line baseline would grow an entry each
-    time until appending to it is the reflex rather than the exception.
+    Until 0.44.0 the corpus lived here, and a violation sample for
+    ``backend/no_hardcoded_credentials`` that held no credential-shaped literal was a
+    broken sample. CI scans every commit, so those four invented literals would fail it
+    forever. A per-line baseline would do the same job less legibly.
 
-    Scoping is only defensible while it stays that narrow, so this asserts the shape
-    of the narrowing rather than merely that a config file exists: the default
-    ruleset stays on, every allowed path is under ``corpus/``, and nothing is allowed
-    by *value* or by commit — a value-shaped allowance is not confined to a
-    directory, so it would hide the same literal anywhere in the repository.
+    This holds the parsed configuration to one shape rather than searching its text:
+    ``[extend]`` keeps the default ruleset on and disables none of it; nothing else is
+    declared at the top level; each allowlist carries only a description and paths,
+    so nothing is allowed by value, by commit or for a chosen rule; the paths are exactly
+    the one sanctioned prefix; and no file at that path exists, so the allowance cannot
+    hide a literal committed from now on.
     """
     config = _ROOT / ".gitleaks.toml"
     assert config.is_file(), (
-        "corpus samples carry credential-shaped literals by construction; "
-        ".gitleaks.toml is where that is recorded, scoped and reviewable"
+        "the history holds invented credential-shaped samples; .gitleaks.toml is where "
+        "that is recorded, scoped and reviewable"
     )
-    text = config.read_text(encoding="utf-8")
-
-    assert re.search(r"useDefault\s*=\s*true", text), (
-        "a .gitleaks.toml without `[extend] useDefault = true` REPLACES the default "
-        "ruleset rather than extending it — the scan would then check almost nothing, "
-        "which on the terminal reads exactly like a clean scan"
+    parsed = tomllib.loads(config.read_text(encoding="utf-8"))
+    assert parsed.get("extend") == {"useDefault": True}, (
+        f".gitleaks.toml declares [extend] as {parsed.get('extend')!r}. It must be exactly "
+        "`useDefault = true`: without it the file REPLACES the default ruleset, and "
+        "`disabledRules`, `path` or `url` would switch detectors off or swap them"
     )
-
-    blocks = re.findall(r"paths\s*=\s*\[(.*?)\]", text, re.S)
-    assert blocks, "the allowlist declares no paths; delete the file instead"
-    quoted = re.findall(r"'''(.*?)'''|\"(.*?)\"", "\n".join(blocks), re.S)
-    patterns = [first or second for first, second in quoted]
-    assert patterns, f"no path patterns parsed out of {blocks!r}"
-    for pattern in patterns:
-        assert pattern.startswith("^corpus/"), (
-            f"{pattern!r} takes the secret scan off a tree outside `corpus/`. Only "
-            "corpus samples are invented by construction; anywhere else a match may be "
-            "a real credential, and the answer to one of those is to rotate it"
+    extra = sorted(set(parsed) - {"extend", "allowlists"})
+    assert not extra, (
+        f".gitleaks.toml declares {extra}. Only [extend] and [[allowlists]] belong here: "
+        "`rules` adds or overrides detectors, and a singular `allowlist` is a second, "
+        "unguarded place to narrow the scan"
+    )
+    paths: set[str] = set()
+    for allowlist in parsed.get("allowlists", []):
+        widening = sorted(set(allowlist) - {"description", "paths"})
+        assert not widening, (
+            f"an allowlist declares {widening}. Allow by path alone: `regexes` and "
+            "`stopwords` allow a match by value, `commits` by commit, and either hides the "
+            "same literal anywhere; `targetRules` and `condition` change what a path means"
         )
-
-    for widening in ("regexes", "stopwords", "commits"):
-        assert not re.search(rf"^\s*{widening}\s*=", text, re.M), (
-            f"`{widening}` allows a match by value or by commit rather than by path, so "
-            "it would hide the same literal anywhere in the repository — including a "
-            "real credential committed outside `corpus/`"
-        )
+        paths.update(allowlist.get("paths", []))
+    assert paths == _HISTORY_ONLY_PATHS, (
+        f"the secret scan is taken off {sorted(paths)}; it may be taken off exactly "
+        f"{sorted(_HISTORY_ONLY_PATHS)}, the invented samples in history. Anywhere else a "
+        "match may be a real credential, and the answer to one of those is to rotate it"
+    )
+    assert not (_ROOT / "corpus").exists(), (
+        "corpus/ is back. The allowance covers the samples in history only; the corpus "
+        "lives in terp-framework, beside the checks it holds"
+    )
 
 
 def _steps_by_job(text: str) -> list[tuple[str, list[str]]]:
@@ -175,7 +181,7 @@ def test_the_jobs_and_their_steps_are_discovered() -> None:
     """Discovery that quietly found nothing would make the assertion below pass."""
     release = _steps_by_job((_WORKFLOWS / "release.yml").read_text(encoding="utf-8"))
     names = {job for job, _ in release}
-    assert {"verify", "certify-against-reference", "publish-pypi"} <= names, names
+    assert {"verify", "publish-pypi", "publish-npm", "github-release"} <= names, names
     assert any(ids for _, ids in release), "no step ids parsed out of release.yml"
 
 
@@ -192,7 +198,7 @@ def test_no_job_declares_one_step_id_twice() -> None:
     And `release.yml` runs on `push: tags: ["v*"]` alone, so the first run that
     would have surfaced it is the release itself: the tag is already pushed, and
     the fix is a new tag. This assertion exists because that shipped — the second
-    `id: reference` went in beside an existing one while the certification
+    `id: reference` went in beside an existing one while a cross-repository
     checkout was being pinned, and every run of the publishing workflow failed at
     startup from that commit until it was noticed.
     """
@@ -204,59 +210,3 @@ def test_no_job_declares_one_step_id_twice() -> None:
                 "rejects the workflow before it starts, so this never appears as a "
                 "failing step — give the later step its own id"
             )
-
-
-# --------------------------------------------------------------------------- #
-# The pinned reference (the certification seam)                                #
-# --------------------------------------------------------------------------- #
-def test_the_reference_commit_is_recorded() -> None:
-    assert _REFERENCE_SHA.is_file(), (
-        "REFERENCE_SHA records the reference-implementation commit this standard "
-        "certifies against — without it the cross-repo checkout takes whatever the "
-        "default branch happened to be, and the certification claim names no commit"
-    )
-    sha = _REFERENCE_SHA.read_text(encoding="utf-8").strip()
-    assert re.fullmatch(r"[0-9a-f]{40}", sha), (
-        f"REFERENCE_SHA must be one full 40-character commit sha, not {sha!r}"
-    )
-
-
-def test_the_certifying_workflows_check_out_the_pinned_reference() -> None:
-    """An unpinned cross-repo checkout compounds twice: a spec pull request's
-    green-ness comes to depend on a repository nobody in it touched, so the
-    reference going red for any reason blocks all spec work and reads as a spec
-    problem — and the commit a release certified against is unrecorded, so the
-    claim cannot be reproduced."""
-    for name in ("ci.yml", "release.yml"):
-        text = (_WORKFLOWS / name).read_text(encoding="utf-8")
-        block = text.split("repository: AITT-NL/terp-framework", 1)
-        assert len(block) == 2, f"{name} no longer checks out the reference implementation"
-        following = block[1].split("path: framework", 1)[0]
-        assert "ref:" in following, (
-            f"{name} checks out the reference implementation with no `ref:` — pin it to "
-            "REFERENCE_SHA, and let reference-drift.yml watch the default branch"
-        )
-
-
-def test_exactly_one_workflow_tracks_the_default_branch_on_purpose() -> None:
-    """Pinning has a cost that has to be paid somewhere: nothing would otherwise
-    notice the reference moving until the next deliberate bump. `reference-drift`
-    pays it on its own schedule, where a divergence is its own named red build."""
-    drift = _WORKFLOWS / "reference-drift.yml"
-    assert drift.is_file(), (
-        "REFERENCE_SHA pins the certification; reference-drift.yml is what keeps the "
-        "pin honest by certifying against the reference's default branch on a schedule"
-    )
-    text = drift.read_text(encoding="utf-8")
-    assert "schedule:" in text and "workflow_dispatch:" in text, (
-        "the drift job must run on a schedule (so drift surfaces without being asked) "
-        "and on demand (so a bump can be proven before it is made)"
-    )
-    assert "repository: AITT-NL/terp-framework" in text
-    following = text.split("repository: AITT-NL/terp-framework", 1)[1].split(
-        "path: framework", 1
-    )[0]
-    assert "ref:" not in following, (
-        "reference-drift.yml exists to watch the DEFAULT BRANCH — pinning its checkout "
-        "would make it certify the same commit ci.yml already does, twice"
-    )

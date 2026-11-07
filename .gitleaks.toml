@@ -1,23 +1,19 @@
 # gitleaks configuration for terp-spec.
 #
-# The default ruleset is kept in full — this file only records where a match
+# The default ruleset is kept in full - this file only records where a match
 # cannot be a real credential, and why.
 [extend]
 useDefault = true
 
-# `corpus/` is a catalogue of *invented* samples. A violation sample for
-# `backend/no_hardcoded_credentials` has to carry a credential-shaped literal,
-# because a checker that does not flag it is the failure the sample exists to
-# catch. Scanning that tree for credentials is a guaranteed false positive, and
-# a per-line baseline would grow a new entry for every sample added — which is
-# how a leak detector turns into a formality nobody reads.
+# Until 0.44.0 this repository held the rule corpus, a catalogue of *invented*
+# samples. A violation sample for `backend/no_hardcoded_credentials` had to carry a
+# credential-shaped literal, because a checker that did not flag it was the failure
+# the sample existed to catch. The corpus moved to terp-framework (its ADR 0203), but
+# CI scans every commit, and the commits before the move still hold those samples.
 #
-# Everything outside `corpus/` is still scanned, including `catalog/`, `tools/`,
-# `tests/` and every workflow. `test_supply_chain.py` holds this allowlist to
-# `corpus/` alone, so widening it fails the build rather than passing quietly.
-#
-# AGENTS.md already forbids the thing this could hide — a corpus sample copied
-# from real code. Invent the sample; never paste one.
+# So this allowlist covers history only: nothing at that path exists any more, and
+# test_supply_chain.py refuses a tree that brings it back, holds the allowlist to this
+# one path, and refuses an allowance by value, by commit or for a chosen rule.
 [[allowlists]]
-description = "corpus samples are invented by construction (AGENTS.md)"
-paths = ['''^corpus/''']
+description = "the credential rule's violation samples in history are invented (AGENTS.md)"
+paths = ['''^corpus/backend/no_hardcoded_credentials/violation-''']

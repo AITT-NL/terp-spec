@@ -2,9 +2,9 @@
 
 The Git tag IS the release artifact (consumers pin ``uv``/``npm`` to it), so
 the workflow that turns a tag into a GitHub Release is itself part of the
-standard's integrity story. These assertions hold the checked-in workflow to
-its contract the same way ``test_standard.py`` holds the catalog to its
-schema: reading the repository's own artifacts, no framework required.
+contracts' integrity story. These assertions hold the checked-in workflow to
+its contract the same way ``test_contracts.py`` holds the packaging to the
+repository: reading the repository's own artifacts, no framework required.
 
 String-level on purpose: the repository is dependency-free (no YAML parser),
 and the contract is about the presence of specific fail-closed steps, not
@@ -96,31 +96,24 @@ def test_release_is_bound_to_the_verified_commit() -> None:
     )
 
 
-def test_release_requires_certification_against_the_reference() -> None:
-    """A tag can never publish a spec no conformant checker exists for: the
-    release runs the same reference-substitution certification as ci.yml and
-    the GitHub Release requires it (fail closed)."""
-    text = _workflow_text()
-    assert "certify-against-reference:" in text, (
-        "the release workflow must certify the tagged spec against the "
-        "reference implementation (the ci.yml substitution), not only "
-        "self-consistency"
+def test_no_workflow_checks_out_another_repository() -> None:
+    """Nothing here waits on another repository (framework ADR 0203).
+
+    The rules, their corpus and the checks that hold them live in terp-framework, so the
+    certification job that checked the framework out at a pinned commit went with them.
+    A workflow that checked out another repository again would bring back the coupling
+    that made a new rule need a fixed push order across two repositories.
+    """
+    workflows = _WORKFLOW.parent
+    offenders = sorted(
+        path.name
+        for path in workflows.glob("*.yml")
+        if re.search(r"^\s+repository:", path.read_text(encoding="utf-8"), re.M)
     )
-    assert "repository: AITT-NL/terp-framework" in text, (
-        "certification checks out the reference framework"
-    )
-    assert "uv pip install -e ../spec" in text and "node_modules/@terpjs/spec" in text, (
-        "certification must substitute the tagged checkout for BOTH pinned "
-        "spec packages (terp-spec and @terpjs/spec)"
-    )
-    assert 'ln -s "$GITHUB_WORKSPACE/spec" node_modules/@terpjs/spec' in text, (
-        "the npm substitution must cover the @terpjs scope (ADR 0086)"
-    )
-    assert re.search(
-        r"needs:\s*\[verify,\s*certify-against-reference(,[^\]]*)?\]", text
-    ), (
-        "the GitHub Release must require the certification job — a failed "
-        "certification refuses the release"
+    assert not offenders, f"these workflows check out another repository: {offenders}"
+    assert not (workflows / "reference-drift.yml").exists(), (
+        "reference-drift.yml watched a reference implementation this repository no "
+        "longer certifies against"
     )
 
 
@@ -136,8 +129,8 @@ def test_release_workflow_keeps_permissions_minimal() -> None:
 
 
 def test_release_publishes_to_both_registries() -> None:
-    """ADR 0086: a tag publishes the standard, it does not only announce it.
-    Both distributions go out from this workflow, gated on certification and
+    """ADR 0086: a tag publishes the contracts, it does not only announce them.
+    Both distributions go out from this workflow, gated on verification and
     bound to the verified commit, with no long-lived registry token."""
     text = _workflow_text()
     assert "publish-pypi:" in text and "publish-npm:" in text, (
@@ -147,11 +140,11 @@ def test_release_publishes_to_both_registries() -> None:
     for job in ("publish-pypi", "publish-npm"):
         block = _job_block(text, job)
         needs = re.search(r"needs:\s*\[([^\]]*)\]", block)
-        assert needs and {"verify", "certify-against-reference"} <= {
+        assert needs and "verify" in {
             name.strip() for name in needs.group(1).split(",")
         }, (
-            f"{job} must require certification \u2014 a version no conformant "
-            "checker exists for may never reach a registry"
+            f"{job} must require verification \u2014 a version whose tag, provenance "
+            "or self-consistency was not proven may never reach a registry"
         )
         assert "ref: ${{ needs.verify.outputs.verified_sha }}" in block, (
             f"{job} must check out the VERIFIED COMMIT, not the tag name \u2014 "

@@ -19,7 +19,7 @@
     },
     "checker": {
       "type": "object",
-      "description": "The checker's identity: tool name and its own version — the same identity the checker's certification scorecard (scorecard.schema.json) carries, so a consumer can tie a report to a verifiable certification claim.",
+      "description": "The checker's identity: tool name and its own version, so a consumer can tie a report to the toolchain that produced it.",
       "required": ["tool", "version"],
       "additionalProperties": false,
       "properties": {

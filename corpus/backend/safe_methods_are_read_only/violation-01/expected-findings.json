@@ -1,7 +1,0 @@
-[
-  {
-    "rule": "backend/safe_methods_are_read_only",
-    "path": "modules/notes/router.py",
-    "line": 3
-  }
-]

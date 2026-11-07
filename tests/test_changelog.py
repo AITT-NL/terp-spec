@@ -1,8 +1,8 @@
-"""The standard has a changelog, and the changelog cannot lie (spec hygiene).
+"""The contracts have a changelog, and the changelog cannot lie.
 
-``VERSION`` is the semver of the standard; ``CHANGELOG.md`` is the change
-history keyed to it — what a checker certified against an earlier version
-reads to see exactly what changed since. Held consistent the same way the
+``VERSION`` is the semver of the contracts; ``CHANGELOG.md`` is the change
+history keyed to it — what a reader pinned to an earlier version reads to see
+exactly what changed since. Held consistent the same way the
 release workflow is: the top entry's version must equal the checked-in
 ``VERSION``, so a version bump cannot ship without its changelog entry (and a
 changelog entry cannot claim an unreleased version).
