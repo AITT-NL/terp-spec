@@ -48,7 +48,10 @@
       "violation-44": { "field": "$.volumes[0].mount.path", "allowed": "a path inside var/, relative to where the image runs the app, such as var/files" },
       "violation-45": { "field": "$.volumes[0].mount.path", "allowed": "a path inside var/ with no segment that begins with a dot" },
       "violation-46": { "field": "$.volumes[0].mount.units[1]", "allowed": "a declared unit's id: api, db, migrate, web" },
-      "violation-47": { "field": "$.volumes[0].mount", "allowed": "a mount: in the generated state the generator renders where each volume goes" }
+      "violation-47": { "field": "$.volumes[0].mount", "allowed": "a mount: in the generated state the generator renders where each volume goes" },
+      "violation-48": { "field": "$.generator.recipes.site", "allowed": "a declared web unit's id: web" },
+      "violation-49": { "field": "$.generator.recipes.api", "allowed": "a declared web unit's id: web" },
+      "violation-50": { "field": "$.generator.recipes.web", "allowed": "static-site" }
     },
     "backend/deployment_declaration_tells_the_truth": {
       "violation-01": { "field": "$.units[4].id", "allowed": "a service of the profile: api, db, migrate, web" },
@@ -76,7 +79,10 @@
       "violation-04": { "in": "pyproject.toml", "field": "project.name", "allowed": "a name compose and Docker accept as a project and an image repository name: lower-case letters and digits, joined by -, _ or __" },
       "violation-05": { "in": ".copier-answers.yml", "field": "deploy_build", "allowed": "generated, the build deployment.json declares" },
       "violation-06": { "field": "$.units[2].dependsOn", "allowed": "a start order without a cycle" },
-      "violation-07": { "field": "$.units[3].command", "allowed": "an argument list - the generator has no command of its own for role virus-scanner" }
+      "violation-07": { "field": "$.units[3].command", "allowed": "an argument list - the generator has no command of its own for role virus-scanner" },
+      "violation-08": { "field": "$.units[4].role", "allowed": "one web unit without a recipe, beside at most one static-site unit - or build own" },
+      "violation-09": { "field": "$.generator.recipes.docs", "allowed": "one static-site unit, beside at most one web unit without a recipe - or build own" },
+      "violation-10": { "field": "$.generator.recipes.site", "allowed": "a static-site unit beside a locked site: site/package-lock.json - or build own" }
     }
   },
   "trees": [

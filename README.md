@@ -225,12 +225,19 @@ Three rules check it, and the schema is what the first one reads:
 
 **The generator's words.** Two words exist for the generated state. `generator`
 holds what only a generator reads, and is valid nowhere else: beside `own` it is
-refused, because nothing would honour it. Its one word so far,
-`generator.systemPackages`, names operating-system packages from a closed
+refused, because nothing would honour it. It has two words.
+`generator.systemPackages` names operating-system packages from a closed
 system-package table the stack publishes, one pinned source per entry, as the
 datastore table does for images; a reader refuses a name its table does not carry
 and names the ones it does, so a stack whose table is empty refuses every name,
-and the pattern refuses a name that could be read as an option. `volumes[].mount`
+and the pattern refuses a name that could be read as an option.
+`generator.recipes` (`{"site": "static-site"}`) maps a web unit's id to the
+recipe its image is built from. A recipe is a name and nothing else: what its
+build takes and how its image serves the result is the stack's to fix, so two
+apps that name one recipe get one build. `static-site` is the only recipe, and a
+reader refuses a key that names no declared web unit, naming the web units the
+file declares. A web unit with no entry is built as the app's own web tier is.
+`volumes[].mount`
 (`{"path": "var/files", "units": ["api", "worker"]}`) says where a volume is
 mounted and on which declared units, always inside the app's `var/` directory
 with no segment that begins with a dot. Under `own` it restates the profile,
