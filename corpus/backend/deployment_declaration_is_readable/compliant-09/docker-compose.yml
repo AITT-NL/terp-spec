@@ -1,5 +1,0 @@
-# The development profile. Never the deployment one.
-services:
-  api:
-    build: .
-    command: ["terp", "dev"]

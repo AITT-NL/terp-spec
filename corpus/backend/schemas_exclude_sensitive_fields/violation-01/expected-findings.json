@@ -1,7 +1,0 @@
-[
-  {
-    "rule": "backend/schemas_exclude_sensitive_fields",
-    "path": "modules/users/schemas.py",
-    "line": 3
-  }
-]

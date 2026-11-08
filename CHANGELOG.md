@@ -1,11 +1,67 @@
-# Changelog — the Terp Standard
+# Changelog — terp-spec
 
-The change history of the spec, keyed to `VERSION` (the semver of the
-standard). Pre-1.0, a **changed contract** bumps the minor; purely additive
-fields and new rules also bump the minor; prose bumps the patch (see
-"Growing the spec" in the README). The top entry's version must equal the
-checked-in `VERSION` — held by `tests/test_changelog.py`. A checker certified
-against an earlier version reads this file to see exactly what changed since.
+The change history of the contracts, keyed to `VERSION`. Pre-1.0, a **changed
+contract** bumps the minor; purely additive fields also bump the minor; prose bumps
+the patch (see "Changing a contract" in the README). The top entry's version must
+equal the checked-in `VERSION` — held by `tests/test_changelog.py`. A reader pinned
+to an earlier version reads this file to see exactly what changed since. Up to
+0.43.0 this package also carried the rule catalog, and the entries below record it.
+
+## 0.44.0
+
+This package now holds only the contracts more than one Terp program reads. The rules
+moved to terp-framework in its 0.38.0 (framework ADR 0203), where they ship with the
+checkers that enforce them: the backend catalog with `terp-arch`, the frontend catalog
+and the refused surface with `@terpjs/eslint-boundaries`. Removing artifacts changes
+what the package carries, so this bumps the minor.
+
+No contract changes shape. The deployment, workbench, layout and conversation-event
+schemas, their fixtures, the finding format and the assurance profile are byte for byte
+those of 0.43.0, so a reader that mirrors one moves its pin without touching anything
+else. The check-report schema changes three descriptions and nothing else. Its
+`checker` field no longer cites the removed scorecard. Its `spec_version` and its own
+description now say what has been true since the rules moved: `spec_version` names
+the check-report format a report follows, and the rule ids resolve against the catalog
+of the checker named in `checker`.
+The package keeps its name: `terp-spec` on PyPI and `@terpjs/spec` on npm. ADR 0203
+proposed `terp-contracts`, which sits one letter from the framework's `@terpjs/contract`
+design-token package, so the owner kept the existing name.
+
+### Removed
+
+- The rule catalog (`catalog/`, with its schema), the violation corpus (`corpus/`, with
+  `PENDING.json` and `RESIDUALS.json`), the refused surface (`restricted-surface.json`),
+  the generated rule pages (`docs/rules/`) and their generator. All of them live in
+  terp-framework.
+- The runtime security scenarios (`runtime-security.schema.json` and
+  `runtime-security.fixtures.json`). They live beside the framework's tests that run them.
+- The scorecard format (`scorecard.schema.json`) and the README's scorecard and
+  conformance-level sections. ADR 0203 withdrew both: a scorecard certified a checker
+  against the corpus, not an app.
+- The `certify-against-reference` jobs in CI and in the release workflow, the scheduled
+  `reference-drift` workflow, and `REFERENCE_SHA`. No CI job checks out another
+  repository, and a GitHub Release no longer names a reference commit.
+
+### Changed
+
+- `terp_spec.spec_dir()` recognises the data directory by `VERSION` and
+  `findings.schema.json` instead of `catalog/`, and both packaging manifests ship
+  exactly the remaining artifacts.
+- The README, AGENTS.md and CONTRIBUTING.md describe the package as it now is. The
+  circular coupling between the two repositories' CIs, and the push order it needed, are
+  gone.
+- The secret scan still steps aside for the credential rule's violation samples, which
+  remain in this repository's history, and for nothing else.
+  `tests/test_supply_chain.py` refuses a `corpus/` tree that would bring them back.
+
+### Corrected
+
+- 0.43.0's runtime rationale for `backend/reads_use_base_query` said the build-time check
+  was the only control for a read that reaches a scoped table through its Core table. That
+  stopped being true in terp-framework 0.37.0, which refuses such a statement when it
+  executes (framework ADR 0204, decision 6). The rule now lives in terp-framework's
+  catalog. At this release, that entry still carries the 0.43.0 sentence, and its
+  correction belongs there.
 
 ## 0.43.0
 

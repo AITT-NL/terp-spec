@@ -1,6 +1,0 @@
-# Restarts the long-running services after a host reboot.
-services:
-  api:
-    restart: always
-  web:
-    restart: always

@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://terp.dev/spec/app-check-report.schema.json",
   "title": "Terp Standard application check report",
-  "description": "The complete, self-describing result of ONE checker invocation over ONE application tree. Findings alone cannot support per-rule verdicts: a rule with zero findings is only passing if the run actually evaluated it, and a consumer must never supply that knowledge itself — its own catalog copy can be newer or older than the checked app's pinned toolchain. So the report carries its own evaluated-rule inventory, the spec version its rule ids resolve against, and the checker's identity: everything a driving tool needs to join verdicts to the catalog fail-closed. A rule absent from `rules` and `not_applicable` was not evaluated and can never render as passing. A multi-surface toolchain emits one report per checker run; a consumer merges reports through their inventories.",
+  "description": "The complete, self-describing result of ONE checker invocation over ONE application tree. Findings alone cannot support per-rule verdicts: a rule with zero findings is only passing if the run actually evaluated it, and a consumer must never supply that knowledge itself — its own catalog copy can be newer or older than the checked app's pinned toolchain. So the report carries its own evaluated-rule inventory, the version of the format it follows, and the checker's identity, whose version names the catalog release its rule ids resolve against (the catalog ships with the checker): everything a driving tool needs to join verdicts to the catalog fail-closed. A rule absent from `rules` and `not_applicable` was not evaluated and can never render as passing. A multi-surface toolchain emits one report per checker run; a consumer merges reports through their inventories.",
   "type": "object",
   "required": ["terp_check_report", "spec_version", "checker", "ok", "rules", "findings"],
   "additionalProperties": false,
@@ -14,12 +14,12 @@
     },
     "spec_version": {
       "type": "string",
-      "description": "The spec semver (VERSION) whose catalog the rule ids in this report resolve against — the checked app's own pinned standard, which may differ from any consumer-side catalog copy.",
+      "description": "The semver (VERSION) of the terp-spec release whose check-report format this report follows. The rule ids resolve against the catalog of the checker named in `checker`, which may differ from any consumer-side catalog copy.",
       "pattern": "^\\d+\\.\\d+\\.\\d+$"
     },
     "checker": {
       "type": "object",
-      "description": "The checker's identity: tool name and its own version — the same identity the checker's certification scorecard (scorecard.schema.json) carries, so a consumer can tie a report to a verifiable certification claim.",
+      "description": "The checker's identity: tool name and its own version. The catalog ships with the checker, so its version names the catalog release the rule ids resolve against, and ties the report to the toolchain that produced it.",
       "required": ["tool", "version"],
       "additionalProperties": false,
       "properties": {

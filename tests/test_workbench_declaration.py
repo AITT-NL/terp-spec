@@ -7,7 +7,7 @@ the development tools that drive the loop from the file as data. Neither owns th
 words, which is why they live here: two readers that each wrote their own once
 disagreed about which fields and which command slots existed.
 
-It is a vocabulary with readers and no catalog rule. What the checker does with the
+It is a vocabulary with readers and no rule. What the checker does with the
 file against the compose file it names is the reference stack's own check of its own
 development loop, not a rule every stack must implement; what every reader must agree
 on is how the file itself reads, and that is what the fixtures fix. This suite is the
@@ -25,7 +25,7 @@ import pytest
 from terp_spec import spec_dir
 
 from test_deployment_declaration import _field, _subschemas
-from test_standard import _validate
+from schema_subset import _validate
 
 _SPEC = spec_dir()
 _SCHEMA = json.loads((_SPEC / "workbench-declaration.schema.json").read_text(encoding="utf-8"))
@@ -49,10 +49,9 @@ _SEAMS = set(_ENV["properties"])
 _SLOTS = set(_COMMANDS["properties"])
 _DEFAULT_COMPOSE = _DECLARED["properties"]["compose"]["properties"]["file"]["default"]
 
-#: The root-level declaration vocabularies no catalog rule realises, by name. Normative
-#: data joins the spec when something realises it: a rule, or - for a vocabulary whose
-#: point is that two readers read one file the same way - the fixtures every reader
-#: runs. Listed rather than inferred, so a schema cannot exempt itself.
+#: The root-level vocabularies whose point is that two readers read one file the same
+#: way, so every reader runs the same fixtures. Listed rather than inferred, so a
+#: schema cannot exempt itself.
 _VOCABULARIES_READ_BY_FIXTURES = {
     "conversation-events.schema.json",
     "workbench-declaration.schema.json",
@@ -326,22 +325,10 @@ def test_the_fixtures_are_well_formed_and_cover_the_vocabulary() -> None:
     assert any(case["reads"]["state"] == "unmanaged" for case in _documents("valid"))
 
 
-def test_a_vocabulary_no_rule_realises_is_claimed_by_its_fixtures() -> None:
-    """Normative data joins the spec when something realises it, never before."""
-    cited = " ".join(
-        f"{entry['intent']} {entry.get('reference', '')}"
-        for surface in ("backend", "frontend")
-        for entry in (
-            json.loads(path.read_text(encoding="utf-8"))
-            for path in sorted((_SPEC / "catalog" / surface).glob("*.json"))
-        )
-    )
-    listed = {_SPEC / name for name in _VOCABULARIES_READ_BY_FIXTURES}
-    for schema in sorted(set(_SPEC.glob("*-declaration.schema.json")) | listed):
-        assert schema.is_file(), f"{schema.name}: listed as a vocabulary and not in the spec"
-        if schema.name in _VOCABULARIES_READ_BY_FIXTURES:
-            assert schema.name not in cited, f"{schema.name} is listed as rule-free and a rule cites it"
-            fixtures = schema.with_name(schema.name.replace(".schema.json", ".fixtures.json"))
-            assert fixtures.is_file(), f"{schema.name}: a vocabulary read by fixtures ships them"
-        else:
-            assert schema.name in cited, f"no catalog entry cites {schema.name}"
+def test_a_vocabulary_read_by_fixtures_ships_them() -> None:
+    """A vocabulary two readers must read alike is held by the fixtures both run."""
+    for name in sorted(_VOCABULARIES_READ_BY_FIXTURES):
+        schema = _SPEC / name
+        assert schema.is_file(), f"{name}: listed as a vocabulary and not in the package"
+        fixtures = schema.with_name(name.replace(".schema.json", ".fixtures.json"))
+        assert fixtures.is_file(), f"{name}: a vocabulary read by fixtures ships them"

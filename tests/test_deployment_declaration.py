@@ -1,18 +1,18 @@
-"""The deployment declaration's schema, corpus and fixtures hold together.
+"""The deployment declaration's schema and fixtures hold together.
 
 ``deployment-declaration.schema.json`` is the normative vocabulary of the file an app
-checks in to declare its deployable units, and two readers are held to it before
-anything else reads it: the reference stack's check, and the tools that drive a deploy
-from the file as data. This suite is the spec's own half. It holds the schema to the
-discipline its description promises (every object closed, every string capped and free
-of control characters, the named key lists coherent), exercises every field valid and
-invalid, applies the stated defaults, and reads the corpus with a small reference reader
-of the file-local refusals - so a violation case that the schema and those refusals do
-not refuse, or a compliant case they do, fails here rather than in a reader's gate.
+checks in to declare its deployable units, and several readers are held to it: the
+framework's check, and the tools that drive a deploy from the file as data. This suite
+is this package's own half. It holds the schema to the discipline its description
+promises (every object closed, every string capped and free of control characters, the
+named key lists coherent), exercises every field valid and invalid, applies the stated
+defaults, reads the refusals beyond the schema's keyword subset with a small reference
+reader, and holds the fixtures to their own shape.
 
-The reader below is deliberately partial. It reads the declaration and the files beside
-it as JSON only; the rules that need the deployment profile (YAML) or the composed app
-are the reference implementation's to prove, against the same corpus.
+The fixtures' refusals name corpus cases, and the corpus lives in terp-framework beside
+the check that reads it (its ADR 0203). The framework's suite holds every refusal to a
+case that its check refuses at the named field; this one holds each refusal to naming a
+field and what it allows, and builds the trees no corpus case can carry.
 """
 
 from __future__ import annotations
@@ -26,14 +26,13 @@ import re
 import pytest
 from terp_spec import spec_dir
 
-from test_standard import _validate
+from schema_subset import _validate
 
 _SPEC = spec_dir()
 _SCHEMA = json.loads((_SPEC / "deployment-declaration.schema.json").read_text(encoding="utf-8"))
 _FIXTURES = json.loads(
     (_SPEC / "deployment-declaration.fixtures.json").read_text(encoding="utf-8")
 )
-_CORPUS = _SPEC / "corpus" / "backend"
 _READABLE = "backend/deployment_declaration_is_readable"
 _TRUTH = "backend/deployment_declaration_tells_the_truth"
 _RENDER = "backend/deployment_generated_files_match_their_render"
@@ -121,8 +120,8 @@ def _development_profile(project: pathlib.Path) -> str:
 def _read(project: pathlib.Path) -> list[tuple[str, str]]:
     """Every file-local refusal of ``deployment.json`` under *project*, as (field, message).
 
-    The checkout is the project root: a corpus case is read as a copied tree, which lies
-    in no work tree. A deploy-policy key is reported with its own message rather than as
+    The checkout is the project root: the tree is read as a copy, which lies in no work
+    tree. A deploy-policy key is reported with its own message rather than as
     an unknown key, which is the one message the schema asks every reader to give.
     """
     file = project / "deployment.json"
@@ -239,25 +238,6 @@ def _read(project: pathlib.Path) -> list[tuple[str, str]]:
                 f"{field}: {written!r} is the development profile; name the deployment one",
             ))
     return refusals
-
-
-def _cases(rule: str) -> list[pathlib.Path]:
-    return sorted(path for path in (_CORPUS / rule.split("/", 1)[1]).iterdir() if path.is_dir())
-
-
-def _member(document: object, path: str) -> bool:
-    """Whether the JSON path *path* ('$', '$.a[0].b') names a member of *document*."""
-    node = document
-    for name, index in re.findall(r"\.([^.\[]+)|\[(\d+)\]", path.removeprefix("$")):
-        if name:
-            if not isinstance(node, dict) or name not in node:
-                return False
-            node = node[name]
-        else:
-            if not isinstance(node, list) or int(index) >= len(node):
-                return False
-            node = node[int(index)]
-    return True
 
 
 # --------------------------------------------------------------------------- #
@@ -728,106 +708,20 @@ def test_the_declaration_round_trips() -> None:
 
 
 # --------------------------------------------------------------------------- #
-# the corpus reads as its cases say                                             #
+# the refusals the fixtures name                                                #
 # --------------------------------------------------------------------------- #
-def test_the_readable_corpus_reads_as_its_cases_say() -> None:
-    refusals = _FIXTURES["refusals"][_READABLE]
-    for case in _cases(_READABLE):
-        found = _read(case)
-        if case.name.startswith("compliant-"):
-            assert found == [], f"{case.name}: a compliant case is refused: {found}"
-            continue
-        expected = refusals[case.name]
-        if "in" in expected:
-            # The refusal is in the profile, which this JSON-only reader does not read;
-            # the declaration itself must then be clean, so the profile is what is wrong.
-            assert found == [], f"{case.name}: the declaration itself is refused: {found}"
-            assert (case / expected["in"]).is_file(), f"{case.name}: {expected['in']} missing"
-            continue
-        assert found, f"{case.name}: nothing refuses this violation case"
-        assert expected["field"] in {field for field, _ in found}, (
-            f"{case.name}: refused, but not at {expected['field']}: {found}"
-        )
-
-
-def test_the_truth_corpus_is_readable_so_it_tests_only_the_truth() -> None:
-    """A truth case that is also unreadable proves nothing about the truth check: a
-    reader stops at the first. So every one of them reads cleanly."""
-    for case in _cases(_TRUTH):
-        assert _read(case) == [], f"{case.name}: {_read(case)}"
-
-
-def test_every_violation_case_names_its_field_and_what_it_allows() -> None:
+def test_every_refusal_names_its_field_and_what_it_allows() -> None:
+    """A refusal a reader states names the field and the values it allows, and at least
+    twenty broken declarations are named for the readable rule. Which corpus case each
+    names, and that the check refuses it there, the framework's suite holds."""
     refusals = _FIXTURES["refusals"]
     assert set(refusals) == set(_RULES)
+    assert sum(name.startswith("violation-") for name in refusals[_READABLE]) >= 20
     for rule in _RULES:
-        violations = {case.name for case in _cases(rule) if case.name.startswith("violation-")}
-        assert set(refusals[rule]) == violations, (
-            f"{rule}: refusals and violation cases differ - "
-            f"unlisted {sorted(violations - set(refusals[rule]))}, "
-            f"listed but absent {sorted(set(refusals[rule]) - violations)}"
-        )
         for name, expected in refusals[rule].items():
+            assert re.fullmatch(r"violation-\d{2,}", name), f"{rule}/{name}: names a violation case"
             assert set(expected) <= {"field", "allowed", "in"}, f"{rule}/{name}"
             assert expected["field"].strip() and expected["allowed"].strip(), f"{rule}/{name}"
-            if rule == _RENDER:
-                continue  # held by test_a_render_refusal_names_a_file_the_case_holds
-            if rule == _TRUTH:
-                document = json.loads(
-                    (_CORPUS / rule.split("/")[1] / name / "deployment.json").read_text(
-                        encoding="utf-8"
-                    )
-                )
-                assert _member(document, expected["field"]), (
-                    f"{rule}/{name}: {expected['field']} names no declared fact"
-                )
-
-
-def test_the_corpus_holds_the_twenty_broken_declarations_and_the_never_red_cases() -> None:
-    """The corpus holds at least twenty broken declarations refused with the field and
-    the allowed values, and the cases that must never be red: an absent file and
-    the opted-out state with a reason."""
-    readable = _cases(_READABLE)
-    assert sum(case.name.startswith("violation-") for case in readable) >= 20
-    for rule in _RULES:
-        compliant = [case for case in _cases(rule) if case.name.startswith("compliant-")]
-        assert any(not (case / "deployment.json").exists() for case in compliant), (
-            f"{rule}: an absent file is never red, and a compliant case says so"
-        )
-        assert any(
-            json.loads((case / "deployment.json").read_text(encoding="utf-8")).get("unmanaged")
-            is True
-            for case in compliant
-            if (case / "deployment.json").is_file()
-        ), f"{rule}: the opted-out state with a reason is never red, and a compliant case says so"
-
-
-def test_a_case_that_names_a_kind_ships_the_table_it_resolves_against() -> None:
-    """Which datastore kinds, versions and digests exist is per stack, so a case that names
-    one carries the table a checker must resolve it against - as the escape-hatch budget
-    cases carry their budget - and stays stack-independent."""
-    for rule in _RULES:
-        for case in _cases(rule):
-            file = case / "deployment.json"
-            try:
-                document = json.loads(file.read_text(encoding="utf-8")) if file.is_file() else {}
-            except json.JSONDecodeError:
-                continue
-            units = document.get("units", []) if isinstance(document, dict) else []
-            kinds = [u for u in units if isinstance(u, dict) and "kind" in u]
-            table_file = case / "datastore-table.json"
-            if not kinds:
-                continue
-            assert table_file.is_file(), f"{rule}/{case.name}: names a kind and ships no table"
-            table = json.loads(table_file.read_text(encoding="utf-8"))
-            assert set(table) == {"kinds"}, f"{rule}/{case.name}: the table is {{'kinds': ...}}"
-            for kind, entry in table["kinds"].items():
-                assert set(entry) == {"role", "versions"}, f"{rule}/{case.name}: {kind}"
-                assert entry["role"] in {"database", "store"}, f"{rule}/{case.name}: {kind}"
-                for version, image in entry["versions"].items():
-                    assert re.fullmatch(r"[a-z0-9./-]+@sha256:[0-9a-f]{64}", image), (
-                        f"{rule}/{case.name}: {kind} {version} is pinned by digest"
-                    )
 
 
 def test_the_generator_words_stand_only_in_the_generated_state() -> None:
@@ -861,69 +755,6 @@ def test_a_package_name_can_never_be_read_as_an_option() -> None:
     for name in ("-y", "--allow-unauthenticated", "-oDir::Etc=/tmp", "+x", ".x", "Curl", "a b",
                  "curl=7.88", "curl/stable", "c"):
         assert re.search(pattern, name) is None, name
-
-
-def _render_cases(prefix: str) -> list[pathlib.Path]:
-    return [case for case in _cases(_RENDER) if case.name.startswith(prefix)]
-
-
-def test_the_render_corpus_holds_only_what_every_stack_can_judge() -> None:
-    """No case carries the expected render: the generator's bytes are the stack's, and
-    they move with every framework release's base-image digests. So every violation is a
-    readable generated declaration that is red whatever the render is, and every compliant
-    case is a state the rule is silent in - and each of the four such states is sampled."""
-    for case in _render_cases("violation-"):
-        document = json.loads((case / "deployment.json").read_text(encoding="utf-8"))
-        assert document.get("build") == "generated", f"{case.name}: red only when generated"
-        assert _read(case) == [], f"{case.name}: the readable rule would stop first: {_read(case)}"
-    silent: set[str] = set()
-    for case in _render_cases("compliant-"):
-        file = case / "deployment.json"
-        if not file.is_file():
-            silent.add("undeclared")
-            continue
-        document = json.loads(file.read_text(encoding="utf-8"))
-        if _read(case):
-            silent.add("unreadable")
-        elif document.get("unmanaged") is True:
-            silent.add("opted out")
-        else:
-            assert document.get("build") == "own", f"{case.name}: a generated case is judged"
-            silent.add("own")
-    assert silent == {"undeclared", "unreadable", "opted out", "own"}, sorted(silent)
-
-
-def test_a_render_refusal_names_a_file_the_case_holds() -> None:
-    """A refusal about a file (a build file, an ignore file, pyproject.toml, the template's
-    answers) names it in ``in``, and the case holds that file - the stale file the render
-    does not produce included, since that file is the finding."""
-    for name, expected in _FIXTURES["refusals"][_RENDER].items():
-        case = _CORPUS / _RENDER.split("/")[1] / name
-        if "in" in expected:
-            assert (case / expected["in"]).is_file(), f"{name}: {expected['in']} missing"
-        else:
-            # A refusal may be about a field the unit lacks (a command the role has no
-            # default for), so the field's own container is what has to be declared.
-            document = json.loads((case / "deployment.json").read_text(encoding="utf-8"))
-            container = re.sub(r"(\.[^.\[]+|\[\d+\])$", "", expected["field"])
-            assert _member(document, container), f"{name}: {expected['field']}"
-
-
-def test_a_case_that_names_a_system_package_ships_the_table_it_resolves_against() -> None:
-    """Which packages exist is per stack, as datastore kinds are, so a case that names one
-    carries the table it resolves against, and stays stack-independent."""
-    for rule in _RULES:
-        for case in _cases(rule):
-            file = case / "deployment.json"
-            try:
-                document = json.loads(file.read_text(encoding="utf-8")) if file.is_file() else {}
-            except json.JSONDecodeError:
-                continue
-            generator = document.get("generator") if isinstance(document, dict) else None
-            if not (isinstance(generator, dict) and generator.get("systemPackages")):
-                continue
-            table = json.loads((case / "system-package-table.json").read_text(encoding="utf-8"))
-            assert set(table) == {"packages"} and isinstance(table["packages"], dict), case.name
 
 
 # --------------------------------------------------------------------------- #
@@ -961,16 +792,3 @@ def test_the_tree_fixtures_resolve_as_they_say(tree: dict, tmp_path: pathlib.Pat
     )
     if tree["expect"] == "violation":
         assert tree.get("field"), f"{tree['id']}: a violation names its field"
-
-
-def test_the_fixtures_and_the_schema_are_claimed_by_a_rule() -> None:
-    """Normative data joins the spec when a rule realises it, not before."""
-    entries = {
-        rule: json.loads((_SPEC / "catalog" / f"{rule}.json").read_text(encoding="utf-8"))
-        for rule in _RULES
-    }
-    for name in ("deployment-declaration.schema.json", "deployment-declaration.fixtures.json"):
-        assert any(
-            name in entry["intent"] or name in entry.get("reference", "")
-            for entry in entries.values()
-        ), f"no catalog entry cites {name}"

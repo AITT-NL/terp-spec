@@ -6,7 +6,7 @@ names Terp adds where AG-UI leaves a name open. It has two kinds of reader, the
 producers that validate every event before they send it and the clients that read the
 stream, and neither imports the other, which is why the words live here.
 
-It is a vocabulary with readers and no catalog rule. The schema validates one event,
+It is a vocabulary with readers and no rule. The schema validates one event,
 and what a single event keeps that a schema cannot state (a bounded depth, an option
 value carried once, no control character anywhere in an open object) is named in
 ``$defs.eventRules``; the order of a run's events is held by the stream rules the schema
@@ -25,7 +25,7 @@ import pytest
 from terp_spec import spec_dir
 
 from test_deployment_declaration import _field, _subschemas
-from test_standard import _validate
+from schema_subset import _validate
 
 _SPEC = spec_dir()
 _SCHEMA = json.loads((_SPEC / "conversation-events.schema.json").read_text(encoding="utf-8"))

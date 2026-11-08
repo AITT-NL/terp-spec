@@ -1,6 +1,6 @@
 name: release
 
-# The Terp Standard's release seam (ADR 0082, published per ADR 0086): a tag
+# The contracts' release seam (ADR 0082, published per ADR 0086): a tag
 # turns into two registry releases (`terp-spec` on PyPI, `@terpjs/spec` on npm)
 # plus a GitHub Release. This workflow makes tagging fail-closed instead of a
 # raw `git push origin v*`:
@@ -8,8 +8,7 @@ name: release
 # the test suite holds to VERSION), the tagged commit must be REACHABLE FROM
 # THE DEFAULT BRANCH (provenance: no releasing an unreviewed side branch or a
 # rewritten commit), the self-consistency suite must pass at the tagged
-# commit, the spec must certify against the reference implementation, and both
-# the publish jobs and the release job are BOUND to the verified commit (a tag
+# commit, and both the publish jobs and the release job are BOUND to the verified commit (a tag
 # moved or deleted mid-workflow is refused, never released). A GitHub Release
 # then documents it with generated notes.
 #
@@ -78,113 +77,14 @@ jobs:
           pip install pytest
           python -m pytest
 
-  # A spec release must be certified against the live reference implementation
-  # (the same substitution ci.yml runs on every push): a tag can never publish a
-  # catalog or corpus no conformant checker exists for. Fail closed — the
-  # GitHub Release requires this job.
-  certify-against-reference:
-    needs: verify
-    runs-on: ubuntu-latest
-    outputs:
-      # The reference commit this release was certified against — recorded in
-      # the GitHub Release so the certification claim is reproducible: check
-      # out exactly this framework commit, substitute the tagged spec, re-run.
-      reference_sha: ${{ steps.reference.outputs.sha }}
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-          path: spec
-      - name: Read the pinned reference commit
-        # NOT `id: reference` — the step below already owns that id in this job,
-        # and a duplicate step id is a workflow GitHub refuses to start at all.
-        id: pinned_reference
-        run: |
-          sha="$(tr -d '[:space:]' < spec/REFERENCE_SHA)"
-          case "$sha" in
-            [0-9a-f]*) [ "${#sha}" -eq 40 ] || { echo "REFERENCE_SHA is not a full commit sha"; exit 1; } ;;
-            *) echo "REFERENCE_SHA is not a full commit sha"; exit 1 ;;
-          esac
-          echo "sha=$sha" >> "$GITHUB_OUTPUT"
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-          repository: AITT-NL/terp-framework
-          # Pinned, deliberately. An unpinned cross-repo checkout takes whatever
-          # the reference's default branch happened to be at that minute, which
-          # compounds twice: a spec pull request's green-ness depends on a
-          # repository nobody in it touched, so the reference going red for any
-          # reason blocks all spec work and reads as a spec problem -- and the
-          # commit a release certifies against is unrecorded, so the
-          # certification claim cannot be reproduced. Bumping REFERENCE_SHA is a
-          # reviewed act, the way the workbench pins the framework it targets;
-          # reference-drift.yml watches the default branch on its own schedule,
-          # so drift surfaces as its own red build instead of inside every PR.
-          ref: ${{ steps.pinned_reference.outputs.sha }}
-          path: framework
-      - name: Record the certified reference commit
-        id: reference
-        run: |
-          sha="$(git -C framework rev-parse HEAD)"
-          echo "sha=$sha" >> "$GITHUB_OUTPUT"
-          echo "Certifying against terp-framework@${sha}" | tee -a "$GITHUB_STEP_SUMMARY"
-      - name: Install uv
-        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
-        with:
-          # A release restores no cache. ci.yml writes this same scope on a
-          # pull request, so a restored cache would be an input a pull request
-          # can influence to a job that gates a publish (zizmor:
-          # cache-poisoning). Resolving from scratch costs minutes; this is the
-          # one pipeline where that is the cheaper side.
-          enable-cache: false
-      - name: Set up Python
-        run: uv python install 3.13
-      - name: Python certification (catalog parity + backend corpus)
-        working-directory: framework
-        run: |
-          # Drop the reference framework's pinned terp-spec release BEFORE
-          # resolving. The pin names a published version, and the whole point
-          # of this job is to certify against a version that is not published
-          # yet — so a reference that already pins THIS release would make
-          # `uv sync` unresolvable and deadlock the release against the very
-          # framework commit that carries the rules being certified.
-          # Substituting the checkout below is what this job actually tests.
-          sed -i '/"terp-spec==/d' pyproject.toml
-          uv sync
-          uv pip install -e ../spec
-          uv run --no-sync pytest tests/architecture/test_spec_catalog.py tests/architecture/test_spec_corpus.py -q
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        # zizmor: ignore[cache-poisoning] this SHA is v4.4.0, which caches only
-        # when a `cache:` input asks for it — and this step does not.
-        with:
-          node-version: "22"
-      - name: Frontend certification (ESLint adapter corpus + surface + findings)
-        working-directory: framework
-        run: |
-          # Drop the reference framework's pinned @terpjs/spec release BEFORE
-          # resolving, for the same reason the Python step does: the pin names
-          # a published version, and this job exists to certify one that is not
-          # published yet. `npm ci` would fail on ETARGET against the very
-          # framework commit that carries the rules being certified, so this
-          # resolves without the pin and substitutes the checkout instead —
-          # which is what the job actually tests.
-          npm pkg delete devDependencies.@terpjs/spec \
-            --workspace @terpjs/eslint-boundaries
-          npm install --no-audit --no-fund
-          rm -rf node_modules/@terpjs/spec
-          mkdir -p node_modules/@terpjs
-          ln -s "$GITHUB_WORKSPACE/spec" node_modules/@terpjs/spec
-          npx vitest run packages/frontend/eslint-boundaries
-
-  # ADR 0086: the standard is published, not only tagged. Both publish jobs
-  # require certification (a version no conformant checker exists for can never
-  # reach a registry) and check out the VERIFIED COMMIT rather than the tag —
+  # ADR 0086: the contracts are published, not only tagged. Both publish jobs
+  # require verification and check out the VERIFIED COMMIT rather than the tag —
   # a tag force-moved mid-workflow cannot change what gets published. Both are
   # idempotent so a partially failed release is re-runnable, and they run in
   # sequence (PyPI, then npm) so a failure cannot half-publish a version — see
   # publish-npm.
   publish-pypi:
-    needs: [verify, certify-against-reference]
+    needs: [verify]
     runs-on: ubuntu-latest
     # Part of the OIDC identity both registries verify: the trusted-publisher
     # configurations name repository + workflow file + this environment, so a
@@ -229,7 +129,7 @@ jobs:
     # ordering's unrecoverable case cannot happen. Serialising costs one
     # registry round-trip and no extra approval (the environment is approved
     # per run, not per job).
-    needs: [verify, certify-against-reference, publish-pypi]
+    needs: [verify, publish-pypi]
     runs-on: ubuntu-latest
     environment: release
     permissions:
@@ -253,7 +153,7 @@ jobs:
       # Pinned, not `@latest`: this is the tool that holds a publishing
       # credential for this package, so resolving it at run time would put an
       # unreviewed npm release inside the one job with `id-token: write`. The
-      # same version the reference implementation pins, so one dependabot PR
+      # same version the framework pins, so one dependabot PR
       # moves both repositories rather than letting them drift.
       - run: npm install -g npm@12.0.2  # zizmor: ignore[adhoc-packages] the publishing tool is pinned
       - name: Publish @terpjs/spec (public, via Trusted Publishing)
@@ -269,11 +169,11 @@ jobs:
           npm publish --access public --provenance
 
   github-release:
-    # The Release announces a published standard: it requires both registries
+    # The Release announces a published version: it requires both registries
     # (fail closed) so a Release can never point at a version consumers cannot
     # install. Publishing binds to the verified COMMIT; the Release additionally
     # re-verifies the tag IDENTITY below.
-    needs: [verify, certify-against-reference, publish-pypi, publish-npm]
+    needs: [verify, publish-pypi, publish-npm]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -299,13 +199,10 @@ jobs:
       - name: Create the GitHub Release (generated notes)
         env:
           GH_TOKEN: ${{ github.token }}
-          REFERENCE_SHA: ${{ needs.certify-against-reference.outputs.reference_sha }}
         run: |
           # --verify-tag: never create the tag as a side effect — release
           # only an existing remote tag (the one just re-verified above).
-          # The certified reference commit makes the claim reproducible.
           gh release create "$GITHUB_REF_NAME" \
             --verify-tag \
-            --title "Terp Standard $GITHUB_REF_NAME" \
-            --generate-notes \
-            --notes "Certified against the reference implementation at [AITT-NL/terp-framework@${REFERENCE_SHA}](https://github.com/AITT-NL/terp-framework/commit/${REFERENCE_SHA})."
+            --title "terp-spec $GITHUB_REF_NAME" \
+            --generate-notes

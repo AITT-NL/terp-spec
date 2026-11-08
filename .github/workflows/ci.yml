@@ -1,21 +1,14 @@
 name: ci
 
-# The Terp Standard's own CI (ADR 0082): the spec is plain data + a tiny
-# accessor with zero dependencies, and the `standard` job proves it
-# self-consistent — versioning agreement, schema validity of every catalog
-# entry, the finding format, the refused surface's shape, and the corpus
-# ratchet. The `certify-against-reference` job closes the adoption gap the
-# package seam leaves (framework CI reads the *pinned* release, so a change
-# here would otherwise be exercised by no live implementation until the pins
-# bump): it substitutes this checkout for the pinned terp-spec/@terpjs/spec and
-# runs the framework's parity + corpus certification against it, so a catalog
-# or corpus change is proven against the reference implementation BEFORE it
-# can be released.
+# The contracts' own CI (ADR 0082): plain data + a tiny accessor with zero
+# dependencies. The `standard` job (the name branch protection knows) proves them
+# self-consistent: versioning agreement, packaging manifests that carry every
+# artifact, each schema well-formed and its fixtures reading as they say.
 #
-# The reference it certifies against is PINNED, in REFERENCE_SHA. Bumping it is
-# a reviewed act; `reference-drift.yml` watches the reference's default branch
-# on its own schedule, so drift is its own red build rather than a red build on
-# every unrelated spec pull request.
+# No job checks out another repository. The rules, their corpus and the checks
+# that hold them live in terp-framework (its ADR 0203), so nothing here waits on a
+# reference implementation, and nothing there waits on this repository except its
+# own pin of a published release.
 
 on:
   push:
@@ -42,13 +35,12 @@ jobs:
           python-version: "3.12"
       - name: Install
         run: pip install pytest
-      - name: Test (the spec is self-consistent)
+      - name: Test (the contracts are self-consistent)
         run: python -m pytest
 
-  # The standard declares the secure-by-default bar, and this repository holds
-  # OIDC publishing rights to two registries that feed the reference
-  # implementation's gate -- and therefore every consumer's. Three checks, the
-  # same set and the same posture the reference implementation runs on itself.
+  # This repository holds OIDC publishing rights to two registries that feed the
+  # framework's gate -- and therefore every consumer's. The same checks and the
+  # same posture the framework runs on itself.
   supply-chain:
     runs-on: ubuntu-latest
     steps:
@@ -84,79 +76,3 @@ jobs:
           echo "${GITLEAKS_SHA256}  gitleaks.tgz" | sha256sum -c -
           tar -xzf gitleaks.tgz gitleaks
           ./gitleaks detect --source . --redact --no-banner
-
-  certify-against-reference:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-          path: spec
-      - name: Read the pinned reference commit
-        id: reference
-        run: |
-          sha="$(tr -d '[:space:]' < spec/REFERENCE_SHA)"
-          case "$sha" in
-            [0-9a-f]*) [ "${#sha}" -eq 40 ] || { echo "REFERENCE_SHA is not a full commit sha"; exit 1; } ;;
-            *) echo "REFERENCE_SHA is not a full commit sha"; exit 1 ;;
-          esac
-          echo "sha=$sha" >> "$GITHUB_OUTPUT"
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-          repository: AITT-NL/terp-framework
-          # Pinned, deliberately. An unpinned cross-repo checkout takes whatever
-          # the reference's default branch happened to be at that minute, which
-          # compounds twice: a spec pull request's green-ness depends on a
-          # repository nobody in it touched, so the reference going red for any
-          # reason blocks all spec work and reads as a spec problem -- and the
-          # commit a release certifies against is unrecorded, so the
-          # certification claim cannot be reproduced. Bumping REFERENCE_SHA is a
-          # reviewed act, the way the workbench pins the framework it targets;
-          # reference-drift.yml watches the default branch on its own schedule,
-          # so drift surfaces as its own red build instead of inside every PR.
-          ref: ${{ steps.reference.outputs.sha }}
-          path: framework
-      - name: Record the certified reference commit
-        run: |
-          sha="$(git -C framework rev-parse HEAD)"
-          echo "Certifying against terp-framework@${sha}" | tee -a "$GITHUB_STEP_SUMMARY"
-      - name: Install uv
-        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
-        with:
-          enable-cache: true
-      - name: Set up Python
-        run: uv python install 3.13
-      - name: Python certification (catalog parity + backend corpus)
-        working-directory: framework
-        run: |
-          # Drop the reference framework's pinned terp-spec release BEFORE
-          # resolving: the pin may already name the unpublished version this
-          # branch is heading towards, which would make `uv sync` unresolvable
-          # and fail the job for a reason that has nothing to do with the spec.
-          sed -i '/"terp-spec==/d' pyproject.toml
-          uv sync
-          # Substitute this checkout for the pinned terp-spec release — the
-          # same seam the framework's pin bump will move, exercised early.
-          uv pip install -e ../spec
-          uv run --no-sync pytest tests/architecture/test_spec_catalog.py tests/architecture/test_spec_corpus.py -q
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version: "22"
-      - name: Frontend certification (ESLint adapter corpus + surface + findings)
-        working-directory: framework
-        run: |
-          # Drop the reference framework's pinned @terpjs/spec release BEFORE
-          # resolving, for the same reason the Python step does: the pin may
-          # already name the unpublished version this branch is heading
-          # towards, and `npm ci` would fail on ETARGET for a reason that has
-          # nothing to do with the spec.
-          npm pkg delete devDependencies.@terpjs/spec \
-            --workspace @terpjs/eslint-boundaries
-          npm install --no-audit --no-fund
-          # Substitute the candidate spec for the pinned release — the same
-          # seam the framework's pin bump will move, exercised early.
-          rm -rf node_modules/@terpjs/spec
-          mkdir -p node_modules/@terpjs
-          ln -s "$GITHUB_WORKSPACE/spec" node_modules/@terpjs/spec
-          npx vitest run packages/frontend/eslint-boundaries
