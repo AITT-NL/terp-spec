@@ -7,6 +7,30 @@ equal the checked-in `VERSION` — held by `tests/test_changelog.py`. A reader p
 to an earlier version reads this file to see exactly what changed since. Up to
 0.43.0 this package also carried the rule catalog, and the entries below record it.
 
+## 0.45.0
+
+The deployment declaration gains one word, so this bumps the minor: `generator.recipes`
+names the recipe a web unit's image is built from (framework ADR 0198). Nothing that
+validated under 0.44.0 is refused: a declaration without the word means what it meant.
+
+### Added
+
+- **`generator.recipes`**, a map from a web unit's id to a recipe, in the `generator`
+  block, so only beside `"build": "generated"`. `static-site` is the one recipe: a static
+  site the unit serves, built from its own source with nothing from the app's
+  environment, with no route to the app and under a policy its image build enforces. A
+  recipe is a name and nothing else, so two apps that name it get one build, and what the
+  build takes is the stack's to fix. A key is a unit id, in the form and length the schema
+  gives one, and a recipe outside the set is refused by the schema.
+- **Its refusals, in the fixtures.** A reader refuses a key that names no declared unit, or
+  a unit whose role is not `web`, and names the web units the file declares
+  (`deployment_declaration_is_readable`, violation-48 and violation-49), and a recipe
+  outside the set (violation-50). A stack's generator refuses two web units without a
+  recipe, two `static-site` units, and a `static-site` unit whose site has no lock file,
+  each naming `own` as the way out (`deployment_generated_files_match_their_render`,
+  violation-08 to violation-10). The cases those refusals name live in terp-framework, as
+  every corpus case has since 0.44.0.
+
 ## 0.44.0
 
 This package now holds only the contracts more than one Terp program reads. The rules

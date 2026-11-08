@@ -174,6 +174,21 @@ def _read(project: pathlib.Path) -> list[tuple[str, str]]:
                     f"$.generator.systemPackages[{index}]: {name!r} is not in the "
                     f"system-package table (packages: {', '.join(sorted(offered)) or 'none'})",
                 ))
+    recipes = generator.get("recipes") if isinstance(generator.get("recipes"), dict) else {}
+    webs = sorted(
+        unit["id"]
+        for unit in units
+        if isinstance(unit, dict) and unit.get("role") == "web" and isinstance(unit.get("id"), str)
+    )
+    for key in recipes:
+        # A recipe builds a web unit's image, so a key names one: a key that names no unit,
+        # or a unit of another role, has no reader. An annotation key is no unit's.
+        if not key.startswith("$") and key not in webs:
+            refusals.append((
+                f"$.generator.recipes.{key}",
+                f"$.generator.recipes.{key}: {key!r} is no declared web unit "
+                f"(web units: {', '.join(webs) or 'none'})",
+            ))
     declared = {unit.get("id") for unit in units if isinstance(unit, dict)}
     volumes = document.get("volumes") if isinstance(document.get("volumes"), list) else []
     for index, volume in enumerate(volumes):
@@ -433,6 +448,16 @@ _VALID = {
         build="generated", generator={"systemPackages": ["g++", "libstdc++6", "python3.13-venv"]}
     ),
     "an empty generator block": _seed(build="generated", generator={}),
+    "a static-site recipe for a second web unit": _seed(
+        build="generated",
+        units=[*_SEED["units"], {"id": "site", "role": "web"}],
+        generator={"recipes": {"site": "static-site"}},
+    ),
+    "an empty recipe map": _seed(build="generated", generator={"recipes": {}}),
+    "a recipe map with an annotation": _seed(
+        build="generated",
+        generator={"recipes": {"$comment": "the public site", "web": "static-site"}},
+    ),
     "annotations": {**_seed(), "$schema": "https://terp.dev/spec/deployment-declaration.schema.json",
                     "$comment": "the hardened profile"},
 }
@@ -520,6 +545,19 @@ _INVALID = {
     "a package of one letter": _seed(build="generated", generator={"systemPackages": ["c"]}),
     "a package with a space": _seed(build="generated", generator={"systemPackages": ["a b"]}),
     "a package twice": _seed(build="generated", generator={"systemPackages": ["curl", "curl"]}),
+    "a recipe beside own": _seed(generator={"recipes": {"web": "static-site"}}),
+    "a recipe outside the set": _seed(build="generated", generator={"recipes": {"web": "ssr"}}),
+    "a recipe in capitals": _seed(build="generated", generator={"recipes": {"web": "Static-Site"}}),
+    "a recipe with parameters": _seed(
+        build="generated", generator={"recipes": {"web": {"name": "static-site", "dir": "www"}}}
+    ),
+    "a recipe list": _seed(build="generated", generator={"recipes": ["static-site"]}),
+    "a recipe keyed by no unit id": _seed(
+        build="generated", generator={"recipes": {"-web": "static-site"}}
+    ),
+    "a recipe keyed past a unit id's length": _seed(
+        build="generated", generator={"recipes": {"w" * 64: "static-site"}}
+    ),
     "a generated volume without its mount": _seed(build="generated", volumes=[{"id": "files"}]),
     "a mount outside var": _seed(volumes=[{"id": "files", "mount": {"path": "data",
                                                                     "units": ["api"]}}]),
@@ -742,7 +780,39 @@ def test_the_generator_words_stand_only_in_the_generated_state() -> None:
     # declaration into a refusal.
     assert "default" not in _GENERATOR
     assert _GENERATOR["properties"]["systemPackages"]["default"] == []
+    assert _GENERATOR["properties"]["recipes"]["default"] == {}
     assert "default" not in _VOLUME["properties"]["mount"]
+
+
+def test_a_recipe_is_keyed_by_a_unit_id_and_names_a_web_unit(tmp_path: pathlib.Path) -> None:
+    """A recipe builds one web unit's image (framework ADR 0198), so its key is a unit id,
+    in the form and length the schema gives a unit's id, and a reader refuses a key that
+    names no web unit of the declaration, naming the ones it declares."""
+    recipes = _GENERATOR["properties"]["recipes"]
+    keys = [key for key in recipes["patternProperties"] if key != "^\\$"]
+    assert len(keys) == 1
+    unit_id = _UNIT["properties"]["id"]
+    for ident in ("web", "site", "Site_2", "9site", "public.site", "w" * unit_id["maxLength"]):
+        assert re.search(unit_id["pattern"], ident) and re.search(keys[0], ident), ident
+    for ident in ("", "-site", ".site", "_site", "site web", "w" * (unit_id["maxLength"] + 1)):
+        assert re.search(keys[0], ident) is None, ident
+    assert recipes["patternProperties"][keys[0]]["enum"] == ["static-site"]
+
+    def refused(document: dict) -> dict[str, str]:
+        (tmp_path / "deployment.json").write_text(json.dumps(document), encoding="utf-8")
+        return dict(_read(tmp_path))
+
+    units = [*_SEED["units"], {"id": "site", "role": "web"}]
+    assert refused(_seed(build="generated", units=units,
+                         generator={"recipes": {"site": "static-site"}})) == {}
+    for key in ("docs", "api"):
+        found = refused(_seed(build="generated", units=units,
+                              generator={"recipes": {key: "static-site"}}))
+        message = found[f"$.generator.recipes.{key}"]
+        assert message.endswith("(web units: site, web)"), message
+    alone = refused(_seed(build="generated", units=_SEED["units"][:3],
+                          generator={"recipes": {"web": "static-site"}}))
+    assert alone["$.generator.recipes.web"].endswith("(web units: none)")
 
 
 def test_a_package_name_can_never_be_read_as_an_option() -> None:
