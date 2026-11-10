@@ -7,6 +7,35 @@ equal the checked-in `VERSION` — held by `tests/test_changelog.py`. A reader p
 to an earlier version reads this file to see exactly what changed since. Up to
 0.43.0 this package also carried the rule catalog, and the entries below record it.
 
+## 0.46.0
+
+The deployment fixtures name five more refusals, so every reader is held to them. No schema
+changes: a declaration that validated under 0.45.0 validates, and every refusal named here
+is one a reader of 0.45.0 already gave or should have. Fixtures are additive, so this bumps
+the minor.
+
+### Added
+
+- **A file that is not strict JSON is refused whole, in the same words.** A key written
+  twice in one object is read by a lenient parser as its last value, and `NaN` and the
+  infinities as numbers, so two readers could read one file differently, or one could pass
+  a file the deploy then refuses. A reader refuses both at `$`, naming what the file may
+  be: `one JSON object, each key once` (`deployment_declaration_is_readable`, violation-53)
+  and `one JSON object, each number finite` (violation-54). Such a case holds a file that
+  is deliberately not strict JSON, so a reader's test hands the reader its bytes.
+- **A recipe key that is no unit id names the web units.** `generator.recipes` has no fixed
+  keys, only a key form, so a key outside that form (`-web`, `public site`) was refused with
+  a message that listed no key at all. A reader names the web units the file declares, as
+  it does for a key that names no web unit (violation-51 and violation-52). The second case
+  also states how a key that is no plain name is written in a field: as JSON in brackets.
+- **A static site's health path is the one its image answers.** A web unit built from the
+  `static-site` recipe answers its health at `/healthz` alone, so a `healthPath` that names
+  another path is one a deploy tool would wait on for ever. A reader refuses it and allows
+  `/healthz, or no healthPath` (violation-55).
+
+The cases these refusals name live in terp-framework, as every corpus case has since 0.44.0,
+and join its corpus with the pin to this release.
+
 ## 0.45.0
 
 The deployment declaration gains one word, so this bumps the minor: `generator.recipes`
