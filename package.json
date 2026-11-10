@@ -1,6 +1,6 @@
 {
   "name": "@terpjs/spec",
-  "version": "0.45.0",
+  "version": "0.46.0",
   "description": "The contracts Terp's programs read: the deployment, workbench and layout declarations, the finding and check-report formats, the assurance profile and the conversation stream. Data only: consumers resolve the root via require.resolve('@terpjs/spec/package.json').",
   "files": [
     "VERSION",

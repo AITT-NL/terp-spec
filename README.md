@@ -268,6 +268,12 @@ work tree but outside the project root — as trees a reader's own test builds o
 disk, because a wheel or a tarball carries no link and a corpus case is no work
 tree.
 
+A reader parses `deployment.json` strictly. A key written twice in one object and
+a number that is no JSON number (`NaN`, an infinity) are each read by a lenient
+parser, so the same bytes would be two documents to two readers; the fixtures
+refuse both at `$`, the file itself, and a case that carries one holds a file that
+is deliberately not strict JSON.
+
 ## Development-loop declaration
 
 A tool that drives an app's development loop has to know which compose file

@@ -762,6 +762,57 @@ def test_every_refusal_names_its_field_and_what_it_allows() -> None:
             assert expected["field"].strip() and expected["allowed"].strip(), f"{rule}/{name}"
 
 
+def _strictly(text: str) -> object:
+    """*text* as strict JSON: a key twice in one object, or a constant, is an error."""
+
+    def once(pairs: list[tuple[str, object]]) -> dict[str, object]:
+        found: dict[str, object] = {}
+        for key, value in pairs:
+            if key in found:
+                raise ValueError(f"the key {key!r} appears twice in one object")
+            found[key] = value
+        return found
+
+    def constant(name: str) -> object:
+        raise ValueError(f"{name} is not a JSON number")
+
+    return json.loads(text, object_pairs_hook=once, parse_constant=constant)
+
+
+def test_a_file_that_is_not_strict_json_is_refused_whole() -> None:
+    """A lenient parser reads a key twice as its last value and ``NaN`` as a number, so the
+    same bytes are two documents to two readers. The fixtures refuse both at ``$``, and
+    every contract in this package is itself strict JSON."""
+    readable = _FIXTURES["refusals"][_READABLE]
+    assert readable["violation-53"] == {"field": "$", "allowed": "one JSON object, each key once"}
+    assert readable["violation-54"] == {"field": "$", "allowed": "one JSON object, each number finite"}
+    twice = '{"schemaVersion": 1, "build": "managed", "build": "own"}'
+    assert json.loads(twice)["build"] == "own", "a lenient parser keeps the last"
+    with pytest.raises(ValueError, match="appears twice"):
+        _strictly(twice)
+    for constant in ("NaN", "Infinity", "-Infinity"):
+        text = f'{{"sizes": {{"small": {{"cpu": {constant}, "memoryMiB": 256}}}}}}'
+        assert json.loads(text), "a lenient parser reads it"
+        with pytest.raises(ValueError, match="is not a JSON number"):
+            _strictly(text)
+    for contract in sorted(_SPEC.glob("*.json")):
+        _strictly(contract.read_text(encoding="utf-8"))
+
+
+def test_the_refusals_of_a_recipe_key_and_a_site_health_path_name_what_is_allowed() -> None:
+    """A recipe key outside the key form names the declared web units, as a key naming no
+    web unit does, and a key that is no plain name is written as JSON in the field."""
+    readable = _FIXTURES["refusals"][_READABLE]
+    key = next(k for k in _GENERATOR["properties"]["recipes"]["patternProperties"] if k != "^\\$")
+    for case, written in (("violation-51", "-web"), ("violation-52", "public site")):
+        assert re.search(key, written) is None, f"{written!r} is outside the key form"
+        assert readable[case]["allowed"] == readable["violation-48"]["allowed"]
+    assert readable["violation-51"]["field"] == "$.generator.recipes.-web"
+    assert readable["violation-52"]["field"] == '$.generator.recipes["public site"]'
+    assert readable["violation-55"]["field"].endswith(".healthPath")
+    assert readable["violation-55"]["allowed"] == "/healthz, or no healthPath"
+
+
 def test_the_generator_words_stand_only_in_the_generated_state() -> None:
     """``generator`` asks a generator for something, so beside ``own`` - where nothing
     renders - it is refused, and beside ``unmanaged`` it is one more key of a state that
