@@ -799,6 +799,63 @@ def test_a_file_that_is_not_strict_json_is_refused_whole() -> None:
         _strictly(contract.read_text(encoding="utf-8"))
 
 
+#: How deep a declaration's objects and arrays may nest, the document being the first.
+_MAX_DEPTH = 64
+
+
+def _depth(text: str) -> int:
+    """How deep *text* nests objects and arrays, counted in the text and never by parsing it."""
+    deepest = depth = 0
+    in_string = escaped = False
+    for character in text:
+        if in_string:
+            if escaped:
+                escaped = False
+            elif character == "\\":
+                escaped = True
+            elif character == '"':
+                in_string = False
+        elif character == '"':
+            in_string = True
+        elif character in "{[":
+            depth += 1
+            deepest = max(deepest, depth)
+        elif character in "}]":
+            depth -= 1
+    return deepest
+
+
+def test_a_file_nested_deeper_than_the_cap_is_refused_whole() -> None:
+    """What a parser does with a deeply nested file is where its own stack ends: an error
+    in one language, a crash in another, and a different answer in the next release of the
+    same one. So the depth is a number of the contract, a reader counts it in the bytes
+    before it parses them, and the fixtures refuse the file at ``$``."""
+    readable = _FIXTURES["refusals"][_READABLE]
+    assert readable["violation-56"] == {
+        "field": "$",
+        "allowed": f"one JSON object, nested at most {_MAX_DEPTH} deep",
+    }
+    assert _depth("{}") == 1, "the document itself is the first"
+    assert _depth('{"units": [{"env": ["A"]}]}') == 4
+    assert _depth('{"note": "a brace { and a bracket [ in a string, and an escaped \\" quote"}') == 1
+
+    def nested(levels: int) -> str:
+        return '{"schemaVersion": 1, "x": ' + "[" * (levels - 1) + "]" * (levels - 1) + "}"
+
+    assert _depth(nested(_MAX_DEPTH)) == _MAX_DEPTH, "the cap itself is allowed"
+    assert _depth(nested(_MAX_DEPTH + 1)) == _MAX_DEPTH + 1, "one more is refused"
+    # Counting never parses, so a file no parser would survive is still only counted.
+    assert _depth(nested(200_000)) == 200_000
+    # The declaration's own contract sits far inside the cap, so no file that validates is
+    # near it.
+    for contract in sorted(_SPEC.glob("deployment-declaration.*.json")):
+        assert _depth(contract.read_text(encoding="utf-8")) < _MAX_DEPTH // 2, contract.name
+    # One number and one way of counting for both contracts that bound their nesting: an
+    # event of the conversation stream is held to the same depth, counted the same way.
+    events = json.loads((_SPEC / "conversation-events.schema.json").read_text(encoding="utf-8"))
+    assert events["$defs"]["maxEventDepth"]["const"] == _MAX_DEPTH
+
+
 def test_the_refusals_of_a_recipe_key_and_a_site_health_path_name_what_is_allowed() -> None:
     """A recipe key outside the key form names the declared web units, as a key naming no
     web unit does, and a key that is no plain name is written as JSON in the field."""
