@@ -17,6 +17,7 @@ import pathlib
 import re
 import shutil
 import subprocess
+import sys
 
 import pytest
 
@@ -157,8 +158,11 @@ def _run_release_step(tmp_path: pathlib.Path, **answers: str) -> tuple[int, str,
     return done.returncode, done.stdout + done.stderr, log.read_text(encoding="utf-8").splitlines()
 
 
+#: On Linux only, where the release runs: elsewhere ``bash`` may be another system's
+#: launcher, which would fail these for a reason that says nothing about the step.
 _needs_bash = pytest.mark.skipif(
-    shutil.which("bash") is None, reason="the step is a bash script; the release runs on Linux"
+    sys.platform != "linux" or shutil.which("bash") is None,
+    reason="the step is a bash script, run as the release runs it: on Linux",
 )
 
 
