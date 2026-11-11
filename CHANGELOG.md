@@ -7,6 +7,30 @@ equal the checked-in `VERSION` — held by `tests/test_changelog.py`. A reader p
 to an earlier version reads this file to see exactly what changed since. Up to
 0.43.0 this package also carried the rule catalog, and the entries below record it.
 
+## 0.47.0
+
+The deployment fixtures name one more refusal: a file nested too deeply. No schema changes,
+and a declaration that validated under 0.46.0 validates. Fixtures are additive, so this
+bumps the minor.
+
+### Added
+
+- **A file nested deeper than 64 is refused whole, in the same words.** What a parser does
+  with a deeply nested file is where its own stack ends: an error in one language, a crash
+  in another, and a different answer in the next release of the same one. One reader's
+  refusal for such a file held on one interpreter release and not on the next, and was
+  taken out. The depth is now a number of the contract: a reader refuses, at `$`, a file whose
+  objects and arrays nest more than 64 deep, the document itself being the first, and allows
+  `one JSON object, nested at most 64 deep` (`deployment_declaration_is_readable`,
+  violation-56). It counts the depth in the bytes before it parses them, so the refusal
+  never depends on a parser. The number and the way of counting are the ones an event of
+  the conversation stream is already held to (`maxEventDepth`). A valid declaration nests a
+  handful deep.
+
+The case this refusal names lives in terp-framework, as every corpus case has since 0.44.0,
+and joins its corpus with the pin to this release. Each reader then counts before it
+parses: the framework, Studio and the runner.
+
 ## 0.46.0
 
 The deployment fixtures name five more refusals, so every reader is held to them. No schema

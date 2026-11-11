@@ -274,6 +274,13 @@ parser, so the same bytes would be two documents to two readers; the fixtures
 refuse both at `$`, the file itself, and a case that carries one holds a file that
 is deliberately not strict JSON.
 
+A reader also refuses, at `$`, a file whose objects and arrays nest more than 64
+deep, counting the document itself as the first. A valid declaration nests a
+handful deep, so the cap costs nothing; without it the answer to a deeply nested
+file is whatever the reader's parser does when its stack ends, which differs
+between languages and between releases of one. A reader counts the depth in the
+bytes before it parses them.
+
 ## Development-loop declaration
 
 A tool that drives an app's development loop has to know which compose file
