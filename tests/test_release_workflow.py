@@ -15,6 +15,10 @@ from __future__ import annotations
 
 import pathlib
 import re
+import shutil
+import subprocess
+
+import pytest
 
 _WORKFLOW = (
     pathlib.Path(__file__).resolve().parents[1]
@@ -94,6 +98,104 @@ def test_release_is_bound_to_the_verified_commit() -> None:
         "one run per tag ref: concurrent runs of the same tag must not race "
         "verification against release"
     )
+
+
+def _release_step() -> str:
+    """The script of the step that makes the GitHub Release, as the runner hands it to bash."""
+    block = _job_block(_workflow_text(), "github-release")
+    step = block[block.index("- name: Create the GitHub Release") :]
+    script = step.split("        run: |\n", 1)[1]
+    return "".join(line[10:] if line.strip() else "\n" for line in script.splitlines(keepends=True))
+
+
+#: A stand-in for ``gh``: it logs what it was asked, answers the lookup of a Release by tag
+#: as GitHub does (the URL, or a 404 body and a failure), and refuses to create a Release for
+#: a tag that has one, as GitHub does with a 422.
+_FAKE_GH = """#!/usr/bin/env bash
+echo "$*" >> "$GH_LOG"
+case "$1 $2" in
+  "api repos/example/contracts/releases/tags/v9.9.9")
+    if [ "$RELEASE_EXISTS" = "1" ]; then
+      echo "https://github.example/example/contracts/releases/tag/v9.9.9"; exit 0
+    fi
+    echo '{"message":"Not Found","status":"404"}'; exit 1 ;;
+  "release create")
+    if [ "$RELEASE_EXISTS" = "1" ]; then
+      echo "HTTP 422: Validation Failed" >&2; echo "Release.tag_name already exists" >&2; exit 1
+    fi
+    exit "${CREATE_FAILS:-0}" ;;
+esac
+echo "the stand-in was asked something the step should not ask: $*" >&2; exit 64
+"""
+
+
+def _run_release_step(tmp_path: pathlib.Path, **answers: str) -> tuple[int, str, list[str]]:
+    """Run the step as the runner does (``bash -e``) against the stand-in; its exit code,
+    what it printed, and what it asked ``gh``."""
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir(parents=True)
+    fake = bin_dir / "gh"
+    fake.write_text(_FAKE_GH, encoding="utf-8")
+    fake.chmod(0o755)
+    log = tmp_path / "gh.log"
+    log.write_text("", encoding="utf-8")
+    script = tmp_path / "step.sh"
+    script.write_text(_release_step(), encoding="utf-8")
+    done = subprocess.run(
+        ["bash", "-e", str(script)],
+        env={
+            "PATH": f"{bin_dir}:/usr/bin:/bin",
+            "GH_LOG": str(log),
+            "GITHUB_REF_NAME": "v9.9.9",
+            "GITHUB_REPOSITORY": "example/contracts",
+            **answers,
+        },
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    return done.returncode, done.stdout + done.stderr, log.read_text(encoding="utf-8").splitlines()
+
+
+_needs_bash = pytest.mark.skipif(
+    shutil.which("bash") is None, reason="the step is a bash script; the release runs on Linux"
+)
+
+
+@_needs_bash
+def test_a_release_made_together_with_the_tag_is_kept_and_the_run_stays_green(
+    tmp_path: pathlib.Path,
+) -> None:
+    """A tag made through the Releases page comes with its Release. The step used to create
+    it again, GitHub refused (422), and a run went red after both registries had taken the
+    version. The Release that exists is kept, and named in the run."""
+    code, said, asked = _run_release_step(tmp_path, RELEASE_EXISTS="1")
+    assert code == 0, said
+    assert asked == ["api repos/example/contracts/releases/tags/v9.9.9 --jq .html_url"]
+    assert "::notice::a Release for v9.9.9 already exists" in said
+    assert "https://github.example/example/contracts/releases/tag/v9.9.9" in said
+
+
+@_needs_bash
+def test_a_tag_with_no_release_gets_one_and_a_failure_to_make_it_fails_the_run(
+    tmp_path: pathlib.Path,
+) -> None:
+    code, said, asked = _run_release_step(tmp_path / "made", RELEASE_EXISTS="0")
+    assert code == 0, said
+    assert asked[-1] == "release create v9.9.9 --verify-tag --title terp-spec v9.9.9 --generate-notes"
+    assert "404" not in said, "the lookup's own answer stays out of the run's output"
+    # Only an existing Release is forgiven: any other failure to create one is still red.
+    code, said, asked = _run_release_step(tmp_path / "failed", RELEASE_EXISTS="0", CREATE_FAILS="1")
+    assert code != 0 and asked[-1].startswith("release create v9.9.9 --verify-tag")
+
+
+def test_the_release_step_looks_for_a_release_before_it_creates_one() -> None:
+    """Held as text as well, for a machine without bash: the lookup is by tag over REST,
+    it comes before the create, and the create still never makes a tag."""
+    step = _release_step()
+    lookup = step.index('gh api "repos/$GITHUB_REPOSITORY/releases/tags/$GITHUB_REF_NAME"')
+    assert lookup < step.index("gh release create")
+    assert "--verify-tag" in step[step.index("gh release create") :]
 
 
 def test_no_workflow_checks_out_another_repository() -> None:
