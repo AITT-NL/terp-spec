@@ -10,7 +10,8 @@ name: release
 # rewritten commit), the self-consistency suite must pass at the tagged
 # commit, and both the publish jobs and the release job are BOUND to the verified commit (a tag
 # moved or deleted mid-workflow is refused, never released). A GitHub Release
-# then documents it with generated notes.
+# then documents it with generated notes; one that was made together with the
+# tag, through the Releases page, is kept instead of failing the run.
 #
 # Publishing uses Trusted Publishing (OIDC) on both registries — no long-lived
 # token is stored here.
@@ -200,6 +201,19 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          # A tag made through the Releases page comes with its Release, so one
+          # is already there when this job starts. Creating it again is refused
+          # (422 "tag_name already exists"), and v0.46.0's run went red on that
+          # after both registries had taken the version. The Release that
+          # exists is this tag's own, and the step above has just held the tag
+          # to the verified commit, so it is kept as it is and named. Asked over
+          # REST by tag: that answers for a published Release only, never a draft.
+          if url="$(gh api "repos/$GITHUB_REPOSITORY/releases/tags/$GITHUB_REF_NAME" \
+                      --jq .html_url 2>/dev/null)"; then
+            echo "::notice::a Release for $GITHUB_REF_NAME already exists ($url)," \
+                 "made with the tag. It is kept as it is."
+            exit 0
+          fi
           # --verify-tag: never create the tag as a side effect — release
           # only an existing remote tag (the one just re-verified above).
           gh release create "$GITHUB_REF_NAME" \
