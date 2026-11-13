@@ -2,12 +2,13 @@
 # (ADR 0082).
 #
 # The package is DATA: the schemas more than one program reads (the deployment,
-# workbench and layout declarations, the finding and check-report formats, the
-# assurance profile and the conversation stream) and their fixtures. Consumers
-# depend on it as a declared dependency instead of a repo-relative path. The
-# version IS the contracts version (VERSION), deliberately independent of the
-# framework's lockstep release version. The rule catalog and its corpus are the
-# framework's own and ship with its checkers (terp-framework ADR 0203).
+# workbench and layout declarations, the resolved deployment, the finding and
+# check-report formats, the assurance profile and the conversation stream) and
+# their fixtures. Consumers depend on it as a declared dependency instead of a
+# repo-relative path. The version IS the contracts version (VERSION),
+# deliberately independent of the framework's lockstep release version. The
+# rule catalog and its corpus are the framework's own and ship with its
+# checkers (terp-framework ADR 0203).
 #
 # Layer-neutral by design: no dependencies, no terp.* imports (the same
 # isolation discipline as Studio and the runner keep).
@@ -18,8 +19,8 @@ build-backend = "hatchling.build"
 
 [project]
 name = "terp-spec"
-version = "0.47.0"
-description = "The contracts Terp's programs read: the deployment, workbench and layout declarations, the finding and check-report formats, the assurance profile and the conversation stream."
+version = "0.48.0"
+description = "The contracts Terp's programs read: the deployment, workbench and layout declarations, the resolved deployment, the finding and check-report formats, the assurance profile and the conversation stream."
 requires-python = ">=3.10"
 license = "Apache-2.0"
 dependencies = []
@@ -47,6 +48,8 @@ packages = ["terp_spec"]
 "layout-declaration.schema.json" = "terp_spec/layout-declaration.schema.json"
 "deployment-declaration.schema.json" = "terp_spec/deployment-declaration.schema.json"
 "deployment-declaration.fixtures.json" = "terp_spec/deployment-declaration.fixtures.json"
+"resolved-deployment.schema.json" = "terp_spec/resolved-deployment.schema.json"
+"resolved-deployment.fixtures.json" = "terp_spec/resolved-deployment.fixtures.json"
 "workbench-declaration.schema.json" = "terp_spec/workbench-declaration.schema.json"
 "workbench-declaration.fixtures.json" = "terp_spec/workbench-declaration.fixtures.json"
 "conversation-events.schema.json" = "terp_spec/conversation-events.schema.json"

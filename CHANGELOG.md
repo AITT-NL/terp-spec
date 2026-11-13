@@ -7,6 +7,42 @@ equal the checked-in `VERSION` — held by `tests/test_changelog.py`. A reader p
 to an earlier version reads this file to see exactly what changed since. Up to
 0.43.0 this package also carried the rule catalog, and the entries below record it.
 
+## 0.48.0
+
+A new contract: the resolved deployment, the closed document a release tool writes into the
+signed release manifest and a deploy executor runs. Nothing that validated under 0.47.0
+changes. An added contract bumps the minor.
+
+### Added
+
+- **`resolved-deployment.schema.json`, with `resolved-deployment.fixtures.json`.** What one
+  release runs, resolved and closed: its services, each image by repository and sha256
+  digest, each command as an argv, the source of each variable (a literal, the environment's
+  configuration or secrets, or the runtime role's database connection), mounts, probes,
+  start order, and the one-shot service the migration step runs in. An executor that reads
+  an app's Compose files instead has to reproduce readers it does not own: a YAML loader,
+  Compose's model and the engine's container configuration. Every difference between its
+  reading and theirs is a hole. A closed document leaves nothing to reproduce.
+- **What it leaves out belongs to the executor or the environment.** There is no field for
+  the restart policy, networks, published ports, labels, logging, container hardening,
+  resources or instance counts, and a reader refuses an unknown field at any depth. Version
+  1 also carries no bind mount, and no field that nothing writes yet: no entrypoint, working
+  directory, user, stop grace period or tmpfs mount.
+- **Shapes the validator subset can hold.** The subset has no `null`, no `maxProperties` and
+  no `oneOf`. So a field that does not apply is absent, collections are capped arrays with
+  ids, and each variant (a variable's `source`, a mount's `type`, a probe's `form`) is chosen
+  by a discriminator with `if`/`then`.
+- **The fixtures read each document against the release that carries it**: the units its
+  deployment declaration declares, the images it built and its datastore table. They name
+  each refusal's field and the values it allows. A `beyondSchema` refusal is one the keyword
+  subset cannot state: uniqueness and order, references that must resolve, agreement with
+  the release, and the variable names an executor owns (`refusedEnvironmentNames`,
+  `refusedEnvironmentPrefixes` in `$defs`). A tool that writes the document refuses before it
+  signs, and an executor that runs it refuses again when it reads; both run these cases.
+
+No program writes or reads the document yet. Readers move their pins first, and a release
+tool writes it only once the readers it serves read it.
+
 ## 0.47.0
 
 The deployment fixtures name one more refusal: a file nested too deeply. No schema changes,
