@@ -37,11 +37,11 @@ changes. An added contract bumps the minor.
   each refusal's field and the values it allows. A `beyondSchema` refusal is one the keyword
   subset cannot state: uniqueness and order, references that must resolve, agreement with
   the release, and the variable names an executor owns (`refusedEnvironmentNames`,
-  `refusedEnvironmentPrefixes` in `$defs`). The tool that writes the document refuses before
-  it signs, and the executor that runs it refuses again; both run these cases.
+  `refusedEnvironmentPrefixes` in `$defs`). A tool that writes the document refuses before it
+  signs, and an executor that runs it refuses again when it reads; both run these cases.
 
-Readers move their pins first. The release tool writes the document once the readers it
-serves read it.
+No program writes or reads the document yet. Readers move their pins first, and a release
+tool writes it only once the readers it serves read it.
 
 ## 0.47.0
 

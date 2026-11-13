@@ -2,10 +2,10 @@
 
 ``resolved-deployment.schema.json`` is the closed document a release tool writes into the
 signed release manifest, at ``outputs.deployment``, and the document an executor runs
-instead of reading the app's Compose files. It has three readers: the release tool, which
-refuses before it signs; the executor, which refuses again when it reads; and the control
-plane, which shows it to the person who approves a deploy. They agree because they run
-the same fixtures.
+instead of reading the app's Compose files. It is written for three readers: a release
+tool, which refuses before it signs; an executor, which refuses again when it reads; and a
+control plane, which shows it to the person who approves a deploy. They agree by running
+the same fixtures. No program reads it yet.
 
 The document is read against the release that carries it: the units its deployment
 declaration declares, the images the release built, and the datastore table it records.
@@ -16,6 +16,7 @@ the refusals the schema's keyword subset cannot state, and every fixture read as
 
 from __future__ import annotations
 
+import copy
 import json
 import re
 
@@ -89,6 +90,11 @@ def _items(value: object) -> list:
     return value if isinstance(value, list) else []
 
 
+def _text(value: object) -> str | None:
+    """*value* when it is a string: what a reader may use as a name or a key."""
+    return value if isinstance(value, str) else None
+
+
 def _beyond_schema(document: object, release: dict) -> list[tuple[str, str]]:
     """``(field, rule)`` for every refusal of *document* a reader makes beyond the schema.
 
@@ -120,11 +126,13 @@ def _beyond_schema(document: object, release: dict) -> list[tuple[str, str]]:
         by_id.setdefault(ident, service)
     if any(ident not in by_id for ident in order):
         refused.append(("$.services", "missing-unit"))
-    seen = [service.get("id") for _, service in services if service.get("id") in units]
-    ranks = [order.index(ident) for ident in seen]
-    for position in range(1, len(ranks)):
-        if ranks[position] <= ranks[position - 1]:
-            index = [i for i, service in services if service.get("id") in units][position]
+    declared = [
+        (index, ident)
+        for index, service in services
+        if (ident := _text(service.get("id"))) is not None and ident in units
+    ]
+    for (_, before), (index, ident) in zip(declared, declared[1:]):
+        if order.index(ident) <= order.index(before):
             refused.append((f"$.services[{index}].id", "declaration-order"))
             break
 
@@ -136,7 +144,7 @@ def _beyond_schema(document: object, release: dict) -> list[tuple[str, str]]:
 
     for index, service in services:
         at = f"$.services[{index}]"
-        unit = units.get(service.get("id"))
+        unit = units.get(_text(service.get("id")))
         if unit is not None:
             if "role" in service and service["role"] != unit["role"]:
                 refused.append((f"{at}.role", "unit-role"))
@@ -149,7 +157,8 @@ def _beyond_schema(document: object, release: dict) -> list[tuple[str, str]]:
         store = service.get("datastore")
         if isinstance(image, str):
             if isinstance(store, dict):
-                if tables.get((store.get("kind"), store.get("version"))) != image:
+                key = (_text(store.get("kind")), _text(store.get("version")))
+                if None not in key and tables.get(key) != image:
                     refused.append((f"{at}.image", "datastore-image"))
             elif image not in release["images"]:
                 refused.append((f"{at}.image", "built-image"))
@@ -231,7 +240,7 @@ def _cycles(services: list[tuple[int, dict]], by_id: dict[str, dict]) -> list[tu
         return [
             entry["unit"]
             for entry in _items(service.get("after"))
-            if isinstance(entry, dict) and entry.get("unit") in by_id
+            if isinstance(entry, dict) and _text(entry.get("unit")) in by_id
         ]
 
     def reaches(start: str, goal: str) -> bool:
@@ -248,11 +257,11 @@ def _cycles(services: list[tuple[int, dict]], by_id: dict[str, dict]) -> list[tu
 
     refused = []
     for index, service in services:
-        ident = service.get("id")
-        if by_id.get(ident) is not service:
+        ident = _text(service.get("id"))
+        if ident is None or by_id.get(ident) is not service:
             continue
         for position, entry in enumerate(_items(service.get("after"))):
-            other = entry.get("unit") if isinstance(entry, dict) else None
+            other = _text(entry.get("unit")) if isinstance(entry, dict) else None
             if other in by_id and other != ident and reaches(other, ident):
                 refused.append((f"$.services[{index}].after[{position}].unit", "after-cycle"))
     return refused
@@ -464,6 +473,34 @@ def test_an_invalid_fixture_is_refused_at_its_field(case: dict) -> None:
         assert schema_alone == [], f"{case['id']}: marked beyond the schema, and the schema refuses it"
     else:
         assert schema_alone, f"{case['id']}: the schema alone must refuse it"
+
+
+#: Values of the wrong type, each in a document no reader validated first.
+_MISTYPED = {
+    "an id that is a list": lambda d: d["services"][0].update(id=["db"]),
+    "an id that is a number": lambda d: d["services"][2].update(id=7),
+    "a datastore kind that is a list": lambda d: d["services"][0]["datastore"].update(kind=["postgres"]),
+    "a datastore that is a list": lambda d: d["services"][0].update(datastore=["postgres", "17"]),
+    "an after unit that is a list": lambda d: d["services"][2]["after"][0].update(unit=["db"]),
+    "an after unit that is an object": lambda d: d["services"][2]["after"][0].update(unit={"id": "db"}),
+    "an after entry that is text": lambda d: d["services"][2]["after"].append("db"),
+    "a variable that is a list": lambda d: d["services"][2]["environment"].append(["X"]),
+    "a variable name that is a list": lambda d: d["services"][2]["environment"][0].update(name=["X"]),
+    "a mount target that is a list": lambda d: d["services"][2]["mounts"][0].update(target=["/srv/var/files"]),
+    "a mount source that is a list": lambda d: d["services"][2]["mounts"][0].update(source=["files"]),
+    "a volume that is a list": lambda d: d.update(volumes=[["db-data"], "files"]),
+    "a migration that is a list": lambda d: d.update(migration=["migrate"]),
+    "a service that is text": lambda d: d["services"].append("web"),
+    "services that are an object": lambda d: d.update(services={"api": {}}),
+}
+
+
+@pytest.mark.parametrize("name", sorted(_MISTYPED))
+def test_a_mistyped_value_is_refused_and_never_raises(name: str) -> None:
+    """A reader meets documents before anything validated them: the wrong type is a refusal."""
+    case = copy.deepcopy(_documents("valid")[0])
+    _MISTYPED[name](case["document"])
+    assert _refused_fields(case), f"{name}: nothing refused it"
 
 
 def test_the_release_facts_are_well_formed() -> None:

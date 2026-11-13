@@ -66,8 +66,8 @@ The artifacts:
    fixtures every reader of it runs. See "Deployment declaration" below.
 6. **The resolved deployment** (`resolved-deployment.schema.json`, with
    `resolved-deployment.fixtures.json`) — the closed document a release tool writes into
-   the signed release manifest, saying exactly what one release runs, and the fixtures its
-   writer and every executor run. See "Resolved deployment" below.
+   the signed release manifest, saying exactly what one release runs, and the fixtures every
+   writer and reader of it runs. See "Resolved deployment" below.
 7. **The development-loop declaration** (`workbench-declaration.schema.json`, with
    `workbench-declaration.fixtures.json`) — the vocabulary of the `workbench.json`
    an app checks in to say which parts of its development loop a tool that drives
@@ -290,10 +290,13 @@ bytes before it parses them.
 A deploy executor has to know exactly what to run, and an app's Compose files are the wrong
 place to read it. Reading them safely means reproducing a YAML loader, Compose's model and
 the engine's container configuration, which the executor does not own and each of which can
-change in its next release. So the release tool resolves what a release runs into one closed
-document, `resolved-deployment.schema.json`, and writes it into the signed release manifest.
-The executor runs that document and writes its own Compose file, or calls the engine
-directly. It never runs the app's.
+change in its next release. So this contract is one closed document,
+`resolved-deployment.schema.json`. A release tool resolves what a release runs into it and
+writes it into the signed release manifest. An executor that reads it runs that document,
+writing its own Compose file or calling the engine directly, and never runs the app's.
+
+No program writes or reads it yet. Each reader moves its pin to a release that carries it
+first, and a release tool writes the document only once the readers it serves read it.
 
 The document holds what the release decides, and nothing more:
 
