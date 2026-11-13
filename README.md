@@ -64,20 +64,24 @@ The artifacts:
    `deployment-declaration.fixtures.json`) — the schema for the `deployment.json`
    an app checks in at its project root to declare its deployable units, and the
    fixtures every reader of it runs. See "Deployment declaration" below.
-6. **The development-loop declaration** (`workbench-declaration.schema.json`, with
+6. **The resolved deployment** (`resolved-deployment.schema.json`, with
+   `resolved-deployment.fixtures.json`) — the closed document a release tool writes into
+   the signed release manifest, saying exactly what one release runs, and the fixtures its
+   writer and every executor run. See "Resolved deployment" below.
+7. **The development-loop declaration** (`workbench-declaration.schema.json`, with
    `workbench-declaration.fixtures.json`) — the vocabulary of the `workbench.json`
    an app checks in to say which parts of its development loop a tool that drives
    it relies on, and the fixtures every reader of it runs. See "Development-loop
    declaration" below.
-7. **The conversation event stream** (`conversation-events.schema.json`, with
+8. **The conversation event stream** (`conversation-events.schema.json`, with
    `conversation-events.fixtures.json`) — the vocabulary of the events one run of a
    conversation streams to the people following it: a profile of AG-UI 1.0 and the
    names Terp adds where AG-UI leaves a name open, with recorded runs every
    producer and reader runs. See "Conversation event stream" below.
-8. **The assurance profile** (`assurance-profile.schema.json`) — the
+9. **The assurance profile** (`assurance-profile.schema.json`) — the
    machine-readable release-assurance claim a toolchain emits from its release
    verification profile. See "Assurance profile" below.
-9. **The changelog** (`CHANGELOG.md`) — the change history keyed to `VERSION` (the
+10. **The changelog** (`CHANGELOG.md`) — the change history keyed to `VERSION` (the
    top entry must match), so a reader pinned to an earlier version can see exactly
    what changed since.
 
@@ -280,6 +284,34 @@ handful deep, so the cap costs nothing; without it the answer to a deeply nested
 file is whatever the reader's parser does when its stack ends, which differs
 between languages and between releases of one. A reader counts the depth in the
 bytes before it parses them.
+
+## Resolved deployment
+
+A deploy executor has to know exactly what to run, and an app's Compose files are the wrong
+place to read it. Reading them safely means reproducing a YAML loader, Compose's model and
+the engine's container configuration, which the executor does not own and each of which can
+change in its next release. So the release tool resolves what a release runs into one closed
+document, `resolved-deployment.schema.json`, and writes it into the signed release manifest.
+The executor runs that document and writes its own Compose file, or calls the engine
+directly. It never runs the app's.
+
+The document holds what the release decides, and nothing more:
+
+| It holds | It leaves to the executor or the environment |
+|---|---|
+| One service per declared unit, in the declaration's order | The restart policy, which the executor decides from each service's `lifecycle` |
+| Each image by repository and sha256 digest, never a tag | Networks, and where a port is published: `serves` names only the port inside the container |
+| Each command as an argv, never one string | Labels, logging and container hardening |
+| Each variable as a literal or a reference: `config`, `secret`, or `database`, which is always the runtime role's connection | Resources and instance counts, which the environment's record holds |
+| Named and anonymous volumes, never over the app root `/srv` except `/srv/var/files` | Bind mounts, which version 1 does not carry |
+| Probes, start order (`after`), and the one-shot service the migration step runs in | The migration step's argv, and the connection that may change the schema |
+
+A field that does not apply is absent, never null. Collections are capped arrays with ids,
+and each variant is chosen by a discriminator. A reader refuses a field it does not know, at
+any depth. The fixtures read each document against the release that carries it (its declared
+units, its built images and its datastore table), and name each refusal's field and the values
+it allows. `beyondSchema` marks the refusals the keyword subset cannot state, which every
+reader applies the same way.
 
 ## Development-loop declaration
 

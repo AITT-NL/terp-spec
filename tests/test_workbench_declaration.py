@@ -54,6 +54,7 @@ _DEFAULT_COMPOSE = _DECLARED["properties"]["compose"]["properties"]["file"]["def
 #: schema cannot exempt itself.
 _VOCABULARIES_READ_BY_FIXTURES = {
     "conversation-events.schema.json",
+    "resolved-deployment.schema.json",
     "workbench-declaration.schema.json",
 }
 
