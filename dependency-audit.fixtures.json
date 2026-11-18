@@ -1,0 +1,149 @@
+[
+  {
+    "name": "valid",
+    "document": {
+      "version": 1,
+      "complete": true,
+      "scanned_at": "2026-11-18T12:00:00Z",
+      "locks": {
+        "frontend/package-lock.json": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      },
+      "findings": [
+        {
+          "advisories": [
+            "GHSA-aaaa-bbbb-cccc"
+          ],
+          "ecosystem": "npm",
+          "package": "example-package",
+          "version": "1.0.0",
+          "lockfile": "frontend/package-lock.json",
+          "dependency_paths": [
+            "node_modules/example-package"
+          ],
+          "fingerprint": "sha256:4b10e6eee1166118d7c09eb466081dbede2492b89f313d0398aa7b672c268833",
+          "severity": "high",
+          "fixed_versions": [],
+          "dependency_scope": "development"
+        }
+      ]
+    },
+    "valid": true
+  },
+  {
+    "name": "unknown version",
+    "document": {
+      "version": 2,
+      "complete": true,
+      "scanned_at": "2026-11-18T12:00:00Z",
+      "locks": {
+        "frontend/package-lock.json": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      },
+      "findings": [
+        {
+          "advisories": [
+            "GHSA-aaaa-bbbb-cccc"
+          ],
+          "ecosystem": "npm",
+          "package": "example-package",
+          "version": "1.0.0",
+          "lockfile": "frontend/package-lock.json",
+          "dependency_paths": [
+            "node_modules/example-package"
+          ],
+          "fingerprint": "sha256:4b10e6eee1166118d7c09eb466081dbede2492b89f313d0398aa7b672c268833",
+          "severity": "high",
+          "fixed_versions": [],
+          "dependency_scope": "development"
+        }
+      ]
+    },
+    "valid": false
+  },
+  {
+    "name": "unknown property",
+    "document": {
+      "version": 1,
+      "complete": true,
+      "scanned_at": "2026-11-18T12:00:00Z",
+      "locks": {
+        "frontend/package-lock.json": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      },
+      "findings": [
+        {
+          "advisories": [
+            "GHSA-aaaa-bbbb-cccc"
+          ],
+          "ecosystem": "npm",
+          "package": "example-package",
+          "version": "1.0.0",
+          "lockfile": "frontend/package-lock.json",
+          "dependency_paths": [
+            "node_modules/example-package"
+          ],
+          "fingerprint": "sha256:4b10e6eee1166118d7c09eb466081dbede2492b89f313d0398aa7b672c268833",
+          "severity": "high",
+          "fixed_versions": [],
+          "dependency_scope": "development"
+        }
+      ],
+      "ignore": true
+    },
+    "valid": false
+  },
+  {
+    "name": "empty-advisories",
+    "document": {
+      "version": 1,
+      "complete": true,
+      "scanned_at": "2026-11-18T12:00:00Z",
+      "locks": {
+        "frontend/package-lock.json": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      },
+      "findings": [
+        {
+          "advisories": [],
+          "ecosystem": "npm",
+          "package": "example-package",
+          "version": "1.0.0",
+          "lockfile": "frontend/package-lock.json",
+          "dependency_paths": [
+            "node_modules/example-package"
+          ],
+          "fingerprint": "sha256:abda03277ac5c7c4889cdb341184f502b66269ff2a5518a340f75df3ebfa86a7",
+          "severity": "high",
+          "fixed_versions": [],
+          "dependency_scope": "development"
+        }
+      ]
+    },
+    "valid": false
+  },
+  {
+    "name": "empty-dependency_paths",
+    "document": {
+      "version": 1,
+      "complete": true,
+      "scanned_at": "2026-11-18T12:00:00Z",
+      "locks": {
+        "frontend/package-lock.json": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      },
+      "findings": [
+        {
+          "advisories": [
+            "GHSA-aaaa-bbbb-cccc"
+          ],
+          "ecosystem": "npm",
+          "package": "example-package",
+          "version": "1.0.0",
+          "lockfile": "frontend/package-lock.json",
+          "dependency_paths": [],
+          "fingerprint": "sha256:74ee8cc7f415532eee40f1ced631109378b4ad50a4e47422e6c666b24e144559",
+          "severity": "high",
+          "fixed_versions": [],
+          "dependency_scope": "development"
+        }
+      ]
+    },
+    "valid": false
+  }
+]

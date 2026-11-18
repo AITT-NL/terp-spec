@@ -1,6 +1,6 @@
 {
   "name": "@terpjs/spec",
-  "version": "0.48.0",
+  "version": "0.49.0",
   "description": "The contracts Terp's programs read: the deployment, workbench and layout declarations, the resolved deployment, the finding and check-report formats, the assurance profile and the conversation stream. Data only: consumers resolve the root via require.resolve('@terpjs/spec/package.json').",
   "files": [
     "VERSION",
@@ -15,7 +15,11 @@
     "workbench-declaration.schema.json",
     "workbench-declaration.fixtures.json",
     "conversation-events.schema.json",
-    "conversation-events.fixtures.json"
+    "conversation-events.fixtures.json",
+    "dependency-audit.schema.json",
+    "dependency-audit.fixtures.json",
+    "dependency-risk-acceptance.schema.json",
+    "dependency-risk-acceptance.fixtures.json"
   ],
   "license": "Apache-2.0",
   "publishConfig": {
