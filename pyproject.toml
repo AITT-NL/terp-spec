@@ -19,7 +19,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "terp-spec"
-version = "0.48.0"
+version = "0.49.0"
 description = "The contracts Terp's programs read: the deployment, workbench and layout declarations, the resolved deployment, the finding and check-report formats, the assurance profile and the conversation stream."
 requires-python = ">=3.10"
 license = "Apache-2.0"
@@ -54,6 +54,10 @@ packages = ["terp_spec"]
 "workbench-declaration.fixtures.json" = "terp_spec/workbench-declaration.fixtures.json"
 "conversation-events.schema.json" = "terp_spec/conversation-events.schema.json"
 "conversation-events.fixtures.json" = "terp_spec/conversation-events.fixtures.json"
+"dependency-audit.schema.json" = "terp_spec/dependency-audit.schema.json"
+"dependency-audit.fixtures.json" = "terp_spec/dependency-audit.fixtures.json"
+"dependency-risk-acceptance.schema.json" = "terp_spec/dependency-risk-acceptance.schema.json"
+"dependency-risk-acceptance.fixtures.json" = "terp_spec/dependency-risk-acceptance.fixtures.json"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
