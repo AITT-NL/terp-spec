@@ -271,5 +271,123 @@
       "revoked_at": ""
     },
     "valid": false
+  },
+  {
+    "name": "malformed digest in lock map",
+    "document": {
+      "version": 1,
+      "id": "acceptance-1",
+      "project_id": "example-project",
+      "commit": "cccccccccccccccccccccccccccccccccccccccc",
+      "environments": [
+        "production"
+      ],
+      "finding": {
+        "advisories": [
+          "GHSA-aaaa-bbbb-cccc"
+        ],
+        "ecosystem": "npm",
+        "package": "example-package",
+        "version": "1.0.0",
+        "lockfile": "frontend/package-lock.json",
+        "dependency_paths": [
+          "node_modules/example-package"
+        ],
+        "fingerprint": "sha256:4b10e6eee1166118d7c09eb466081dbede2492b89f313d0398aa7b672c268833",
+        "severity": "high",
+        "fixed_versions": [],
+        "dependency_scope": "development"
+      },
+      "locks": {
+        "frontend/package-lock.json": "sha256:incomplete"
+      },
+      "reason": "Reviewed exposure during the build.",
+      "evidence": [
+        "review-1"
+      ],
+      "approved_by": "owner-1",
+      "approved_at": "2026-11-18T12:00:00Z",
+      "expires_at": "2026-11-25T12:00:00Z",
+      "revoked_at": ""
+    },
+    "valid": false
+  },
+  {
+    "name": "blank human approver",
+    "document": {
+      "version": 1,
+      "id": "acceptance-1",
+      "project_id": "example-project",
+      "commit": "cccccccccccccccccccccccccccccccccccccccc",
+      "environments": [
+        "production"
+      ],
+      "finding": {
+        "advisories": [
+          "GHSA-aaaa-bbbb-cccc"
+        ],
+        "ecosystem": "npm",
+        "package": "example-package",
+        "version": "1.0.0",
+        "lockfile": "frontend/package-lock.json",
+        "dependency_paths": [
+          "node_modules/example-package"
+        ],
+        "fingerprint": "sha256:4b10e6eee1166118d7c09eb466081dbede2492b89f313d0398aa7b672c268833",
+        "severity": "high",
+        "fixed_versions": [],
+        "dependency_scope": "development"
+      },
+      "locks": {
+        "frontend/package-lock.json": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      },
+      "reason": "Reviewed exposure during the build.",
+      "evidence": [
+        "review-1"
+      ],
+      "approved_by": "   ",
+      "approved_at": "2026-11-18T12:00:00Z",
+      "expires_at": "2026-11-25T12:00:00Z",
+      "revoked_at": ""
+    },
+    "valid": false
+  },
+  {
+    "name": "acceptance without a lock",
+    "document": {
+      "version": 1,
+      "id": "acceptance-1",
+      "project_id": "example-project",
+      "commit": "cccccccccccccccccccccccccccccccccccccccc",
+      "environments": [
+        "production"
+      ],
+      "finding": {
+        "advisories": [
+          "GHSA-aaaa-bbbb-cccc"
+        ],
+        "ecosystem": "npm",
+        "package": "example-package",
+        "version": "1.0.0",
+        "lockfile": "frontend/package-lock.json",
+        "dependency_paths": [
+          "node_modules/example-package"
+        ],
+        "fingerprint": "sha256:4b10e6eee1166118d7c09eb466081dbede2492b89f313d0398aa7b672c268833",
+        "severity": "high",
+        "fixed_versions": [],
+        "dependency_scope": "development"
+      },
+      "locks": {},
+      "reason": "Reviewed exposure during the build.",
+      "evidence": [
+        "review-1"
+      ],
+      "approved_by": "owner-1",
+      "approved_at": "2026-11-18T12:00:00Z",
+      "expires_at": "2026-11-25T12:00:00Z",
+      "revoked_at": ""
+    },
+    "valid": false
   }
 ]

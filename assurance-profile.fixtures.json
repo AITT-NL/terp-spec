@@ -1,0 +1,61 @@
+{
+  "valid": {
+    "terp_assurance": 1,
+    "spec_version": "0.50.0",
+    "toolchain": {
+      "tool": "example-toolchain",
+      "version": "1.0.0"
+    },
+    "profile": "release",
+    "ok": true,
+    "lanes": [
+      {
+        "id": "terp-standard",
+        "status": "passed",
+        "checks": [
+          "architecture",
+          "frontend-boundaries"
+        ]
+      },
+      {
+        "id": "appsec-baseline",
+        "status": "passed",
+        "checks": [
+          "appsec-baseline"
+        ]
+      },
+      {
+        "id": "dependency-audit",
+        "status": "passed",
+        "checks": [
+          "dependency-audit-python",
+          "dependency-audit-npm"
+        ]
+      },
+      {
+        "id": "secret-scanning",
+        "status": "passed",
+        "checks": [
+          "secret-scanning"
+        ]
+      },
+      {
+        "id": "a11y",
+        "status": "not-run",
+        "checks": []
+      },
+      {
+        "id": "blackbox-conformance",
+        "status": "failed",
+        "checks": [
+          "conformance"
+        ]
+      },
+      {
+        "id": "test-adequacy",
+        "status": "not-run",
+        "checks": []
+      }
+    ]
+  }
+}

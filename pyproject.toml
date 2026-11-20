@@ -19,7 +19,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "terp-spec"
-version = "0.49.0"
+version = "0.50.0"
 description = "The contracts Terp's programs read: the deployment, workbench and layout declarations, the resolved deployment, the finding and check-report formats, the assurance profile and the conversation stream."
 requires-python = ">=3.10"
 license = "Apache-2.0"
@@ -45,6 +45,7 @@ packages = ["terp_spec"]
 "findings.schema.json" = "terp_spec/findings.schema.json"
 "app-check-report.schema.json" = "terp_spec/app-check-report.schema.json"
 "assurance-profile.schema.json" = "terp_spec/assurance-profile.schema.json"
+"assurance-profile.fixtures.json" = "terp_spec/assurance-profile.fixtures.json"
 "layout-declaration.schema.json" = "terp_spec/layout-declaration.schema.json"
 "deployment-declaration.schema.json" = "terp_spec/deployment-declaration.schema.json"
 "deployment-declaration.fixtures.json" = "terp_spec/deployment-declaration.fixtures.json"

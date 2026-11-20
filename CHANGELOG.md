@@ -7,6 +7,18 @@ equal the checked-in `VERSION` — held by `tests/test_changelog.py`. A reader p
 to an earlier version reads this file to see exactly what changed since. Up to
 0.43.0 this package also carried the rule catalog, and the entries below record it.
 
+## 0.50.0
+
+The assurance profile schema now enforces the documented seven lanes, the evidence
+required for each verdict, and agreement between required lane verdicts and the
+release claim. Readers validating an assurance document can apply these checks in
+one schema validation.
+
+Dependency risk acceptances require a nonblank approver, rationale, evidence and
+scope, plus at least one lock digest. Both dependency contracts require the whole
+digest string to match. The shared fixture validator now checks each digest in a
+lock map and counts string length as JSON Schema specifies.
+
 ## 0.49.0
 
 - Add dependency audit evidence and human risk acceptance contracts. Acceptance never changes the raw assurance verdict.

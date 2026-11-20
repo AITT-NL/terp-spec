@@ -36,7 +36,7 @@ def _validate(instance: object, schema: dict, path: str) -> list[str]:
     Deliberately minimal so the spec stays dependency-free: type / enum / const /
     pattern / minLength / maxLength / minimum / maximum / exclusiveMinimum / minItems / maxItems
     / uniqueItems / required / dependentRequired / properties / patternProperties /
-    additionalProperties / items / if-then-else, with ``$defs`` and ``default`` read as
+    additionalProperties / items / contains / allOf / if-then-else, with ``$defs`` and ``default`` read as
     annotations. An unknown constraint keyword fails loudly rather than passing
     silently. Every message names the field it is about and, where the schema states
     them, the values that field allows.
@@ -49,8 +49,8 @@ def _validate(instance: object, schema: dict, path: str) -> list[str]:
         "$schema", "$id", "$defs", "title", "description", "default",  # annotations
         "type", "enum", "const", "pattern", "minLength", "maxLength", "minimum", "maximum",
         "exclusiveMinimum", "minItems", "maxItems", "uniqueItems", "required",
-        "dependentRequired", "properties", "patternProperties", "additionalProperties",
-        "items", "if", "then", "else",
+        "dependentRequired", "properties", "patternProperties", "additionalProperties", "minProperties",
+        "items", "contains", "allOf", "if", "then", "else",
     }
     errors = [f"{path}: unknown schema keyword {key!r}" for key in schema if key not in _KNOWN]
     if "enum" in schema and not any(_same(instance, value) for value in schema["enum"]):
@@ -75,6 +75,8 @@ def _validate(instance: object, schema: dict, path: str) -> list[str]:
     if expected is not None and not matches[expected]:
         return errors + [f"{path}: expected {expected}, got {type(instance).__name__}"]
     if isinstance(instance, dict):
+        if len(instance) < schema.get("minProperties", 0):
+            errors.append(f"{path}: fewer than {schema['minProperties']} properties")
         for field in schema.get("required", []):
             if field not in instance:
                 errors.append(f"{path}: missing required field {field!r}")
@@ -99,7 +101,11 @@ def _validate(instance: object, schema: dict, path: str) -> list[str]:
                 if key not in properties
                 and not any(re.search(pattern, key) for pattern in patterns)
             )
+        additional = schema.get("additionalProperties")
         for key, value in instance.items():
+            if (isinstance(additional, dict) and key not in properties
+                    and not any(re.search(pattern, key) for pattern in patterns)):
+                errors.extend(_validate(value, additional, f"{path}.{key}"))
             if key in properties:
                 errors.extend(_validate(value, properties[key], f"{path}.{key}"))
             for pattern, definition in patterns.items():
@@ -116,10 +122,15 @@ def _validate(instance: object, schema: dict, path: str) -> list[str]:
                 for index, item in enumerate(instance)
                 if any(_same(item, earlier) for earlier in instance[:index])
             )
+        if "contains" in schema and not any(
+            not _validate(item, schema["contains"], f"{path}[{index}]")
+            for index, item in enumerate(instance)
+        ):
+            errors.append(f"{path}: no item matches {schema['contains']}")
         for index, item in enumerate(instance):
             errors.extend(_validate(item, schema.get("items", {}), f"{path}[{index}]"))
     elif isinstance(instance, str):
-        if len(instance.strip()) < schema.get("minLength", 0):
+        if len(instance) < schema.get("minLength", 0):
             errors.append(f"{path}: shorter than minLength {schema['minLength']}")
         if "maxLength" in schema and len(instance) > schema["maxLength"]:
             errors.append(f"{path}: longer than maxLength {schema['maxLength']}")
@@ -132,6 +143,8 @@ def _validate(instance: object, schema: dict, path: str) -> list[str]:
             errors.append(f"{path}: above maximum {schema['maximum']}")
         if "exclusiveMinimum" in schema and instance <= schema["exclusiveMinimum"]:
             errors.append(f"{path}: must be above {schema['exclusiveMinimum']}")
+    for condition in schema.get("allOf", []):
+        errors.extend(_validate(instance, condition, path))
     if "if" in schema:
         branch = "then" if not _validate(instance, schema["if"], path) else "else"
         if branch in schema:

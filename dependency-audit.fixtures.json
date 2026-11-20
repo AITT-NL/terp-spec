@@ -145,5 +145,35 @@
       ]
     },
     "valid": false
+  },
+  {
+    "name": "malformed digest in lock map",
+    "document": {
+      "version": 1,
+      "complete": true,
+      "scanned_at": "2026-11-18T12:00:00Z",
+      "locks": {
+        "frontend/package-lock.json": "sha256:incomplete"
+      },
+      "findings": [
+        {
+          "advisories": [
+            "GHSA-aaaa-bbbb-cccc"
+          ],
+          "ecosystem": "npm",
+          "package": "example-package",
+          "version": "1.0.0",
+          "lockfile": "frontend/package-lock.json",
+          "dependency_paths": [
+            "node_modules/example-package"
+          ],
+          "fingerprint": "sha256:4b10e6eee1166118d7c09eb466081dbede2492b89f313d0398aa7b672c268833",
+          "severity": "high",
+          "fixed_versions": [],
+          "dependency_scope": "development"
+        }
+      ]
+    },
+    "valid": false
   }
 ]

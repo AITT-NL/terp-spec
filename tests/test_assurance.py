@@ -13,7 +13,9 @@ from __future__ import annotations
 
 import json
 
-from terp_spec import spec_dir, spec_version
+import pytest
+
+from terp_spec import spec_dir
 
 from schema_subset import _validate
 
@@ -36,21 +38,7 @@ def _schema() -> dict:
 
 
 def _sample() -> dict:
-    return {
-        "terp_assurance": 1,
-        "spec_version": spec_version(),
-        "toolchain": {"tool": "example-toolchain", "version": "1.0.0"},
-        "profile": "release",
-        "ok": True,
-        "lanes": [
-            {"id": "terp-standard", "status": "passed", "checks": ["architecture", "frontend-boundaries"]},
-            {"id": "appsec-baseline", "status": "passed", "checks": ["appsec-baseline"]},
-            {"id": "dependency-audit", "status": "passed", "checks": ["dependency-audit-python", "dependency-audit-npm"]},
-            {"id": "a11y", "status": "not-run", "checks": []},
-            {"id": "blackbox-conformance", "status": "failed", "checks": ["conformance"]},
-            {"id": "test-adequacy", "status": "not-run", "checks": []},
-        ],
-    }
+    return json.loads((_SPEC / "assurance-profile.fixtures.json").read_text(encoding="utf-8"))["valid"]
 
 
 def test_a_representative_assurance_profile_validates() -> None:
@@ -94,3 +82,26 @@ def test_the_lane_vocabulary_is_the_normative_mapping() -> None:
         assert f"| `{lane}` | recommended |" in readme, (
             f"README assurance table must state {lane!r} as recommended"
         )
+
+
+@pytest.mark.parametrize("lane_id", REQUIRED_LANES + RECOMMENDED_LANES)
+def test_every_lane_is_required_exactly_once(lane_id: str) -> None:
+    doc = _sample()
+    others = [lane for lane in doc["lanes"] if lane["id"] != lane_id]
+    assert _validate(doc | {"lanes": others}, _schema(), "assurance")
+    duplicate = others[0] | {"checks": ["another-check"], "status": "passed"}
+    assert _validate(doc | {"lanes": [*others, duplicate]}, _schema(), "assurance")
+    assert not _validate(doc | {"lanes": list(reversed(doc["lanes"]))}, _schema(), "assurance")
+
+
+@pytest.mark.parametrize("lane_id", REQUIRED_LANES + RECOMMENDED_LANES)
+@pytest.mark.parametrize("status", ["passed", "failed", "not-run"])
+def test_claim_and_evidence_match_the_verdict(lane_id: str, status: str) -> None:
+    doc = _sample()
+    lane = next(row for row in doc["lanes"] if row["id"] == lane_id)
+    lane.update(status=status, checks=[] if status == "not-run" else ["example-check"])
+    doc["ok"] = status == "passed" or lane_id in RECOMMENDED_LANES
+    assert not _validate(doc, _schema(), "assurance")
+    assert _validate(doc | {"ok": not doc["ok"]}, _schema(), "assurance")
+    lane["checks"] = ["example-check"] if status == "not-run" else []
+    assert _validate(doc, _schema(), "assurance")

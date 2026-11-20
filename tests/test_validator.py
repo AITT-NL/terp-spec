@@ -63,9 +63,7 @@ def test_additional_properties_false_rejects_unknown_fields() -> None:
 
 def test_string_constraints_are_enforced() -> None:
     assert _errors("", {"type": "string", "minLength": 1})
-    assert _errors("   ", {"type": "string", "minLength": 1}), (
-        "whitespace-only must not satisfy minLength"
-    )
+    assert _errors("   ", {"type": "string", "minLength": 1}) == []
     assert _errors("nope", {"type": "string", "pattern": r"^\d+$"})
     assert _errors("123", {"type": "string", "pattern": r"^\d+$"}) == []
 
@@ -193,3 +191,13 @@ def test_nested_errors_carry_their_path() -> None:
     assert errors and "root.items[1]" in errors[0], (
         f"a nested violation must name its path: {errors}"
     )
+
+
+def test_schema_for_additional_properties_only_checks_unmatched_keys() -> None:
+    schema = {
+        "properties": {"name": {"type": "string"}},
+        "patternProperties": {"^flag_": {"type": "boolean"}},
+        "additionalProperties": {"type": "integer"},
+    }
+    assert not _errors({"name": "sample", "flag_enabled": True, "count": 2}, schema)
+    assert _errors({"count": "two"}, schema)

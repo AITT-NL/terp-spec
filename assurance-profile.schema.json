@@ -38,10 +38,23 @@
     "lanes": {
       "type": "array",
       "description": "One entry per lane of the spec's vocabulary, each exactly once.",
-      "minItems": 1,
+      "minItems": 7,
+      "maxItems": 7,
+      "allOf": [
+        { "contains": { "properties": { "id": { "const": "terp-standard" } } } },
+        { "contains": { "properties": { "id": { "const": "appsec-baseline" } } } },
+        { "contains": { "properties": { "id": { "const": "dependency-audit" } } } },
+        { "contains": { "properties": { "id": { "const": "secret-scanning" } } } },
+        { "contains": { "properties": { "id": { "const": "a11y" } } } },
+        { "contains": { "properties": { "id": { "const": "blackbox-conformance" } } } },
+        { "contains": { "properties": { "id": { "const": "test-adequacy" } } } }
+      ],
       "items": {
         "type": "object",
         "required": ["id", "status", "checks"],
+        "if": { "properties": { "status": { "const": "not-run" } } },
+        "then": { "properties": { "checks": { "maxItems": 0 } } },
+        "else": { "properties": { "checks": { "minItems": 1 } } },
         "additionalProperties": false,
         "properties": {
           "id": {
@@ -63,10 +76,24 @@
           "checks": {
             "type": "array",
             "description": "The verification-check ids whose verdicts compose this lane (evidence pointers into the toolchain's verification envelope). Non-empty for 'passed'/'failed'; empty for 'not-run' - a verdict without evidence is not a verdict.",
-            "items": { "type": "string", "minLength": 1 }
+            "items": { "type": "string", "minLength": 1, "pattern": "\\S" }
           }
         }
       }
     }
-  }
+  },
+  "if": {
+    "properties": {
+      "lanes": {
+        "contains": {
+          "properties": {
+            "id": { "enum": ["terp-standard", "appsec-baseline", "dependency-audit", "secret-scanning"] },
+            "status": { "enum": ["failed", "not-run"] }
+          }
+        }
+      }
+    }
+  },
+  "then": { "properties": { "ok": { "const": false } } },
+  "else": { "properties": { "ok": { "const": true } } }
 }

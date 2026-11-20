@@ -25,23 +25,26 @@
     "id": {
       "type": "string",
       "minLength": 1,
-      "maxLength": 4096
+      "maxLength": 4096,
+      "pattern": "[^\\u0000-\\u0020\\u007F-\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]"
     },
     "project_id": {
       "type": "string",
       "minLength": 1,
-      "maxLength": 4096
+      "maxLength": 4096,
+      "pattern": "[^\\u0000-\\u0020\\u007F-\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]"
     },
     "commit": {
       "type": "string",
-      "pattern": "^([0-9a-f]{40}|[0-9a-f]{64})$"
+      "pattern": "^([0-9a-f]{40}|[0-9a-f]{64})(?![\\s\\S])"
     },
     "environments": {
       "type": "array",
       "items": {
         "type": "string",
         "minLength": 1,
-        "maxLength": 4096
+        "maxLength": 4096,
+        "pattern": "[^\\u0000-\\u0020\\u007F-\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]"
       },
       "maxItems": 10000,
       "uniqueItems": true,
@@ -108,7 +111,7 @@
         },
         "fingerprint": {
           "type": "string",
-          "pattern": "^sha256:[0-9a-f]{64}$"
+          "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])"
         },
         "severity": {
           "enum": [
@@ -143,20 +146,23 @@
       "type": "object",
       "additionalProperties": {
         "type": "string",
-        "pattern": "^sha256:[0-9a-f]{64}$"
-      }
+        "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])"
+      },
+      "minProperties": 1
     },
     "reason": {
       "type": "string",
       "minLength": 1,
-      "maxLength": 4096
+      "maxLength": 4096,
+      "pattern": "[^\\u0000-\\u0020\\u007F-\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]"
     },
     "evidence": {
       "type": "array",
       "items": {
         "type": "string",
         "minLength": 1,
-        "maxLength": 4096
+        "maxLength": 4096,
+        "pattern": "[^\\u0000-\\u0020\\u007F-\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]"
       },
       "maxItems": 10000,
       "uniqueItems": true,
@@ -165,7 +171,8 @@
     "approved_by": {
       "type": "string",
       "minLength": 1,
-      "maxLength": 4096
+      "maxLength": 4096,
+      "pattern": "[^\\u0000-\\u0020\\u007F-\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]"
     },
     "approved_at": {
       "type": "string",
